@@ -20,6 +20,21 @@ func NewDiskFilesystem(baseDir string) (*DiskFilesystem, error) {
 		log.Error(0, "Could not initialize filesystem: %v", err)
 		return nil, err
 	}
+
+	// Check if the base directory does not exist. If it doesn't, create it.
+	// TODO: check if the base directory is actually a *directory*
+	_, err = os.Stat(base)
+	if os.IsNotExist(err) {
+		log.Info("Base directory does not exist, creating it now.")
+		err := os.Mkdir(base, 0755)
+		if err != nil {
+			log.Error(0, "Could not create base directory: %v", err)
+			return nil, err
+		}
+	} else {
+		log.Warn("Could not check if base directory exists, assuming it does")
+	}
+
 	log.Info("Initialized filesystem at base directory %s", base)
 	return &DiskFilesystem{base}, nil
 }
