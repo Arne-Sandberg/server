@@ -8,6 +8,7 @@ func Init() {
 }
 
 func setDefaults() {
+	viper.SetDefault("http.ssl", false)
 	viper.SetDefault("http.port", 8080)
 	viper.SetDefault("http.host", "localhost")
 	viper.SetDefault("http.upload_limit", 10)
@@ -24,4 +25,8 @@ func GetInt(key string) int {
 
 func GetInt64(key string) int64 {
 	return viper.GetInt64(key)
+}
+
+func GetBool(key string) bool {
+	return viper.GetBool(key)
 }

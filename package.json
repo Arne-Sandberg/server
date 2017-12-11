@@ -1,0 +1,15 @@
+{
+  "name": "freecloud",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:riesinger/freecloud",
+  "author": "Pascal Riesinger",
+  "license": "MIT",
+  "scripts": {
+    "dev": "yarn node-sass -xrw public/sass -o public/css"
+  },
+  "dependencies": {
+    "bulma": "^0.6.1",
+    "node-sass": "^4.7.2"
+  }
+}

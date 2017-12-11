@@ -6,4 +6,6 @@ import "os"
 // filesystem and a memory filesystem.
 type Filesystem interface {
 	NewFileHandle(path string) (*os.File, error)
+	CreateDirectory(path string) error
+	ListFiles(path string) ([]os.FileInfo, error)
 }

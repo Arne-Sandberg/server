@@ -5,8 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Freecloud</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">  
 </head>
 <body>
   <header>
-    
+    <nav class="navbar is-primary" role="navigation" aria-label="main-navigation">
+      <div class="navbar-brand">
+        <a href="/" class="navbar-item">
+          <img src="/img/cloud.svg" style="height: 32px">
+        </a>
+        {{if .CurrentUser.SignedIn}}
+        <button class="button navbar-burger">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        {{end}}
+      </div>
+      {{if .CurrentUser.SignedIn}}
+      <div class="navbar-menu">
+        <div class="navbar-end">
+          <div class="navbar-item has-dropdown">
+            <div class="navbar-link">
+              <!-- TODO: move this margin into a css class -->
+              <img class="image is-32x32" src="/img/account-circle.svg">
+            </div>
+            <div class="navbar-dropdown">
+              <a href="/" class="navbar-item">Sign out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{end}}
+    </nav>
   </header>

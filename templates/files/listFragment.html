@@ -1,0 +1,29 @@
+<div class="box">
+  <table class="file-list">
+    <thead class="file-list--header">
+      <tr>
+        <th class="file-list--header-cell name">Name</th>
+        <th class="file-list--header-cell size">Size</th>
+      </tr>
+    </thead>
+    <tbody class="file-list--items">
+      {{range .Files}}
+      <tr class="file-list--item">
+        <td class="file-list--cell file-list--cell_name">
+          <div class="icon is-large">
+            {{if .IsDir}}
+            <i class="fa fa-folder fa-2x"></i>
+            {{else}}
+            <i class="fa fa-file"></i>
+            {{end}}
+          </div>
+          {{.Name}}
+        </td>
+        <td class="file-list--cell file-list--cell_size">
+          {{.Size}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>

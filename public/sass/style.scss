@@ -1,0 +1,25 @@
+// @import "reset";
+// @import "colors";
+// @import "variables";
+// @import "typography";
+
+// @import "./atoms/button";
+// @import "./atoms/icon";
+
+// TODO: give the header a padding of 0 1.5rem
+
+@import "../../node_modules/bulma/bulma";
+
+html, body {
+  height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+section.section {
+  flex: 1 0 auto;
+  background-color: #f2f2f2;
+}
+
+@import "./molecules/file-list";

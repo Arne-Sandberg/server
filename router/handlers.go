@@ -56,3 +56,12 @@ func (server) FileUpload(c *macaron.Context) {
 		c.HTML(http.StatusCreated, "files/upload", "Upload successful!")
 	}
 }
+
+func (server) FileList(c *macaron.Context) {
+	ff, err := filesystem.ListFiles(".")
+	if err != nil {
+		c.Error(http.StatusInternalServerError, "Could not list files:", err.Error())
+		return
+	}
+	c.HTML(200, "files/list", ff)
+}

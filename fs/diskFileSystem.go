@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -31,4 +32,22 @@ func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
 		return nil, err
 	}
 	return f, nil
+}
+
+// TODO: make filesizes human-readable
+func (dfs *DiskFilesystem) ListFiles(path string) ([]os.FileInfo, error) {
+	info, err := ioutil.ReadDir(filepath.Join(dfs.base, path))
+	if err != nil {
+		log.Error(0, "Could not list files in %s: %v", path, err)
+		return nil, err
+	}
+	return info, nil
+}
+
+func (dfs *DiskFilesystem) CreateDirectory(path string) error {
+	err := os.Mkdir(filepath.Join(dfs.base, path), 0755)
+	if err != nil {
+		log.Error(0, "Could not create directory %s: %v", path, err)
+	}
+	return err
 }
