@@ -31,7 +31,7 @@ func NewDiskFilesystem(baseDir string) (*DiskFilesystem, error) {
 			log.Error(0, "Could not create base directory: %v", err)
 			return nil, err
 		}
-	} else {
+	} else if err != nil {
 		log.Warn("Could not check if base directory exists, assuming it does")
 	}
 

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/models"
 	"github.com/riesinger/freecloud/fs"
+	"github.com/riesinger/freecloud/models"
 	log "gopkg.in/clog.v1"
 	macaron "gopkg.in/macaron.v1"
 )
@@ -40,13 +40,17 @@ func Start(port int, hostname string, filesys fs.Filesystem) {
 			c.Error(http.StatusInternalServerError, err.Error())
 			return
 		}
-		c.HTML(200, "index", struct{ 
-			Files []os.FileInfo
+		c.HTML(200, "index", struct {
+			Files       []os.FileInfo
 			CurrentUser models.User
-			}{
-				files,
-				models.User{SignedIn: false},
-			})
+		}{
+			files,
+			models.User{SignedIn: false},
+		})
+	})
+
+	m.Get("/signup", func(c *macaron.Context) {
+		c.HTML(200, "auth/signup")
 	})
 
 	log.Fatal(0, "%v", http.ListenAndServe(fmt.Sprintf("%s:%d", hostname, port), m))

@@ -1,6 +1,19 @@
 package auth
 
-var provider CredentialsProvider
+import (
+	"errors"
+
+	log "gopkg.in/clog.v1"
+)
+
+const SessionTokenLength = 16
+
+var (
+	provider CredentialsProvider
+
+	ErrMissingCredentials = errors.New("auth: Missing credentials")
+	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
+)
 
 // Init intializes the auth package. You must call this before using any auth function.
 func Init(cprovider CredentialsProvider) {
@@ -17,15 +30,23 @@ var sessions map[Session]struct{}
 
 // NewSession verifies the user's credentials and then returns a new Session
 func NewSession(email string, password string) (Session, error) {
-	validCredentials, err := provider.VerifyUserPassword(email, plaintext)
+	// First, do some sanity checks before verification
+	if len(email) == 0 || len(password) == 0 {
+		return "", ErrMissingCredentials
+	}
+	// Now, verify the password using the credentials provider
+	validCredentials, err := provider.VerifyUserPassword(email, password)
 	if err != nil {
 		log.Error(0, "Could not create new session, because call to credentials provider failed: %v", err)
-		return nil, err
+		return "", err
 	}
-	return utils.RandomStringSecure(15)
+	if validCredentials {
+		return Session(make([]byte, SessionTokenLength, SessionTokenLength)), nil
+	}
+	return "", ErrInvalidCredentials
 }
 
-// ValidateSession checks if the session is valid.
-func ValidateSession(sess Session) (valid bool, err error) {
+// // ValidateSession checks if the session is valid.
+// func ValidateSession(sess Session) (valid bool, err error) {
 
-}
+// }

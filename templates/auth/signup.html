@@ -1,7 +1,74 @@
 {{template "base/header" .}}
 <section class="section">
-  <form class="form">
-
-  </form>
+  <div class="container">
+    <form class="form">
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label">Name</label>
+        </div>
+        <div class="field-body">
+          <div class="field">
+            <p class="control has-icons-left has-icons-right is-expanded">
+              <input name="fname" type="text" class="input is-success" placeholder="John">
+              <span class="icon is-small is-left">
+                <i class="fa fa-user"></i>
+              </span>
+            </p>
+          </div>
+          <div class="field">
+            <p class="control has-icons-left has-icons-right is-expanded">
+              <input name="lname" type="text" class="input is-success" placeholder="Doe">
+              <span class="icon is-small is-left">
+                <i class="fa fa-user"></i>
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label for="email" class="label">Email</label>
+        </div>
+        <div class="field-body">
+          <div class="field">
+            <div class="control has-icons-left has-icons-right">
+              <input name="email" type="email" class="input is-success" placeholder="john.doe@example.org">
+              <span class="icon is-small is-left">
+                <i class="fa fa-envelope"></i>
+              </span>
+              <span class="icon is-small is-right">
+                <i class="fa fa-check"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label for="password" class="label">Password</label>
+        </div>
+        <div class="field-body">
+          <div class="field">
+            <div class="control has-icons-left has-icons-right">
+              <input name="password" type="password" class="input" placeholder="Password">
+              <span class="icon is-small is-left">
+                <i class="fa fa-key"></i>
+              </span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field">
+              <div class="control has-icons-left has-icons-right">
+                <input name="password-confirm" type="password" class="input" placeholder="Confirm Password">
+                <span class="icon is-small is-left">
+                  <i class="fa fa-key"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
 </section>
 {{template "base/footer" .}}

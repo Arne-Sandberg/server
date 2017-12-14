@@ -12,6 +12,7 @@
 
 html, body {
   height: 100%;
+  overflow-y: auto;
 }
 body {
   display: flex;

@@ -6,7 +6,8 @@
   "author": "Pascal Riesinger",
   "license": "MIT",
   "scripts": {
-    "dev": "yarn node-sass -xrw public/sass -o public/css"
+    "dev": "node-sass -xrw public/sass -o public/css",
+    "build": "mkdir -p public/css && node-sass --output-style compressed public/sass/style.scss > public/css/style.css"
   },
   "dependencies": {
     "bulma": "^0.6.1",
