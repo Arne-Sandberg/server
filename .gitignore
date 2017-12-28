@@ -13,3 +13,18 @@ data/*
 # Database files
 *.db
 *.db.lock
+
+#
+# IDEs
+#
+
+# IntelliJ / GoLand
+.idea/*
+
+# VS Code
+.vscode/*
+
+# Vim
+*.vim
+*.swp
+
