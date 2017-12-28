@@ -4,13 +4,14 @@ import "time"
 
 // User represents a single end-user.
 type User struct {
-	ID int
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
-	AvatarURL string
-	SignedIn bool
-	Created   time.Time
+	ID          int    `storm:"id,increment" json:"-"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	Email       string `storm:"unique" json:"email"`
+	Password    string `json:"password"`
+	AvatarURL   string `json:"avatarURL"`
+	SignedIn    bool   `json:"-"`
+	Created     time.Time
+	Updated     time.Time
+	LastSession time.Time
 }
-

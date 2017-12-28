@@ -2,7 +2,7 @@ package hashers
 
 import (
 	"encoding/base64"
-	"errors"
+	"github.com/pkg/errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -29,17 +29,41 @@ func HashScrypt(plaintext string) (hash string, err error) {
 
 	hashb, err := scrypt.Key(passwordb, saltb, recommendedN, recommendedr, recommendedp, scryptHashLength)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not hash password")
 	}
 
 	hashs := base64.StdEncoding.EncodeToString(hashb)
 	salts := base64.StdEncoding.EncodeToString(saltb)
 
-	return fmt.Sprintf("$%s$%d$%d$%d$%s%s", ScryptHashID, recommendedN, recommendedp, recommendedr, salts, hashs), nil
+	return fmt.Sprintf("$%s$%d$%d$%d$%s$%s", ScryptHashID, recommendedN, recommendedr, recommendedp, salts, hashs), nil
 
 }
 
-func ParseScryptStub(password string) (salt, hash []byte, N, r, p int, err error) {
+// TODO: Upgrade the old password hashing, if needed
+func ValidateScryptPassword(plaintext, hashed string) (valid bool, err error) {
+	// First, parse the stub of the hash to get the scrypt parameters
+	salt, oldHash, N, r, p, err := parseScryptStub(hashed)
+	if err != nil {
+		err = errors.Wrap(err, "could not get the password stub")
+		return
+	}
+
+	hash, err := scrypt.Key([]byte(plaintext), salt, N, r, p, scryptHashLength)
+	if err != nil {
+		err = errors.Wrap(err, "could not hash password")
+		return
+	}
+	// Check if the old hash is the same as the new one
+	if base64.StdEncoding.EncodeToString(hash) == base64.StdEncoding.EncodeToString(oldHash) {
+		valid = true
+		err = nil
+		return
+	}
+
+	return
+}
+
+func parseScryptStub(password string) (salt, hash []byte, N, r, p int, err error) {
 	// First, do some cheap sanity checking
 	if len(password) < 10 || !strings.HasPrefix(password, fmt.Sprintf("$%s$", ScryptHashID)) {
 		err = ErrInvalidScryptStub
@@ -58,6 +82,7 @@ func ParseScryptStub(password string) (salt, hash []byte, N, r, p int, err error
 
 	n64, err = strconv.ParseInt(parts[0], 10, 0)
 	if err != nil {
+		err = errors.Wrap(err, "could not parse scrypt parameters")
 		return
 	}
 
@@ -65,6 +90,7 @@ func ParseScryptStub(password string) (salt, hash []byte, N, r, p int, err error
 
 	r64, err = strconv.ParseInt(parts[1], 10, 0)
 	if err != nil {
+		err = errors.Wrap(err, "could not parse scrypt parameters")
 		return
 	}
 
@@ -72,6 +98,7 @@ func ParseScryptStub(password string) (salt, hash []byte, N, r, p int, err error
 
 	p64, err = strconv.ParseInt(parts[2], 10, 0)
 	if err != nil {
+		err = errors.Wrap(err, "could not parse scrypt parameters")
 		return
 	}
 
@@ -79,9 +106,13 @@ func ParseScryptStub(password string) (salt, hash []byte, N, r, p int, err error
 
 	salt, err = base64.StdEncoding.DecodeString(parts[3])
 	if err != nil {
+		err = errors.Wrap(err, "could not parse scrypt salt")
 		return
 	}
 
 	hash, err = base64.StdEncoding.DecodeString(parts[4])
+	if err != nil {
+		err = errors.Wrap(err, "could not parse scrypt hash")
+	}
 	return
 }

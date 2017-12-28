@@ -1,6 +1,8 @@
 package hashers
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestParseScryptStub(t *testing.T) {
 	type data struct {
@@ -18,10 +20,27 @@ func TestParseScryptStub(t *testing.T) {
 	}
 
 	for _, td := range testdata {
-		_, _, _, _, _, err := ParseScryptStub(td.Password)
+		_, _, _, _, _, err := parseScryptStub(td.Password)
 		if err != td.Error {
 			t.Errorf("Expected %v for %s, got: %v", td.Error, td.Name, err)
 		}
 	}
 
+}
+
+func TestPasswordHashing(t *testing.T) {
+	// first, hash a password, then test it against itself
+	hash, err := HashScrypt("h4x0r!")
+	if err != nil {
+		t.Errorf("Got error while hashing password: %v", err)
+		return
+	}
+	valid, err := ValidateScryptPassword("h4x0r!", hash)
+	if err != nil {
+		t.Errorf("Got error while validating password: %v", err)
+		return
+	}
+	if !valid {
+		t.Errorf("Expected a valid password verification, but it failed")
+	}
 }

@@ -1,8 +1,13 @@
 package main
 
+// TODO: check for multiple logs on the same error
+
 import (
 	"fmt"
 	"os"
+
+	"github.com/riesinger/freecloud/auth"
+	"github.com/riesinger/freecloud/db"
 
 	"gopkg.in/clog.v1"
 
@@ -13,11 +18,21 @@ import (
 
 func main() {
 	config.Init()
+	// auth.Init()
 	setupLogger()
 	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"))
 	if err != nil {
 		os.Exit(3)
 	}
+
+	database, err := db.NewStormDB()
+	if err != nil {
+		clog.Fatal(0, "Database setup failed, bailing out!")
+		os.Exit(1)
+	}
+
+	auth.Init(database)
+
 	router.Start(config.GetInt("http.port"), config.GetString("http.host"), filesystem)
 }
 

@@ -11,11 +11,11 @@ var credProvider CredentialsProvider
 // testing implementation of a CredentialsProvider
 type testCredProvider struct{}
 
-func (p *testCredProvider) VerifyUserPassword(email string, plaintext string) (bool, error) {
-	return true, nil
+func (p *testCredProvider) GetUserByID(uid int) (*models.User, error) {
+	return &models.User{}, nil
 }
 
-func (p *testCredProvider) NewUser(user models.User) error {
+func (p *testCredProvider) CreateUser(user *models.User) error {
 	return nil
 }
 
@@ -27,19 +27,20 @@ func init() {
 func TestNewSession(t *testing.T) {
 	type pair struct {
 		Name          string
+		ID            int
 		Email         string
 		Password      string
 		ExpectedValid bool
 	}
 	var testdata = []pair{
-		{"valid email and password", "john.doe@test.com", "thisIsAPassword", true},
-		{"missing email", "", "invalid cause no mail", false},
-		{"missing password", "john.doe@test.com", "", false},
-		{"missing email and password", "", "", false},
+		{"valid email and password", 1, "john.doe@test.com", "thisIsAPassword", true},
+		{"missing email", 2, "", "invalid cause no mail", false},
+		{"missing password", 3, "john.doe@test.com", "", false},
+		{"missing email and password", 4, "", "", false},
 	}
 
 	for _, td := range testdata {
-		gotSession, gotError := NewSession(td.Email, td.Password)
+		gotSession, gotError := NewSession(td.ID, td.Password)
 		if td.ExpectedValid {
 			if len(gotSession) != SessionTokenLength {
 				t.Error("Expected a valid session for", td.Name, "but length of token is", len(gotSession))

@@ -9,3 +9,7 @@ npm*log
 
 # Uploaded data
 data/*
+
+# Database files
+*.db
+*.db.lock

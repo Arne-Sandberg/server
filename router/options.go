@@ -5,8 +5,3 @@ type RouterOptions struct {
 	Port     int
 	Hostname string
 }
-
-var defaultOptions = RouterOptions{
-	Port:     8080,
-	Hostname: "localhost",
-}
