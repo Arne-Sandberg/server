@@ -1,0 +1,11 @@
+{{template "base/header" .}}
+<section class="section">
+  <ul>
+    {{range .Users}}
+    <li>
+      <div>Name: {{.FirstName}}&nbsp;{{.LastName}}, UID: {{.ID}}, Email: {{.Email}}</div>
+    </li>
+    {{end}}
+  </ul>
+</section>
+{{template "base/footer" .}}
