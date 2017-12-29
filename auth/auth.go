@@ -28,8 +28,6 @@ func Init(cprovider CredentialsProvider) {
 // Session represents a user session, denoted in a cryptographically secure string
 type Session string
 
-// TODO: we should probably store the sessions on the database, as re-logging every time the server
-// restarts is kind of tedious.
 var sessions map[int][]Session
 
 // NewSession verifies the user's credentials and then returns a new Session

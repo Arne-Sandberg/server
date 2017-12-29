@@ -27,7 +27,7 @@ func Start(port int, hostname string, filesys fs.Filesystem) {
 	m := macaron.New()
 	m.Use(s.Logging())
 	m.Use(macaron.Recovery())
-	m.Use(macaron.Static("public"))
+	m.Use(macaron.Static("public", macaron.StaticOptions{SkipLogging: true}))
 	m.Use(macaron.Renderer())
 
 	filesystem = filesys
@@ -35,10 +35,6 @@ func Start(port int, hostname string, filesys fs.Filesystem) {
 	m.Get("/", s.IndexHandler)
 	m.Get("/signup", s.SignupPageHandler)
 	m.Post("/signup", s.SignupHandler)
-	m.Any("/signup", s.SignupHandler)
-
-	// TODO: Add a development mode which reloads each page if some assets in /public change
 
 	log.Fatal(0, "%v", http.ListenAndServe(fmt.Sprintf("%s:%d", hostname, port), m))
 }
-

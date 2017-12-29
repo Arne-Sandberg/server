@@ -2,10 +2,11 @@ package hashers
 
 import (
 	"encoding/base64"
-	"github.com/pkg/errors"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/riesinger/freecloud/utils"
 	"golang.org/x/crypto/scrypt"
@@ -39,7 +40,6 @@ func HashScrypt(plaintext string) (hash string, err error) {
 
 }
 
-// TODO: Upgrade the old password hashing, if needed
 func ValidateScryptPassword(plaintext, hashed string) (valid bool, err error) {
 	// First, parse the stub of the hash to get the scrypt parameters
 	salt, oldHash, N, r, p, err := parseScryptStub(hashed)
