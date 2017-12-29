@@ -46,7 +46,9 @@ func (db *StormDB) CreateUser(user *models.User) (err error) {
 }
 
 func (db *StormDB) GetUserByID(uid int) (user *models.User, err error) {
-	err = db.c.One("ID", uid, user)
+	var u models.User
+	err = db.c.One("ID", uid, &u)
+	user = &u
 	return
 }
 

@@ -17,7 +17,7 @@ import (
 
 const oneGigabyte = 1024 * 1024 * 1024 * 1024
 
-func (server) FileUpload(c *macaron.Context) {
+func (s server) FileUpload(c *macaron.Context) {
 	// Parse the multipart form in the request
 	err := c.Req.ParseMultipartForm(config.GetInt64("http.upload_limit") * oneGigabyte)
 	if err != nil {
@@ -39,7 +39,7 @@ func (server) FileUpload(c *macaron.Context) {
 		defer file.Close()
 
 		// Create the destination file making sure the path is writeable.
-		dst, err := filesystem.NewFileHandle(files[i].Filename)
+		dst, err := s.filesystem.NewFileHandle(files[i].Filename)
 		if err != nil {
 			c.Error(http.StatusInternalServerError, "Could not open file for writing:", err.Error())
 			return
@@ -56,13 +56,13 @@ func (server) FileUpload(c *macaron.Context) {
 	c.HTML(http.StatusCreated, "files/upload", "Upload successful!")
 }
 
-func (server) SignupPageHandler(c *macaron.Context) {
+func (s server) SignupPageHandler(c *macaron.Context) {
 	c.HTML(200, "auth/signup")
 }
 
 // SignupHandler handles the /signup route, when a POST request is made to it.
 // It creates a new user and returns a session and user cookie.
-func (server) SignupHandler(c *macaron.Context) {
+func (s server) SignupHandler(c *macaron.Context) {
 	if c.Req.Request.Body == nil {
 		log.Warn("No user data received while signing up")
 		c.WriteHeader(http.StatusBadRequest)
@@ -81,7 +81,7 @@ func (server) SignupHandler(c *macaron.Context) {
 		return
 	}
 
-	log.Trace("Signing up user: %s %s, uid %d, email %s", user.FirstName, user.LastName, user.ID, user.Email)
+	log.Trace("Signing up user: %s %s, email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(&user)
 	if err != nil {
 		c.WriteHeader(http.StatusInternalServerError)
@@ -95,18 +95,18 @@ func (server) SignupHandler(c *macaron.Context) {
 // IndexHandler handles the / route, which is only GETtable.
 // Note that this handler is not called if the user is not signed in. The /login handler
 // will be called instaead.
-func (server) IndexHandler(c *macaron.Context) {
-	files, err := filesystem.ListFiles(".")
+func (s server) IndexHandler(c *macaron.Context) {
+	files, err := s.filesystem.ListFiles(".")
 	if err != nil {
 		c.Error(http.StatusInternalServerError, err.Error())
 		return
 	}
 	c.HTML(200, "index", struct {
 		Files       []os.FileInfo
-		CurrentUser models.User
+		CurrentUser *models.User
 	}{
 		files,
-		models.User{SignedIn: false},
+		c.Data["user"].(*models.User),
 	})
 }
 

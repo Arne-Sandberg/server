@@ -48,7 +48,7 @@ func (s server) IsUser(c *macaron.Context) {
 		}
 		valid, err := auth.ValidateSession(int(userID), auth.Session(session))
 		if err != nil {
-			log.Error(0, "Could not validate session")
+			log.Error(0, "Could not validate session: %v", err)
 			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -58,6 +58,13 @@ func (s server) IsUser(c *macaron.Context) {
 			return
 		}
 
+		// If the session is valid, fill the context's user data
+		user, err := s.credentialsProvider.GetUserByID(int(userID))
+		if err != nil {
+			log.Warn("Filling user data in middleware failed: %v", err)
+		}
+		user.SignedIn = true
+		c.Data["user"] = user
 	}
 
 }

@@ -31,7 +31,7 @@ func main() {
 
 	auth.Init(database)
 
-	router.Start(config.GetInt("http.port"), config.GetString("http.host"), filesystem)
+	router.Start(config.GetInt("http.port"), config.GetString("http.host"), filesystem, database)
 }
 
 func setupLogger() {

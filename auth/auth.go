@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/riesinger/freecloud/models"
@@ -58,6 +59,7 @@ func NewSession(uid int, password string) (Session, error) {
 func newUnverifiedSession(uid int) Session {
 	sess := Session(utils.RandomString(SessionTokenLength))
 	sessions[uid] = append(sessions[uid], sess)
+	log.Trace("Sessions: %v", sessions)
 	return sess
 }
 
@@ -83,6 +85,17 @@ func NewUser(user *models.User) (session Session, err error) {
 
 // ValidateSession checks if the session is valid.
 func ValidateSession(userID int, sess Session) (valid bool, err error) {
-
+	userSessions, ok := sessions[userID]
+	if !ok {
+		err = fmt.Errorf("no sessions for this user")
+		return
+	}
+	for _, v := range userSessions {
+		if v == sess {
+			valid = true
+			err = nil
+			return
+		}
+	}
 	return
 }

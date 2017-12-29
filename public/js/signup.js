@@ -72,6 +72,7 @@
     }
 
     fetch("/signup", {
+      credentials: "include",
       method: "POST",
       body: JSON.stringify({
         firstName: fnameField.value,
