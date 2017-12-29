@@ -18,8 +18,10 @@ func NewStormDB() (*StormDB, error) {
 	db, err := storm.Open("freecloud.db")
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
+		return nil, err
 	}
-	return &StormDB{c: db}, err
+	log.Info("Initialized database")
+	return &StormDB{c: db}, nil
 }
 
 func (db *StormDB) Close() {

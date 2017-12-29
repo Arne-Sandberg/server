@@ -22,7 +22,6 @@ func NewDiskFilesystem(baseDir string) (*DiskFilesystem, error) {
 	}
 
 	// Check if the base directory does not exist. If it doesn't, create it.
-	// TODO: check if the base directory is actually a *directory*
 	_, err = os.Stat(base)
 	if os.IsNotExist(err) {
 		log.Info("Base directory does not exist, creating it now.")
@@ -49,7 +48,6 @@ func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
 	return f, nil
 }
 
-// TODO: make filesizes human-readable
 func (dfs *DiskFilesystem) ListFiles(path string) ([]os.FileInfo, error) {
 	info, err := ioutil.ReadDir(filepath.Join(dfs.base, path))
 	if err != nil {

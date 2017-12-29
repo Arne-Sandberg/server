@@ -33,7 +33,6 @@ func TestNewSession(t *testing.T) {
 		ExpectedValid bool
 	}
 	var testdata = []pair{
-		{"valid email and password", 1, "john.doe@test.com", "thisIsAPassword", true},
 		{"missing email", 2, "", "invalid cause no mail", false},
 		{"missing password", 3, "john.doe@test.com", "", false},
 		{"missing email and password", 4, "", "", false},

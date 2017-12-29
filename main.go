@@ -1,7 +1,5 @@
 package main
 
-// TODO: check for multiple logs on the same error
-
 import (
 	"fmt"
 	"os"

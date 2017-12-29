@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/riesinger/freecloud/auth"
 
@@ -59,9 +60,8 @@ func (server) SignupPageHandler(c *macaron.Context) {
 	c.HTML(200, "auth/signup")
 }
 
-// SignupHandler handles the /signup route.
-// If GETting the URL, the signup page is shown, if POSTing to this URL, the signup
-// process is initiated.
+// SignupHandler handles the /signup route, when a POST request is made to it.
+// It creates a new user and returns a session and user cookie.
 func (server) SignupHandler(c *macaron.Context) {
 	if c.Req.Request.Body == nil {
 		log.Warn("No user data received while signing up")
@@ -87,8 +87,9 @@ func (server) SignupHandler(c *macaron.Context) {
 		c.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// TODO: send the session ID and user ID as cookies
-	c.Write([]byte(session))
+	c.SetCookie(config.GetString("auth.session_cookie"), string(session))
+	c.SetCookie(config.GetString("auth.user_cookie"), strconv.Itoa(user.ID))
+	c.WriteHeader(http.StatusOK)
 }
 
 // IndexHandler handles the / route, which is only GETtable.
