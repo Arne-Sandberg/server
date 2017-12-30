@@ -1,8 +1,20 @@
 {{template "base/header" .}}
 <section class="section">
-	<div style="width: max-content; margin: auto">
-		<img src="/img/warning.png" style="height: 150px; vertical-align: middle; margin: 10px">
-		<span style="font-size: 400%">404 Not Found</span>
+	<div class="container">
+		<article class="media">
+				<figure class="media-left">
+					<p class="image is-128x128">
+						<img src="/img/warning.png">
+					</p>
+				</figure>
+				<div class="media-content">
+					<div class="content">
+						<p>
+							<p style="font-size: 400%">404 Not Found</p>
+						</p>
+					</div>
+				</div>
+		</article>
 	</div>
 </section>
 {{template "base/footer" .}}
