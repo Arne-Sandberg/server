@@ -118,3 +118,7 @@ func (s server) IndexHandler(c *macaron.Context) {
 // 		users,
 // 	})
 // }
+
+func (server) NotFoundHandler(c *macaron.Context) {
+	c.HTML(404, "notFound")
+}

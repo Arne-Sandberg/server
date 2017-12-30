@@ -41,5 +41,7 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m.Get("/signup", s.SignupPageHandler)
 	m.Post("/signup", s.SignupHandler)
 
+	m.NotFound(s.NotFoundHandler)
+
 	log.Fatal(0, "%v", http.ListenAndServe(fmt.Sprintf("%s:%d", hostname, port), m))
 }
