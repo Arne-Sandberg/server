@@ -19,19 +19,29 @@
     fnameField.addEventListener("input", (event) => {
       if (event.target.value.length > 0) {
         event.target.classList.add("is-success");
+      } else {
+        event.target.classList.remove("is-success");
       }
     });
 
     lnameField.addEventListener("input", (event) => {
       if (event.target.value.length > 0) {
         event.target.classList.add("is-success");
+      } else {
+        event.target.classList.remove("is-success");
       }
     });
 
     emailField.addEventListener("input", (event) => {
-      console.log(event.target.checkValidity())
-      if (event.target.checkValidity()) {
+      if (event.target.value.length == 0) {
+        event.target.classList.remove("is-success");
+        event.target.classList.remove("is-danger");
+      } else if (validateEmail(event.target.value)) {
+        event.target.classList.remove("is-danger");
         event.target.classList.add("is-success");
+      } else {
+        event.target.classList.remove("is-success");
+        event.target.classList.add("is-danger");
       }
     });
 
@@ -93,5 +103,10 @@
 
     // This is done to prevent a reload
     return false;
+  }
+
+  function validateEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email.toLowerCase());
   }
 })()
