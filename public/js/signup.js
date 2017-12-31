@@ -5,6 +5,7 @@
   let passwordField;
   let passwordConfirmField;
   let passwordConfirmHelp;
+  let submitButton;
 
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("form.signup-form").onsubmit = onSignupSubmit;
@@ -15,6 +16,8 @@
     passwordFieldHelp = document.querySelector(".help.password-help");
     passwordConfirmField = document.querySelector("input[name='password-confirm']");
     passwordConfirmHelp = document.querySelector(".help.password-confirm-help");
+    submitButton = document.querySelector("input[type='submit']")
+
 
     fnameField.addEventListener("input", (event) => {
       if (event.target.value.length > 0) {
@@ -22,6 +25,8 @@
       } else {
         event.target.classList.remove("is-success");
       }
+
+      checkButtonActivation();
     });
 
     lnameField.addEventListener("input", (event) => {
@@ -30,6 +35,8 @@
       } else {
         event.target.classList.remove("is-success");
       }
+
+      checkButtonActivation();
     });
 
     emailField.addEventListener("input", (event) => {
@@ -43,6 +50,8 @@
         event.target.classList.remove("is-success");
         event.target.classList.add("is-danger");
       }
+
+      checkButtonActivation();
     });
 
     passwordField.addEventListener("input", (event) => {
@@ -55,6 +64,8 @@
         passwordField.classList.add("is-success");
         passwordField.classList.remove("is-danger");
       }
+
+      checkButtonActivation();
     })
 
     passwordConfirmField.addEventListener("input", (event) => {
@@ -67,6 +78,8 @@
         passwordConfirmField.classList.add("is-success");
         passwordConfirmHelp.classList.add("is-invisible");
       }
+
+      checkButtonActivation();
     });
   })
 
@@ -108,5 +121,17 @@
   function validateEmail(email) {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email.toLowerCase());
+  }
+
+  function checkButtonActivation() {
+    if (fnameField.classList.contains("is-success") &&
+        lnameField.classList.contains("is-success") &&
+        emailField.classList.contains("is-success") &&
+        passwordField.classList.contains("is-success") &&
+        passwordConfirmField.classList.contains("is-success")) {
+      submitButton.removeAttribute("disabled")
+    } else {
+      submitButton.setAttribute("disabled", "")
+    }
   }
 })()
