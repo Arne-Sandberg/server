@@ -32,27 +32,27 @@ type Session string
 var sessions map[int][]Session
 
 // NewSession verifies the user's credentials and then returns a new Session
-func NewSession(uid int, password string) (Session, error) {
+func NewSession(email string, password string) (Session, int, error) {
 	// First, do some sanity checks before verification
 	if len(password) == 0 {
-		return "", ErrMissingCredentials
+		return "", -1, ErrMissingCredentials
 	}
 	// Get the user
-	user, err := provider.GetUserByID(uid)
+	user, err := provider.GetUserByEmail(email)
 	if err != nil {
-		log.Error(0, "Could not get user with ID %d: %v", uid, err)
-		return "", err
+		log.Error(0, "Could not get user with email %s: %v", email, err)
+		return "", -1, err
 	}
 	// Now, verify the password
 	valid, err := ValidatePassword(password, user.Password)
 	if err != nil {
 		log.Error(0, "Password verification failed: %v", err)
-		return "", err
+		return "", -1, err
 	}
 	if valid {
-		return newUnverifiedSession(uid), nil
+		return newUnverifiedSession(user.ID), user.ID, nil
 	}
-	return "", ErrInvalidCredentials
+	return "", -1, ErrInvalidCredentials
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password

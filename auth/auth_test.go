@@ -15,6 +15,10 @@ func (p *testCredProvider) GetUserByID(uid int) (*models.User, error) {
 	return &models.User{}, nil
 }
 
+func (p *testCredProvider) GetUserByEmail(email string) (*models.User, error) {
+	return &models.User{}, nil
+}
+
 func (p *testCredProvider) CreateUser(user *models.User) error {
 	return nil
 }
@@ -27,19 +31,18 @@ func init() {
 func TestNewSession(t *testing.T) {
 	type pair struct {
 		Name          string
-		ID            int
 		Email         string
 		Password      string
 		ExpectedValid bool
 	}
 	var testdata = []pair{
-		{"missing email", 2, "", "invalid cause no mail", false},
-		{"missing password", 3, "john.doe@test.com", "", false},
-		{"missing email and password", 4, "", "", false},
+		{"missing email", "", "invalid cause no mail", false},
+		{"missing password", "john.doe@test.com", "", false},
+		{"missing email and password", "", "", false},
 	}
 
 	for _, td := range testdata {
-		gotSession, gotError := NewSession(td.ID, td.Password)
+		gotSession, _, gotError := NewSession(td.Email, td.Password)
 		if td.ExpectedValid {
 			if len(gotSession) != SessionTokenLength {
 				t.Error("Expected a valid session for", td.Name, "but length of token is", len(gotSession))

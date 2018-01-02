@@ -82,7 +82,7 @@ func (s server) SignupHandler(c *macaron.Context) {
 		return
 	}
 
-	log.Trace("Signing up user: %s %s, email %s", user.FirstName, user.LastName, user.Email)
+	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(&user)
 	if err != nil {
 		c.WriteHeader(http.StatusInternalServerError)
@@ -110,6 +110,49 @@ func (s server) IndexHandler(c *macaron.Context) {
 		files,
 		c.Data["user"].(*models.User),
 	})
+}
+
+func (s server) LoginPageHandler(c *macaron.Context) {
+	c.HTML(http.StatusOK, "auth/login", nil)
+}
+
+func (s server) LoginHandler(c *macaron.Context) {
+	type jsonData struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if c.Req.Request.Body == nil {
+		log.Warn("No user data received while signing in")
+		c.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer c.Req.Request.Body.Close()
+	// Deserialize user
+	log.Trace("Deserializing login data")
+	var data jsonData
+	err := json.NewDecoder(c.Req.Request.Body).Decode(&data)
+	if err != nil {
+		log.Error(0, "Could not decode login data: %v", err)
+		c.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	session, uid, err := auth.NewSession(data.Email, data.Password)
+	if err == auth.ErrInvalidCredentials {
+		log.Info("Invalid credentials for user %s", data.Email)
+		c.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	if err != nil {
+		log.Error(0, "Failed to get user %s: %v", data.Email, err)
+		c.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	c.SetCookie(config.GetString("auth.session_cookie"), string(session))
+	c.SetCookie(config.GetString("auth.user_cookie"), strconv.Itoa(uid))
+	c.WriteHeader(http.StatusOK)
 }
 
 // func (server) ListUsersHandler(c *macaron.Context) {

@@ -29,6 +29,19 @@ func TestParseScryptStub(t *testing.T) {
 }
 
 func TestPasswordHashing(t *testing.T) {
+	// verify that hashing the same password two times does not yield the same result
+	h1, err := HashScrypt("testpassword")
+	h2, err := HashScrypt("testpassword")
+	if err != nil {
+		t.Errorf("Error while hashing password: %v", err)
+		return
+	}
+	if h1 == h2 {
+		t.Errorf("Hashing the same password twice yielded the same result: %s", h1)
+		return
+	} else {
+		t.Logf("h1: %s, h2: %s", h1, h2)
+	}
 	// first, hash a password, then test it against itself
 	hash, err := HashScrypt("h4x0r!")
 	if err != nil {

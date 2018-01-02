@@ -1,0 +1,41 @@
+{{template "base/header" .}}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Login to freecloud</h1>
+    <div class="section"></div>
+    <form class="form login-form" action="javascript:void(0);">
+      <div class="field">
+        <label for="email" class="label">Email</label>
+        <div class="control has-icons-left">
+          <input name="email" type="email" class="input" placeholder="john.doe@example.org">
+          <span class="icon is-small is-left">
+            <i class="fa fa-envelope"></i>
+          </span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="password" class="label">Password</label>
+        <div class="control has-icons-left has-icons-right">
+          <input name="password" type="password" class="input" placeholder="Password">
+          <span class="icon is-small is-left">
+            <i class="fa fa-key"></i>
+          </span>
+        </div>
+        <p class="help is-invisible is-danger password-help">Wrong password or email</p>
+      </div>
+      <div class="level">
+        <div class="level-left"></div>
+        <div class="level-right">
+          <div class="level-item">
+            <div class="level-item">
+              <a href="/signup" class="button is-text">I don't have an account</a>
+            </div>
+            <input type="submit" class="button is-primary is-right" value="Login"></input>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+<script src="/js/login.js"></script>
+{{template "base/footer" .}}

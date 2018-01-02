@@ -31,13 +31,6 @@ func (db *StormDB) Close() {
 func (db *StormDB) CreateUser(user *models.User) (err error) {
 	user.Created = time.Now().UTC()
 	user.Updated = time.Now().UTC()
-	// Hash the user's password
-	hash, err := auth.HashPassword(user.Password)
-	if err != nil {
-		log.Error(0, "Password hashing failed: %v", err)
-		return
-	}
-	user.Password = hash
 	err = db.c.Save(user)
 	if err != nil {
 		log.Error(0, "Could not save user: %v", err)
@@ -48,6 +41,13 @@ func (db *StormDB) CreateUser(user *models.User) (err error) {
 func (db *StormDB) GetUserByID(uid int) (user *models.User, err error) {
 	var u models.User
 	err = db.c.One("ID", uid, &u)
+	user = &u
+	return
+}
+
+func (db *StormDB) GetUserByEmail(email string) (user *models.User, err error) {
+	var u models.User
+	err = db.c.One("Email", email, &u)
 	user = &u
 	return
 }

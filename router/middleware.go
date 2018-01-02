@@ -36,7 +36,7 @@ func (s server) Logging() macaron.Handler {
 func (s server) IsUser(c *macaron.Context) {
 
 	if session, user := c.GetCookie(config.GetString("auth.session_cookie")), c.GetCookie(config.GetString("auth.user_cookie")); session == "" || user == "" {
-		c.WriteHeader(http.StatusUnauthorized)
+		c.Redirect("/login", http.StatusFound)
 		return
 	} else {
 		// convert the user cookie to a user id
@@ -54,7 +54,7 @@ func (s server) IsUser(c *macaron.Context) {
 		}
 		if !valid {
 			log.Warn("Invalid session")
-			c.WriteHeader(http.StatusUnauthorized)
+			c.Redirect("/login", http.StatusFound)
 			return
 		}
 
