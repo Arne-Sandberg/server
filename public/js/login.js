@@ -23,9 +23,6 @@
 
 
   function onLoginSubmit() {
-    // First of all, validate the passwords match
-    // TODO: also validate the passwords on input
-   
     fetch("/login", {
       credentials: "include",
       method: "POST",
