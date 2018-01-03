@@ -1,12 +1,9 @@
-// @import "reset";
-// @import "colors";
-// @import "variables";
-// @import "typography";
 
-// @import "./atoms/button";
-// @import "./atoms/icon";
+$global-primary-background: #274C77;
 
-@import "../../node_modules/bulma/bulma";
+@import "../../node_modules/uikit/src/scss/variables-theme.scss";
+@import "../../node_modules/uikit/src/scss/mixins-theme.scss";
+@import "../../node_modules/uikit/src/scss/uikit-theme.scss";
 
 html, body {
   height: 100%;
@@ -18,7 +15,6 @@ body {
 }
 section.section {
   flex: 1 0 auto;
-  // background-color: #f2f2f2;
 }
 
 @import "./molecules/file-list";

@@ -34,6 +34,7 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m.Use(s.Logging())
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Static("public", macaron.StaticOptions{SkipLogging: true}))
+	m.Use(macaron.Static("node_modules/uikit/dist", macaron.StaticOptions{SkipLogging: true}))
 	m.Use(macaron.Renderer())
 
 	m.Post("/upload", s.FileUpload)
