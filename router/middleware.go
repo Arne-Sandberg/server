@@ -62,6 +62,8 @@ func (s server) IsUser(c *macaron.Context) {
 		user, err := s.credentialsProvider.GetUserByID(int(userID))
 		if err != nil {
 			log.Warn("Filling user data in middleware failed: %v", err)
+			c.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 		user.SignedIn = true
 		c.Data["user"] = user

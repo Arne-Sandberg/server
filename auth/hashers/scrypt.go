@@ -1,7 +1,6 @@
 package hashers
 
 import (
-	log "gopkg.in/clog.v1"
 	"encoding/base64"
 	"fmt"
 	"strconv"
@@ -54,7 +53,6 @@ func ValidateScryptPassword(plaintext, hashed string) (valid bool, err error) {
 		err = errors.Wrap(err, "could not hash password")
 		return
 	}
-	log.Trace("Validating scrypt password %s against %s", base64.StdEncoding.EncodeToString(hash), base64.StdEncoding.EncodeToString(oldHash))
 	// Check if the old hash is the same as the new one
 	if base64.StdEncoding.EncodeToString(hash) == base64.StdEncoding.EncodeToString(oldHash) {
 		valid = true
