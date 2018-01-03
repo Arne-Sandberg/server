@@ -18,6 +18,7 @@ import (
 const oneGigabyte = 1024 * 1024 * 1024 * 1024
 
 func (s server) FileUpload(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
 	// Parse the multipart form in the request
 	err := c.Req.ParseMultipartForm(config.GetInt64("http.upload_limit") * oneGigabyte)
 	if err != nil {
@@ -39,7 +40,7 @@ func (s server) FileUpload(c *macaron.Context) {
 		defer file.Close()
 
 		// Create the destination file making sure the path is writeable.
-		dst, err := s.filesystem.NewFileHandle(files[i].Filename)
+		dst, err := s.filesystem.NewFileHandleForUser(user, files[i].Filename)
 		if err != nil {
 			c.Error(http.StatusInternalServerError, "Could not open file for writing:", err.Error())
 			return
@@ -96,7 +97,8 @@ func (s server) SignupHandler(c *macaron.Context) {
 // Note that this handler is not called if the user is not signed in. The /login handler
 // will be called instaead.
 func (s server) IndexHandler(c *macaron.Context) {
-	files, err := s.filesystem.ListFiles(".")
+	user := c.Data["user"].(*models.User)
+	files, err := s.filesystem.ListFilesForUser(user, ".")
 	if err != nil {
 		c.Error(http.StatusInternalServerError, err.Error())
 		return
