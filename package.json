@@ -7,10 +7,13 @@
   "license": "MIT",
   "scripts": {
     "dev": "node-sass -xrw public/sass -o public/css",
-    "build": "mkdir -p public/css && node-sass --output-style compressed public/sass/style.scss > public/css/style.css"
+    "build": "mkdirp public/css && node-sass --output-style=compressed public/sass/style.scss > public/css/style.css"
   },
   "dependencies": {
     "bulma": "^0.6.1",
     "node-sass": "^4.7.2"
+  },
+  "devDependencies": {
+    "mkdirp": "^0.5.1"
   }
 }
