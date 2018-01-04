@@ -12,8 +12,7 @@ import (
 )
 
 type server struct {
-	filesystem          fs.Filesystem
-	credentialsProvider auth.CredentialsProvider
+	filesystem fs.Filesystem
 }
 
 var (
@@ -26,8 +25,7 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	}
 	log.Info("Starting router at http://%s:%d", hostname, port)
 	s = server{
-		filesystem:          filesys,
-		credentialsProvider: credProvider,
+		filesystem: filesys,
 	}
 
 	m := macaron.New()
@@ -37,13 +35,13 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m.Use(macaron.Static("node_modules/uikit/dist", macaron.StaticOptions{SkipLogging: true}))
 	m.Use(macaron.Renderer())
 
-	m.Post("/upload", s.IsUser, s.FileUpload)
-	m.Get("/", s.IsUser, s.IndexHandler)
-	m.Get("/signup", s.SignupPageHandler)
+	m.Post("/upload", s.OnlyUsers, s.FileUpload)
+	m.Get("/", s.OnlyUsers, s.IndexHandler)
+	m.Get("/signup", s.OnlyAnonymous, s.SignupPageHandler)
 	m.Post("/signup", s.SignupHandler)
-	m.Get("/login", s.LoginPageHandler)
+	m.Get("/login", s.OnlyAnonymous, s.LoginPageHandler)
 	m.Post("/login", s.LoginHandler)
-	m.Post("/logout", s.IsUser, s.LogoutHandler)
+	m.Post("/logout", s.OnlyUsers, s.LogoutHandler)
 
 	m.NotFound(s.NotFoundHandler)
 
