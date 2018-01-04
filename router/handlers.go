@@ -29,7 +29,12 @@ func (s server) FileUpload(c *macaron.Context) {
 	multiform := c.Req.MultipartForm
 
 	// Get the *fileheaders
-	files := multiform.File["files"]
+	files, ok := multiform.File["files"]
+	if !ok {
+		log.Error(0, "No 'files' form field, aborting file upload")
+		c.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	for i := range files {
 		// For each fileheader, get a handle to the actual file
 		file, err := files[i].Open()
