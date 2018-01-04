@@ -9,4 +9,8 @@ func TestRandomString(t *testing.T) {
 			t.Errorf("Expected string of length %d, but got %d", v, length)
 		}
 	}
+
+	if RandomString(10) == RandomString(10) {
+		t.Error("Expected two different random strings but got two times the same")
+	}
 }

@@ -96,7 +96,10 @@ func (s server) SignupHandler(c *macaron.Context) {
 
 	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(&user)
-	if err != nil {
+	if err == auth.ErrInvalidSignupData {
+		c.WriteHeader(http.StatusBadRequest)
+		return
+	} else if err != nil {
 		c.WriteHeader(http.StatusInternalServerError)
 		return
 	}
