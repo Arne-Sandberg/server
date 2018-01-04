@@ -11,32 +11,32 @@
 </head>
 <body>
   <header>
-    <div uk-sticky class="uk-navbar-container uk-active">
-        <div class="uk-container uk-container-expand uk-background-primary uk-light">
-            <nav uk-navbar>
-                <div class="uk-navbar-left">
-                    <a href="/" class="uk-navbar-item uk-logo">
-                      <img src="/img/cloud.svg" style="height: 32px">
-                    </a>
-                </div>
-                {{if .CurrentUser.SignedIn}}
-                <div class="uk-navbar-right">
-                    <ul class="uk-navbar-nav">
-                        <li class="uk-active">
-                            <a href="">Your Name &nbsp;<span uk-icon="icon: user"></span></a>
-                            <div uk-dropdown="pos: bottom-right; mode: click; offset: -17;">
-                                <ul class="uk-nav uk-navbar-dropdown-nav">
-                                    <li class="uk-nav-header">Options</li>
-                                    <li><a href="#">Edit Profile</a></li>
-                                    <li class="uk-nav-header">Actions</li>
-                                    <li><a href="#">Logout</a></li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                {{end}}
-            </nav>
-        </div>
-      </div>
+	<div uk-sticky class="uk-navbar-container uk-active">
+		<div class="uk-container uk-container-expand uk-background-primary uk-light">
+			<nav uk-navbar>
+				<div class="uk-navbar-left">
+					<a href="/" class="uk-navbar-item uk-logo">
+					  <img src="/img/cloud.svg" style="height: 32px">
+					</a>
+				</div>
+				{{if .CurrentUser.SignedIn}}
+				<div class="uk-navbar-right">
+					<ul class="uk-navbar-nav">
+						<li class="uk-active">
+							<a href="">Your Name &nbsp;<span uk-icon="icon: user"></span></a>
+							<div uk-dropdown="pos: bottom-right; mode: click; offset: -17;">
+								<ul class="uk-nav uk-navbar-dropdown-nav">
+									<li class="uk-nav-header">Options</li>
+									<li><a href="#">Edit Profile</a></li>
+									<li class="uk-nav-header">Actions</li>
+									<li><a href="#">Logout</a></li>
+								</ul>
+							</div>
+						</li>
+					</ul>
+				</div>
+				{{end}}
+			</nav>
+		</div>
+	  </div>
   </header>

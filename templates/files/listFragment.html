@@ -1,5 +1,5 @@
 <div class="box">
-  <table class="uk-table uk-table-striped uk-table-hover uk-table-small uk-table-responsive">
+  <table class="uk-table uk-table-divider uk-table-hover uk-table-small uk-table-responsive">
     <thead>
       <tr>
         <th class="uk-table-shrink"></th>
@@ -7,6 +7,7 @@
         <th class="uk-table-expand">Name</th>
         <th class="uk-width-1-6 uk-text-nowrap">Size</th>
         <th class="uk-width-1-6 uk-text-nowrap">Changed at</th>
+        <th class="uk-table-shrink"></th>
       </tr>
     </thead>
     <tbody>
@@ -17,7 +18,7 @@
           {{if .IsDir}}
           <span uk-icon="icon: folder"></span>
           {{else}}
-          <span uk-icon="icon: file"></span>
+          <span uk-icon="icon: copy"></span>
           {{end}}
         </td>
         <td class="uk-table-link">
@@ -28,6 +29,9 @@
         </td>
         <td>
           {{.ModTime}}
+        </td>
+        <td>
+          <a href="" class="uk-icon-button" uk-icon="icon: trash"></a>
         </td>
       </tr>
       {{end}}
