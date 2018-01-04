@@ -126,6 +126,9 @@ func (s server) LoginPageHandler(c *macaron.Context) {
 }
 
 func (s server) LoginHandler(c *macaron.Context) {
+	// Delete cookies in case the auth fails; if it succeeds this will be overwritten by the real cookie
+	c.SetCookie(config.GetString("auth.session_cookie"), "", -1) // Set a MaxAge of -1 to delete the cookie
+
 	type jsonData struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
