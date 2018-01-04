@@ -10,8 +10,8 @@
     "build": "mkdirp public/css && node-sass --output-style=compressed public/sass/style.scss > public/css/style.css"
   },
   "dependencies": {
-    "bulma": "^0.6.1",
-    "node-sass": "^4.7.2"
+    "node-sass": "^4.7.2",
+    "uikit": "^3.0.0-beta.35"
   },
   "devDependencies": {
     "mkdirp": "^0.5.1"
