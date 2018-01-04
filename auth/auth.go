@@ -88,3 +88,8 @@ func ValidateSession(sess models.Session) (valid bool) {
 func GetUserByID(uid int) (*models.User, error) {
 	return cProvider.GetUserByID(uid)
 }
+
+//RemoveSession removes the session from the session provider
+func RemoveSession(sess models.Session) (err error) {
+	return sProvider.RemoveSession(sess)
+}

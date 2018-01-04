@@ -29,7 +29,12 @@ func (s server) FileUpload(c *macaron.Context) {
 	multiform := c.Req.MultipartForm
 
 	// Get the *fileheaders
-	files := multiform.File["files"]
+	files, ok := multiform.File["files"]
+	if !ok {
+		log.Error(0, "No 'files' form field, aborting file upload")
+		c.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	for i := range files {
 		// For each fileheader, get a handle to the actual file
 		file, err := files[i].Open()
@@ -112,7 +117,7 @@ func (s server) IndexHandler(c *macaron.Context) {
 		CurrentUser *models.User
 	}{
 		files,
-		c.Data["user"].(*models.User),
+		user,
 	})
 }
 
@@ -155,6 +160,18 @@ func (s server) LoginHandler(c *macaron.Context) {
 	}
 
 	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
+	c.WriteHeader(http.StatusOK)
+}
+
+func (s server) LogoutHandler(c *macaron.Context) {
+	session := c.Data["session"].(models.Session)
+	err := auth.RemoveSession(session)
+	if err != nil {
+		log.Error(0, "Failed to remove session during logout: %v", err)
+		// Don't set an InternalServerError header because the logout should run normally on the client
+	}
+
+	c.SetCookie(config.GetString("auth.session_cookie"), "", -1) // Set a MaxAge of -1 to delete the cookie
 	c.WriteHeader(http.StatusOK)
 }
 

@@ -72,11 +72,14 @@ func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid boo
 	}
 
 	return
-
 }
 
 func (db *StormDB) StoreSession(session models.Session) error {
 	return db.c.Save(&session)
+}
+
+func (db *StormDB) RemoveSession(session models.Session) error {
+	return db.c.DeleteStruct(&session)
 }
 
 func (db *StormDB) SessionIsValid(session models.Session) bool {
