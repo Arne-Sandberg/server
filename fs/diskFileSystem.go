@@ -16,7 +16,7 @@ type DiskFilesystem struct {
 }
 
 // NewDiskFilesystem sets up a disk filesystem and returns it
-func NewDiskFilesystem(baseDir string) (*DiskFilesystem, error) {
+func NewDiskFilesystem(baseDir string) (dfs *DiskFilesystem, err error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -24,20 +24,25 @@ func NewDiskFilesystem(baseDir string) (*DiskFilesystem, error) {
 	}
 
 	// Check if the base directory does not exist. If it doesn't, create it.
-	_, err = os.Stat(base)
+	baseInfo, err := os.Stat(base)
 	if os.IsNotExist(err) {
 		log.Info("Base directory does not exist, creating it now")
-		err := os.Mkdir(base, 0755)
+		err = os.Mkdir(base, 0755)
 		if err != nil {
 			log.Error(0, "Could not create base directory: %v", err)
-			return nil, err
+			return
 		}
+	} else if !baseInfo.IsDir() {
+		log.Fatal(0, "Base directory does exist but is not a directory")
+		return
 	} else if err != nil {
-		log.Warn("Could not check if base directory exists, assuming it does")
+		log.Fatal(0, "Could not check if base directory exists: %v", err)
+		return
 	}
 
 	log.Info("Initialized filesystem at base directory %s", base)
-	return &DiskFilesystem{base}, nil
+	dfs = &DiskFilesystem{base}
+	return
 }
 
 // NewFileHandle opens an *os.File handle for writing to
