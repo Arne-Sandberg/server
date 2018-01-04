@@ -1,6 +1,9 @@
 (function() {
 	document.addEventListener("DOMContentLoaded", () => {
-		document.querySelector("#logoutButton").onclick = onLogoutClick;
+		let logoutButton = document.querySelector("#logoutButton");
+		if (logoutButton) { //Check needed for sites without a logged in user
+			logoutButton.onclick = onLogoutClick;
+		}
 	});
 
 	function onLogoutClick() {

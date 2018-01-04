@@ -72,7 +72,6 @@ func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid boo
 	}
 
 	return
-
 }
 
 func (db *StormDB) StoreSession(session models.Session) error {
