@@ -21,7 +21,7 @@
 		name: "files",
 
 		error: function () {
-			console.log("UiKit upload error", arguments);
+			UIkit.notification({message: "An error occured during the file upload!", status: "danger"})
 		},
 
 		loadStart: function (e) {

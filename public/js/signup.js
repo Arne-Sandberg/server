@@ -57,9 +57,9 @@
       if (event.target.value.length < 8) {
         passwordField.classList.add("uk-form-danger");
         passwordField.classList.remove("uk-form-success");
-        //passwordFieldHelp.classList.remove("is-invisible");
+        passwordFieldHelp.removeAttribute("hidden");
       } else {
-        //passwordFieldHelp.classList.add("is-invisible");
+        passwordFieldHelp.setAttribute("hidden", "")
         passwordField.classList.add("uk-form-success");
         passwordField.classList.remove("uk-form-danger");
       }
@@ -71,11 +71,11 @@
       if (event.target.value !== passwordField.value) {
         passwordConfirmField.classList.add("uk-form-danger");
         passwordConfirmField.classList.remove("uk-form-success");
-        //passwordConfirmHelp.classList.remove("is-invisible");
+        passwordConfirmHelp.removeAttribute("hidden");
       } else {
         passwordConfirmField.classList.remove("uk-form-danger");
         passwordConfirmField.classList.add("uk-form-success");
-        //passwordConfirmHelp.classList.add("is-invisible");
+        passwordConfirmHelp.setAttribute("hidden", "")
       }
 
       checkButtonActivation();
@@ -85,11 +85,10 @@
 
   function onSignupSubmit() {
     // First of all, validate the passwords match
-    // TODO: also validate the passwords on input
     if (passwordField.value !== passwordConfirmField.value) {
       passwordConfirmField.classList.add("uk-form-danger");
       passwordConfirmHelp.classList.add("uk-form-danger");
-      //passwordConfirmHelp.classList.remove("is-invisible");
+      passwordConfirmHelp.removeAttribute("hidden");
       return false;
     }
 
