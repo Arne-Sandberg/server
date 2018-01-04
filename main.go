@@ -29,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	auth.Init(database)
+	auth.Init(database, database)
 
 	router.Start(config.GetInt("http.port"), config.GetString("http.host"), filesystem, database)
 }

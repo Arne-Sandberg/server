@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/riesinger/freecloud/auth"
 
@@ -93,8 +92,7 @@ func (s server) SignupHandler(c *macaron.Context) {
 		c.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	c.SetCookie(config.GetString("auth.session_cookie"), string(session))
-	c.SetCookie(config.GetString("auth.user_cookie"), strconv.Itoa(user.ID))
+	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
 	c.WriteHeader(http.StatusOK)
 }
 
@@ -144,7 +142,7 @@ func (s server) LoginHandler(c *macaron.Context) {
 		return
 	}
 
-	session, uid, err := auth.NewSession(data.Email, data.Password)
+	session, err := auth.NewSession(data.Email, data.Password)
 	if err == auth.ErrInvalidCredentials {
 		log.Info("Invalid credentials for user %s", data.Email)
 		c.WriteHeader(http.StatusUnauthorized)
@@ -156,8 +154,7 @@ func (s server) LoginHandler(c *macaron.Context) {
 		return
 	}
 
-	c.SetCookie(config.GetString("auth.session_cookie"), string(session))
-	c.SetCookie(config.GetString("auth.user_cookie"), strconv.Itoa(uid))
+	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
 	c.WriteHeader(http.StatusOK)
 }
 

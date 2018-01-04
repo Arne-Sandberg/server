@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/riesinger/freecloud/models"
@@ -14,57 +13,55 @@ import (
 const SessionTokenLength = 32
 
 var (
-	provider CredentialsProvider
+	cProvider CredentialsProvider
+	sProvider SessionProvider
 
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
-func Init(cprovider CredentialsProvider) {
-	provider = cprovider
-	sessions = make(map[int][]Session)
+func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider) {
+	cProvider = credentialsProvider
+	sProvider = sessionProvider
 }
 
-// Session represents a user session, denoted in a cryptographically secure string
-type Session string
-
-var sessions map[int][]Session
-
 // NewSession verifies the user's credentials and then returns a new Session
-func NewSession(email string, password string) (Session, int, error) {
+func NewSession(email string, password string) (models.Session, error) {
 	// First, do some sanity checks before verification
 	if len(password) == 0 {
-		return "", -1, ErrMissingCredentials
+		return models.Session{}, ErrMissingCredentials
 	}
 	// Get the user
-	user, err := provider.GetUserByEmail(email)
+	user, err := cProvider.GetUserByEmail(email)
 	if err != nil {
 		log.Error(0, "Could not get user with email %s: %v", email, err)
-		return "", -1, err
+		return models.Session{}, err
 	}
 	// Now, verify the password
 	valid, err := ValidatePassword(password, user.Password)
 	if err != nil {
 		log.Error(0, "Password verification failed: %v", err)
-		return "", -1, err
+		return models.Session{}, err
 	}
 	if valid {
-		return newUnverifiedSession(user.ID), user.ID, nil
+		return newUnverifiedSession(user.ID), nil
 	}
-	return "", -1, ErrInvalidCredentials
+	return models.Session{}, ErrInvalidCredentials
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(uid int) Session {
-	sess := Session(utils.RandomString(SessionTokenLength))
-	sessions[uid] = append(sessions[uid], sess)
-	log.Trace("Sessions: %v", sessions)
+func newUnverifiedSession(uid int) models.Session {
+	sess := models.Session{UID: uid, Token: utils.RandomString(SessionTokenLength)}
+	err := sProvider.StoreSession(sess)
+	if err != nil {
+		log.Error(0, "Could not store session: %v", err)
+	}
 	return sess
 }
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
-func NewUser(user *models.User) (session Session, err error) {
+func NewUser(user *models.User) (session models.Session, err error) {
 	user.Created = time.Now().UTC()
 	user.Updated = time.Now().UTC()
 	user.Password, err = HashPassword(user.Password)
@@ -74,7 +71,7 @@ func NewUser(user *models.User) (session Session, err error) {
 	}
 
 	// Save the user. This also fills its ID
-	err = provider.CreateUser(user)
+	err = cProvider.CreateUser(user)
 	if err != nil {
 		return
 	}
@@ -84,18 +81,6 @@ func NewUser(user *models.User) (session Session, err error) {
 }
 
 // ValidateSession checks if the session is valid.
-func ValidateSession(userID int, sess Session) (valid bool, err error) {
-	userSessions, ok := sessions[userID]
-	if !ok {
-		err = fmt.Errorf("no sessions for this user")
-		return
-	}
-	for _, v := range userSessions {
-		if v == sess {
-			valid = true
-			err = nil
-			return
-		}
-	}
-	return
+func ValidateSession(sess models.Session) (valid bool) {
+	return sProvider.SessionIsValid(sess)
 }
