@@ -2,11 +2,11 @@ package router
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/riesinger/freecloud/auth"
 	"github.com/riesinger/freecloud/config"
+	"github.com/riesinger/freecloud/models"
 
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
@@ -35,23 +35,19 @@ func (s server) Logging() macaron.Handler {
 
 func (s server) IsUser(c *macaron.Context) {
 
-	if session, user := c.GetCookie(config.GetString("auth.session_cookie")), c.GetCookie(config.GetString("auth.user_cookie")); session == "" || user == "" {
+	if sessionStr := c.GetCookie(config.GetString("auth.session_cookie")); sessionStr == "" {
 		c.Redirect("/login", http.StatusFound)
 		return
 	} else {
 		// convert the user cookie to a user id
-		userID, err := strconv.ParseInt(user, 10, 0)
+		session, err := models.ParseSessionCookieString(sessionStr)
 		if err != nil {
-			log.Error(0, "Could not convert userID %s to an integer", user, err)
+			log.Error(0, "Could not parse session token: %v", err)
 			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		valid, err := auth.ValidateSession(int(userID), auth.Session(session))
-		if err != nil {
-			log.Error(0, "Could not validate session: %v", err)
-			c.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		valid := auth.ValidateSession(session)
+
 		if !valid {
 			log.Warn("Invalid session")
 			c.Redirect("/login", http.StatusFound)
@@ -59,7 +55,7 @@ func (s server) IsUser(c *macaron.Context) {
 		}
 
 		// If the session is valid, fill the context's user data
-		user, err := s.credentialsProvider.GetUserByID(int(userID))
+		user, err := s.credentialsProvider.GetUserByID(session.UID)
 		if err != nil {
 			log.Warn("Filling user data in middleware failed: %v", err)
 			c.WriteHeader(http.StatusInternalServerError)

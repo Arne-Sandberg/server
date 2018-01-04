@@ -74,3 +74,21 @@ func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid boo
 	return
 
 }
+
+func (db *StormDB) StoreSession(session models.Session) error {
+	return db.c.Save(&session)
+}
+
+func (db *StormDB) SessionIsValid(session models.Session) bool {
+	var s models.Session
+	err := db.c.One("Token", session.Token, &s)
+	if err != nil {
+		log.Info("Could not get session for verification, assuming it is invalid: %v", err)
+		return false
+	}
+	if s.UID != session.UID {
+		log.Warn("Session token existed, but has different UID: %d vs %d", s.UID, session.UID)
+		return false
+	}
+	return true
+}
