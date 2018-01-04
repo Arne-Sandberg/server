@@ -21,7 +21,8 @@ func (s server) FileUpload(c *macaron.Context) {
 	// Parse the multipart form in the request
 	err := c.Req.ParseMultipartForm(config.GetInt64("http.upload_limit") * oneGigabyte)
 	if err != nil {
-		c.Error(http.StatusInternalServerError, "File upload failed:", err.Error())
+		log.Error(0, "File upload failed: %v", err)
+		c.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -33,7 +34,8 @@ func (s server) FileUpload(c *macaron.Context) {
 		// For each fileheader, get a handle to the actual file
 		file, err := files[i].Open()
 		if err != nil {
-			c.Error(http.StatusInternalServerError, "Could not open file:", err.Error())
+			log.Error(0, "Could not open file: %v", err)
+			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		defer file.Close()
@@ -41,19 +43,22 @@ func (s server) FileUpload(c *macaron.Context) {
 		// Create the destination file making sure the path is writeable.
 		dst, err := s.filesystem.NewFileHandleForUser(user, files[i].Filename)
 		if err != nil {
-			c.Error(http.StatusInternalServerError, "Could not open file for writing:", err.Error())
+			log.Error(0, "Could not open file for writing: %v", err)
+			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		defer dst.Close()
 
 		// Copy the uploaded file to the destination file
 		if _, err := io.Copy(dst, file); err != nil {
-			c.Error(http.StatusInternalServerError, "Could not copy the file:", err.Error())
+			log.Error(0, "Could not copy the file: %v", err)
+			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
 
-	c.HTML(http.StatusCreated, "files/upload", "Upload successful!")
+	c.WriteHeader(http.StatusCreated)
+	//c.HTML(http.StatusCreated, "files/upload", "Upload successful!")
 }
 
 func (s server) SignupPageHandler(c *macaron.Context) {
@@ -98,7 +103,8 @@ func (s server) IndexHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	files, err := s.filesystem.ListFilesForUser(user, ".")
 	if err != nil {
-		c.Error(http.StatusInternalServerError, err.Error())
+		log.Error(0, "%v", err)
+		c.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	c.HTML(200, "index", struct {

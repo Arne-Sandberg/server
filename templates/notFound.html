@@ -1,19 +1,14 @@
 {{template "base/header" .}}
-<section class="section">
-	<div class="container">
-		<article class="media">
-				<figure class="media-left">
-					<p class="image is-128x128">
-						<img src="/img/warning.png">
-					</p>
-				</figure>
-				<div class="media-content">
-					<div class="content">
-							<p class="title is-1">404 Not Found</p>
-							<p class="subtitle is-5"><a href="/">Get back on track</a></p>
-					</div>
+<div class="uk-section-large">
+	<div class="uk-container">
+		<div class="uk-card uk-card-default" uk-grid>
+			<div>
+				<div class="uk-card-body">
+					<h1 class="uk-card-title">404 - This page does not exist</h1>
+					<a href="/">Get back on track</a>
 				</div>
-		</article>
+			</div>
+		</div>
 	</div>
-</section>
+</div>
 {{template "base/footer" .}}

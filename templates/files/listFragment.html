@@ -1,26 +1,37 @@
 <div class="box">
-  <table class="file-list">
-    <thead class="file-list--header">
+  <table class="uk-table uk-table-divider uk-table-hover uk-table-small uk-table-responsive">
+    <thead>
       <tr>
-        <th class="file-list--header-cell name">Name</th>
-        <th class="file-list--header-cell size">Size</th>
+        <th class="uk-table-shrink"></th>
+        <th class="uk-table-shrink"></th>
+        <th class="uk-table-expand">Name</th>
+        <th class="uk-width-1-6 uk-text-nowrap">Size</th>
+        <th class="uk-width-1-6 uk-text-nowrap">Changed at</th>
+        <th class="uk-table-shrink"></th>
       </tr>
     </thead>
-    <tbody class="file-list--items">
+    <tbody>
       {{range .Files}}
-      <tr class="file-list--item">
-        <td class="file-list--cell file-list--cell_name">
-          <div class="icon is-large">
-            {{if .IsDir}}
-            <i class="fa fa-folder fa-2x"></i>
-            {{else}}
-            <i class="fa fa-file"></i>
-            {{end}}
-          </div>
-          {{.Name}}
+      <tr>
+        <td><input class="uk-checkbox" type="checkbox"></td>
+        <td>
+          {{if .IsDir}}
+          <span uk-icon="icon: folder"></span>
+          {{else}}
+          <span uk-icon="icon: copy"></span>
+          {{end}}
         </td>
-        <td class="file-list--cell file-list--cell_size">
+        <td class="uk-table-link">
+          <a class="uk-link-reset" href="">{{.Name}}</a>
+        </td>
+        <td>
           {{.Size}}
+        </td>
+        <td>
+          {{.ModTime}}
+        </td>
+        <td>
+          <a href="" class="uk-icon-button" uk-icon="icon: trash"></a>
         </td>
       </tr>
       {{end}}

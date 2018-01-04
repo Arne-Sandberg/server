@@ -1,4 +1,51 @@
-<form action="/upload" method="post" enctype="multipart/form-data">
-  <input type="file" name="files" id="files" multiple="multiple" class="button">
-  <input type="submit" name="submit" value="Upload" class="button">
-</form>
+<div class="js-upload uk-placeholder uk-text-center">
+	<span uk-icon="icon: cloud-upload"></span>
+	<span class="uk-text-middle">Attach binaries by dropping them here or</span>
+	<div uk-form-custom>
+		<input type="file" multiple>
+		<span class="uk-link">selecting one</span>
+	</div>
+</div>
+
+<progress id="js-progressbar" class="uk-progress" value="0" max="100"></progress>
+
+<script>
+
+	var bar = document.getElementById("js-progressbar");
+
+	UIkit.upload(".js-upload", {
+
+		url: "/upload",
+		multiple: true,
+		type: "POST",
+		name: "files",
+
+		error: function () {
+			UIkit.notification({message: "An error occured during the file upload!", status: "danger"})
+		},
+
+		loadStart: function (e) {
+			bar.max = e.total;
+			bar.value = e.loaded;
+		},
+
+		progress: function (e) {
+			bar.max = e.total;
+			bar.value = e.loaded;
+		},
+
+		loadEnd: function (e) {
+			bar.max = e.total;
+			bar.value = e.loaded;
+		},
+
+		completeAll: function () {
+			// Reload the page so that the uploaded file is shown
+			// This should be replaced by WebSockets or similar so that a reload is not needed
+			UIkit.notification({message: "File(s) successfully uploaded.<br />This page will be reloaded shortly!", status: "success"})
+			setTimeout(function(){ location.reload(); }, 1500);
+		}
+
+	});
+
+</script>
