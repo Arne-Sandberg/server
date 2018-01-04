@@ -18,6 +18,7 @@ var (
 
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
+	ErrInvalidSignupData  = errors.New("auth: Invalid signup data")
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
@@ -62,6 +63,11 @@ func newUnverifiedSession(uid int) models.Session {
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
+	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 {
+		err = ErrInvalidSignupData
+		return
+	}
+
 	user.Created = time.Now().UTC()
 	user.Updated = time.Now().UTC()
 	user.Password, err = HashPassword(user.Password)

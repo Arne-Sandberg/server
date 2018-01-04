@@ -54,7 +54,7 @@
     });
 
     passwordField.addEventListener("input", (event) => {
-      if (event.target.value.length < 8) {
+      if (event.target.value.length < 6) {
         passwordField.classList.add("uk-form-danger");
         passwordField.classList.remove("uk-form-success");
         passwordFieldHelp.removeAttribute("hidden");
@@ -117,8 +117,7 @@
   }
 
   function validateEmail(email) {
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(email.toLowerCase());
+    return email.includes("@") && email.includes(".")
   }
 
   function checkButtonActivation() {
