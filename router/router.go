@@ -43,6 +43,7 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m.Post("/signup", s.SignupHandler)
 	m.Get("/login", s.LoginPageHandler)
 	m.Post("/login", s.LoginHandler)
+	m.Post("/logout", s.IsUser, s.LogoutHandler)
 
 	m.NotFound(s.NotFoundHandler)
 

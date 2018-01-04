@@ -84,3 +84,8 @@ func NewUser(user *models.User) (session models.Session, err error) {
 func ValidateSession(sess models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)
 }
+
+//RemoveSession removes the session from the session provider
+func RemoveSession(sess models.Session) (err error) {
+	return sProvider.RemoveSession(sess)
+}
