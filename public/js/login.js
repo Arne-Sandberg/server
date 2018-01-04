@@ -3,7 +3,7 @@
   let passwordField;
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector("form").onsubmit = onLoginSubmit;
+    document.querySelector("#loginForm").onsubmit = onLoginSubmit;
     emailField = document.querySelector("input[name='email']");
     passwordField = document.querySelector("input[name='password']");
   });
@@ -17,13 +17,16 @@
         password: passwordField.value,
       })
     }).then((res) => {
-      if (res.status !== 200) {
-        alert("Login failed with status code " + res.status);
+      if (res.status == 401) {
+        UIkit.notification({message: "Wrong email address or password!", status: "danger"})
+        return
+      } else if (res.status !== 200) {
+        UIkit.notification({message: "Login failed with status code " + res.status, status: "danger"})
         return;
       }
       window.location.href = "/";
     }).catch((err) => {
-      alert("Login failed, because " + err);
+      UIkit.notification({message: "Login failed because of " + err, status: "danger"})
     });
 
     // This is done to prevent a reload

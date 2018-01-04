@@ -1,88 +1,81 @@
 {{template "base/header" .}}
-<section class="section">
-  <div class="container">
-    <h1 class="title">Create your freecloud account&hellip;</h1>
-    <h2 class="subtitle">&hellip; and start uploading your favorite files right away!</h2>
-    <div class="section"></div>
-    <form class="form signup-form" action="javascript:void(0);">
-      <div class="field is-horizontal">
-        <div class="field-label is-normal">
-          <label class="label">Name</label>
-        </div>
-        <div class="field-body">
-          <div class="field">
-            <p class="control has-icons-left has-icons-right is-expanded">
-              <input name="fname" type="text" class="input" placeholder="John">
-              <span class="icon is-small is-left">
-                <i class="fa fa-user"></i>
-              </span>
-            </p>
-          </div>
-          <div class="field">
-            <p class="control has-icons-left has-icons-right is-expanded">
-              <input name="lname" type="text" class="input" placeholder="Doe">
-              <span class="icon is-small is-left">
-                <i class="fa fa-user"></i>
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="field is-horizontal">
-        <div class="field-label is-normal">
-          <label for="email" class="label">Email</label>
-        </div>
-        <div class="field-body">
-          <div class="field">
-            <div class="control has-icons-left">
-              <input name="email" type="email" class="input" placeholder="john.doe@example.org">
-              <span class="icon is-small is-left">
-                <i class="fa fa-envelope"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="field is-horizontal">
-        <div class="field-label is-normal">
-          <label for="password" class="label">Password</label>
-        </div>
-        <div class="field-body">
-          <div class="field">
-            <div class="control has-icons-left has-icons-right">
-              <input name="password" type="password" class="input" placeholder="Password">
-              <span class="icon is-small is-left">
-                <i class="fa fa-key"></i>
-              </span>
-            </div>
-            <p class="help is-invisible is-danger password-help">Please make your password at least 8 characters long</p>
-          </div>
-          <div class="field">
-            <div class="field">
-              <div class="control has-icons-left has-icons-right">
-                <input name="password-confirm" type="password" class="input" placeholder="Confirm Password">
-                <span class="icon is-small is-left">
-                  <i class="fa fa-key"></i>
-                </span>
-              </div>
-              <p class="help is-invisible is-danger password-confirm-help">Passwords don't match</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="level">
-        <div class="level-left"></div>
-        <div class="level-right">
-          <div class="level-item">
-            <div class="level-item">
-              <a href="/login" class="button is-text">I already have an account</a>
-            </div>
-            <input type="submit" class="button is-primary is-right" value="Sign up" disabled></input>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
-</section>
+<div class="uk-section-large">
+	<div class="uk-container uk-container-large">
+		<div uk-grid class="uk-child-width-1-1@s uk-child-width-2-3@l">
+			<div class="uk-width-1-1@s uk-width-1-5@l uk-width-1-3@xl"></div>
+			<div class="uk-width-1-1@s uk-width-3-5@l uk-width-1-3@xl">
+				<div class="uk-card uk-card-default">
+					<div class="uk-card-body">
+						<center>
+							<h1>Register to freecloud!</h1>
+							<br />
+						</center>
+						<form action="javascript:void(0);" id="signupForm">
+							<fieldset class="uk-fieldset">
+								<div class="uk-margin">
+									<label for="fname">First name</label>
+									<div class="uk-position-relative">
+										<div class="uk-form-controls">
+											<span class="uk-form-icon" uk-icon="icon: user"></span>
+											<input name="fname" class="uk-input" type="text" placeholder="John">
+										</div>
+									</div>
+								</div>
+								<div class="uk-margin">
+									<label for="lname">Last name</label>
+									<div class="uk-position-relative">
+										<div class="uk-form-controls">
+											<span class="uk-form-icon" uk-icon="icon: user"></span>
+											<input name="lname" class="uk-input" type="text" placeholder="Doe">
+										</div>
+									</div>
+								</div>
+								<div class="uk-margin">
+									<label for="email">Email</label>
+									<div class="uk-position-relative">
+										<div class="uk-form-controls">
+											<span class="uk-form-icon" uk-icon="icon: mail"></span>
+											<input name="email" class="uk-input" type="text" placeholder="john.doe@example.com">
+										</div>
+									</div>
+								</div>
+								<div class="uk-margin">
+									<label for="password">Password</label>
+									<div class="uk-position-relative">
+										<div class="uk-form-controls">
+											<span class="uk-form-icon" uk-icon="icon: lock"></span>
+											<input name="password" class="uk-input" type="password" placeholder="SecretPassword">
+										</div>
+									</div>
+								</div>
+								<div class="uk-margin">
+									<label for="password-confirm">Confirm Password</label>
+									<div class="uk-position-relative">
+										<div class="uk-form-controls">
+											<span class="uk-form-icon" uk-icon="icon: lock"></span>
+											<input name="password-confirm" class="uk-input" type="password" placeholder="SecretPassword">
+										</div>
+									</div>
+								</div>
+								<div class="uk-margin">
+									<button type="submit" class="uk-button uk-button-primary" value="Login">
+										Register
+									</button>
+								</div>
+								<hr />
+								<center>
+									<a href="/login">
+										I already have an account!
+									</a>
+								</center>
+							</fieldset>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div class="uk-width-1-1@s uk-width-1-5@l uk-width-1-3@xl"></div>
+		</div>
+	</div>
+</div>
 <script src="/js/signup.js"></script>
 {{template "base/footer" .}}

@@ -42,7 +42,8 @@
 		completeAll: function () {
 			// Reload the page so that the uploaded file is shown
 			// This should be replaced by WebSockets or similar so that a reload is not needed
-			location.reload();
+			UIkit.notification({message: "File(s) successfully uploaded.<br />This page will be reloaded shortly!", status: "success"})
+			setTimeout(function(){ location.reload(); }, 1500);
 		}
 
 	});

@@ -8,7 +8,7 @@
   let submitButton;
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector("form.signup-form").onsubmit = onSignupSubmit;
+    document.querySelector("#signupForm").onsubmit = onSignupSubmit;
     fnameField = document.querySelector("input[name='fname']");
     lnameField = document.querySelector("input[name='lname']");
     emailField = document.querySelector("input[name='email']");
@@ -16,14 +16,13 @@
     passwordFieldHelp = document.querySelector(".help.password-help");
     passwordConfirmField = document.querySelector("input[name='password-confirm']");
     passwordConfirmHelp = document.querySelector(".help.password-confirm-help");
-    submitButton = document.querySelector("input[type='submit']")
-
+    submitButton = document.querySelector("button[type='submit']")
 
     fnameField.addEventListener("input", (event) => {
       if (event.target.value.length > 0) {
-        event.target.classList.add("is-success");
+        event.target.classList.add("uk-form-success");
       } else {
-        event.target.classList.remove("is-success");
+        event.target.classList.remove("uk-form-success");
       }
 
       checkButtonActivation();
@@ -31,9 +30,9 @@
 
     lnameField.addEventListener("input", (event) => {
       if (event.target.value.length > 0) {
-        event.target.classList.add("is-success");
+        event.target.classList.add("uk-form-success");
       } else {
-        event.target.classList.remove("is-success");
+        event.target.classList.remove("uk-form-success");
       }
 
       checkButtonActivation();
@@ -41,14 +40,14 @@
 
     emailField.addEventListener("input", (event) => {
       if (event.target.value.length == 0) {
-        event.target.classList.remove("is-success");
-        event.target.classList.remove("is-danger");
+        event.target.classList.remove("uk-form-success");
+        event.target.classList.remove("uk-form-danger");
       } else if (validateEmail(event.target.value)) {
-        event.target.classList.remove("is-danger");
-        event.target.classList.add("is-success");
+        event.target.classList.remove("uk-form-danger");
+        event.target.classList.add("uk-form-success");
       } else {
-        event.target.classList.remove("is-success");
-        event.target.classList.add("is-danger");
+        event.target.classList.remove("uk-form-success");
+        event.target.classList.add("uk-form-danger");
       }
 
       checkButtonActivation();
@@ -56,13 +55,13 @@
 
     passwordField.addEventListener("input", (event) => {
       if (event.target.value.length < 8) {
-        passwordField.classList.add("is-danger");
-        passwordField.classList.remove("is-success");
-        passwordFieldHelp.classList.remove("is-invisible");
+        passwordField.classList.add("uk-form-danger");
+        passwordField.classList.remove("uk-form-success");
+        //passwordFieldHelp.classList.remove("is-invisible");
       } else {
-        passwordFieldHelp.classList.add("is-invisible");
-        passwordField.classList.add("is-success");
-        passwordField.classList.remove("is-danger");
+        //passwordFieldHelp.classList.add("is-invisible");
+        passwordField.classList.add("uk-form-success");
+        passwordField.classList.remove("uk-form-danger");
       }
 
       checkButtonActivation();
@@ -70,13 +69,13 @@
 
     passwordConfirmField.addEventListener("input", (event) => {
       if (event.target.value !== passwordField.value) {
-        passwordConfirmField.classList.add("is-danger");
-        passwordConfirmField.classList.remove("is-success");
-        passwordConfirmHelp.classList.remove("is-invisible");
+        passwordConfirmField.classList.add("uk-form-danger");
+        passwordConfirmField.classList.remove("uk-form-success");
+        //passwordConfirmHelp.classList.remove("is-invisible");
       } else {
-        passwordConfirmField.classList.remove("is-danger");
-        passwordConfirmField.classList.add("is-success");
-        passwordConfirmHelp.classList.add("is-invisible");
+        passwordConfirmField.classList.remove("uk-form-danger");
+        passwordConfirmField.classList.add("uk-form-success");
+        //passwordConfirmHelp.classList.add("is-invisible");
       }
 
       checkButtonActivation();
@@ -88,9 +87,9 @@
     // First of all, validate the passwords match
     // TODO: also validate the passwords on input
     if (passwordField.value !== passwordConfirmField.value) {
-      passwordConfirmField.classList.add("is-danger");
-      passwordConfirmHelp.classList.add("is-danger");
-      passwordConfirmHelp.classList.remove("is-invisible");
+      passwordConfirmField.classList.add("uk-form-danger");
+      passwordConfirmHelp.classList.add("uk-form-danger");
+      //passwordConfirmHelp.classList.remove("is-invisible");
       return false;
     }
 
@@ -105,12 +104,12 @@
       })
     }).then((res) => {
       if (res.status !== 200) {
-        alert("Signup failed with status code " + res.status);
+        UIkit.notification({message: "Signup failed with status code " + res.status, status: "danger"})
         return;
       }
       window.location.href = "/";
     }).catch((err) => {
-      alert("Signup failed, because " + err);
+      UIkit.notification({message: "Signup failed beacuse of " + err, status: "danger"})
     });
 
 
@@ -124,11 +123,11 @@
   }
 
   function checkButtonActivation() {
-    if (fnameField.classList.contains("is-success") &&
-        lnameField.classList.contains("is-success") &&
-        emailField.classList.contains("is-success") &&
-        passwordField.classList.contains("is-success") &&
-        passwordConfirmField.classList.contains("is-success")) {
+    if (fnameField.classList.contains("uk-form-success") &&
+        lnameField.classList.contains("uk-form-success") &&
+        emailField.classList.contains("uk-form-success") &&
+        passwordField.classList.contains("uk-form-success") &&
+        passwordConfirmField.classList.contains("uk-form-success")) {
       submitButton.removeAttribute("disabled")
     } else {
       submitButton.setAttribute("disabled", "")
