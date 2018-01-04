@@ -3,7 +3,7 @@
   let passwordField;
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector("form.login-form").onsubmit = onLoginSubmit;
+    document.querySelector("form").onsubmit = onLoginSubmit;
     emailField = document.querySelector("input[name='email']");
     passwordField = document.querySelector("input[name='password']");
   });
