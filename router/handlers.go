@@ -73,6 +73,9 @@ func (s server) SignupPageHandler(c *macaron.Context) {
 // SignupHandler handles the /signup route, when a POST request is made to it.
 // It creates a new user and returns a session and user cookie.
 func (s server) SignupHandler(c *macaron.Context) {
+	// Delete cookies in case the auth fails; if it succeeds this will be overwritten by the real cookie
+	c.SetCookie(config.GetString("auth.session_cookie"), "", -1) // Set a MaxAge of -1 to delete the cookie
+
 	if c.Req.Request.Body == nil {
 		log.Warn("No user data received while signing up")
 		c.WriteHeader(http.StatusBadRequest)
