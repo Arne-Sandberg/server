@@ -79,6 +79,10 @@ func (db *StormDB) StoreSession(session models.Session) error {
 	return db.c.Save(&session)
 }
 
+func (db *StormDB) RemoveSession(session models.Session) error {
+	return db.c.DeleteStruct(&session)
+}
+
 func (db *StormDB) SessionIsValid(session models.Session) bool {
 	var s models.Session
 	err := db.c.One("Token", session.Token, &s)

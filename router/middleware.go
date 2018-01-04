@@ -63,6 +63,7 @@ func (s server) IsUser(c *macaron.Context) {
 		}
 		user.SignedIn = true
 		c.Data["user"] = user
+		c.Data["session"] = session
 	}
 
 }
