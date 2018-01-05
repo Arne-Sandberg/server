@@ -47,45 +47,45 @@ func (s server) OnlyAdmins(c *macaron.Context) {
 }
 
 func (s server) OnlyUsers(c *macaron.Context) {
-	if sessionStr := c.GetCookie(config.GetString("auth.session_cookie")); sessionStr == "" {
+	sessionStr := c.GetCookie(config.GetString("auth.session_cookie"))
+	if sessionStr == "" {
 		c.Redirect("/login", http.StatusFound)
 		return
-	} else {
-		session, err := models.ParseSessionCookieString(sessionStr)
-		// This probably also means the session is invalid, so redirect time it is!
-		if err != nil {
-			log.Error(0, "Could not parse session token: %v", err)
-			c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
-			c.Redirect("/login", http.StatusFound)
-			return
-		}
-		valid := auth.ValidateSession(session)
-		if !valid {
-			log.Warn("Invalid session")
-			c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
-			c.Redirect("/login", http.StatusFound)
-			return
-		}
-
-		// If the session is valid, fill the context's user data
-		user, err := auth.GetUserByID(session.UID)
-		if err != nil {
-			log.Warn("Filling user data in middleware failed: %v", err)
-			c.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		user.SignedIn = true
-		c.Data["user"] = user
-		c.Data["session"] = session
 	}
+
+	session, err := models.ParseSessionCookieString(sessionStr)
+	// This probably also means the session is invalid, so redirect time it is!
+	if err != nil {
+		log.Error(0, "Could not parse session token: %v", err)
+		c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
+		c.Redirect("/login", http.StatusFound)
+		return
+	}
+	valid := auth.ValidateSession(session)
+	if !valid {
+		log.Warn("Invalid session")
+		c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
+		c.Redirect("/login", http.StatusFound)
+		return
+	}
+
+	// If the session is valid, fill the context's user data
+	user, err := auth.GetUserByID(session.UID)
+	if err != nil {
+		log.Warn("Filling user data in middleware failed: %v", err)
+		c.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	user.SignedIn = true
+	c.Data["user"] = user
+	c.Data["session"] = session
 }
 
 func (s server) OnlyAnonymous(c *macaron.Context) {
 	if sessionStr := c.GetCookie(config.GetString("auth.session_cookie")); sessionStr == "" {
 		// We were successfully identified as nobody ;)
 		return
-	} else {
-		c.Redirect("/", http.StatusFound)
-		return
 	}
+
+	c.Redirect("/", http.StatusFound)
 }

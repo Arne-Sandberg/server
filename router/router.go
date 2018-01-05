@@ -19,6 +19,7 @@ var (
 	s server
 )
 
+// Start starts the router with the given settings
 func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.CredentialsProvider) {
 	if config.GetBool("http.ssl") {
 		log.Warn("SSL is not implemented yet, falling back to HTTP")
