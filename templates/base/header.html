@@ -1,43 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Freecloud</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="/js/uikit.min.js"></script>
-  <script src="/js/uikit-icons.min.js"></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Freecloud</title>
+	<link rel="stylesheet" href="/css/style.css">
+	<script src="/js/uikit.min.js"></script>
+	<script src="/js/uikit-icons.min.js"></script>
 </head>
+
 <body>
-  <header>
-	<div uk-sticky class="uk-navbar-container uk-active">
-		<div class="uk-container uk-container-expand uk-background-primary uk-light">
-			<nav uk-navbar>
-				<div class="uk-navbar-left">
-					<a href="/" class="uk-navbar-item uk-logo">
-					  <img src="/img/cloud.svg" style="height: 32px">
-					</a>
-				</div>
-				{{if .CurrentUser.SignedIn}}
-				<div class="uk-navbar-right">
-					<ul class="uk-navbar-nav">
-						<li class="uk-active">
-							<a href="">{{.CurrentUser.FirstName}} {{.CurrentUser.LastName}} &nbsp;<span uk-icon="icon: user"></span></a>
-							<div uk-dropdown="pos: bottom-right; mode: click; offset: -17;">
-								<ul class="uk-nav uk-navbar-dropdown-nav">
-									<li class="uk-nav-header">Options</li>
-									<li><a href="#">Edit Profile</a></li>
-									<li class="uk-nav-header">Actions</li>
-									<li><a href="#" id="logoutButton">Logout</a></li>
-								</ul>
+	<header>
+		<div uk-sticky class="uk-navbar-container uk-active">
+			<div class="uk-container uk-container-expand uk-background-primary uk-light">
+				<nav uk-navbar>
+					<div class="uk-navbar-left">
+						<a href="/" class="uk-navbar-item uk-logo">
+							<img src="/img/cloud.svg" style="height: 32px">
+						</a>
+						<a class="uk-icon-button uk-margin-left" type="button" uk-icon="icon: plus"></a>
+						<div uk-dropdown="mode: click">
+							<ul class="uk-nav uk-dropdown-nav">
+								<li>
+									<a href="#" uk-toggle="target: #create-directory-modal">Create a directory</a>
+								</li>
+								<li>
+									<a href="#">Upload files</a>
+								</li>
+							</ul>
+						</div>
+						<!-- This is the modal with the default close button -->
+						<div id="create-directory-modal" uk-modal>
+							<div class="uk-modal-dialog">
+								<button class="uk-modal-close-default" type="button" uk-close></button>
+								<div class="uk-modal-header">
+									<h2 class="uk-modal-title">Enter the new directory's name</h2>
+								</div>
+								<div class="uk-modal-body">
+										<input id="createDirectoryNameField" class="uk-input" type="text" placeholder="New Directory">
+								</div>
+								<div class="uk-modal-footer uk-text-right">
+									<button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+									<button class="uk-button uk-button-primary" type="button" id="createDirectoryButton">Create</button>
+								</div>
 							</div>
-						</li>
-					</ul>
-				</div>
-				{{end}}
-			</nav>
-		</div>
+						</div>
+					</div>
+					{{if .CurrentUser.SignedIn}}
+					<div class="uk-navbar-right">
+						<ul class="uk-navbar-nav">
+							<li class="uk-active">
+								<a href="">{{.CurrentUser.FirstName}} {{.CurrentUser.LastName}} &nbsp;
+									<span uk-icon="icon: user"></span>
+								</a>
+								<div uk-dropdown="pos: bottom-right; mode: click; offset: -17;">
+									<ul class="uk-nav uk-navbar-dropdown-nav">
+										<li class="uk-nav-header">Options</li>
+										<li>
+											<a href="#">Edit Profile</a>
+										</li>
+										<li class="uk-nav-header">Actions</li>
+										<li>
+											<a href="#" id="logoutButton">Logout</a>
+										</li>
+									</ul>
+								</div>
+							</li>
+						</ul>
+					</div>
+					{{end}}
+				</nav>
+			</div>
 		</div>
 		<script src="js/header.js"></script>
-  </header>
+	</header>
