@@ -55,15 +55,6 @@ func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
 	return f, nil
 }
 
-func (dfs *DiskFilesystem) ListFiles(path string) ([]os.FileInfo, error) {
-	info, err := ioutil.ReadDir(filepath.Join(dfs.base, path))
-	if err != nil {
-		log.Error(0, "Could not list files in %s: %v", path, err)
-		return nil, err
-	}
-	return info, nil
-}
-
 func (dfs *DiskFilesystem) CreateDirectory(path string) error {
 	err := os.MkdirAll(filepath.Join(dfs.base, path), 0755)
 	if err != nil {
@@ -87,11 +78,28 @@ func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string
 	return dfs.CreateDirectory(filepath.Join(dfs.GetUserBaseDirectory(user), path))
 }
 
-func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]os.FileInfo, error) {
+func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error) {
 	if err := dfs.createUserDirIfNotExist(user); err != nil {
 		return nil, err
 	}
-	return dfs.ListFiles(filepath.Join(dfs.GetUserBaseDirectory(user), path))
+	info, err := ioutil.ReadDir(filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path))
+	if err != nil {
+		log.Error(0, "Could not list files in %s: %v", path, err)
+		return nil, err
+	}
+	fileInfos := make([]*models.FileInfo, len(info), len(info))
+	for i, f := range info {
+		fileInfos[i] = &models.FileInfo{
+			Path:  filepath.Join(dfs.base, path, f.Name()),
+			Name:  f.Name(),
+			IsDir: f.IsDir(),
+			Size:  f.Size(),
+			// TODO: This might not be valid once we enable file sharing between users
+			OwnerID:     user.ID,
+			LastChanged: f.ModTime(),
+		}
+	}
+	return fileInfos, nil
 }
 
 func (dfs *DiskFilesystem) createUserDirIfNotExist(user *models.User) error {

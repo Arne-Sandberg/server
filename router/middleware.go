@@ -1,7 +1,9 @@
 package router
 
 import (
+	"encoding/json"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/riesinger/freecloud/auth"
@@ -12,7 +14,8 @@ import (
 	"gopkg.in/macaron.v1"
 )
 
-func (s server) Logging() macaron.Handler {
+// Logging is a middleware logging ever request with URL, IP, duration and status
+func Logging() macaron.Handler {
 	return func(c *macaron.Context) {
 		startTime := time.Now()
 		log.Info("Started %s %s for %s", c.Req.Method, c.Req.RequestURI, c.RemoteAddr())
@@ -33,8 +36,9 @@ func (s server) Logging() macaron.Handler {
 	}
 }
 
-func (s server) OnlyAdmins(c *macaron.Context) {
-	s.OnlyUsers(c)
+// OnlyAdmins is the same as OnlyUsers, however we have an additional check to only allow admins to pass through.
+func OnlyAdmins(c *macaron.Context) {
+	OnlyUsers(c)
 	userRaw, ok := c.Data["user"]
 	if !ok {
 		return
@@ -46,10 +50,12 @@ func (s server) OnlyAdmins(c *macaron.Context) {
 	c.WriteHeader(http.StatusForbidden)
 }
 
-func (s server) OnlyUsers(c *macaron.Context) {
+// OnlyUsers only allows users to pass through, sending a http.StatusUnauthorized to non-users.
+// If a valid session/user pair is encountered, this fills the context's "session" and "user" fields.
+func OnlyUsers(c *macaron.Context) {
 	sessionStr := c.GetCookie(config.GetString("auth.session_cookie"))
 	if sessionStr == "" {
-		c.Redirect("/login", http.StatusFound)
+		c.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -58,14 +64,14 @@ func (s server) OnlyUsers(c *macaron.Context) {
 	if err != nil {
 		log.Error(0, "Could not parse session token: %v", err)
 		c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
-		c.Redirect("/login", http.StatusFound)
+		c.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	valid := auth.ValidateSession(session)
 	if !valid {
 		log.Warn("Invalid session")
 		c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
-		c.Redirect("/login", http.StatusFound)
+		c.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -81,11 +87,73 @@ func (s server) OnlyUsers(c *macaron.Context) {
 	c.Data["session"] = session
 }
 
-func (s server) OnlyAnonymous(c *macaron.Context) {
+// OnlyAnonymous only allows non-users to pass through, otherwise we'll write a http.StatusForbidden
+func OnlyAnonymous(c *macaron.Context) {
 	if sessionStr := c.GetCookie(config.GetString("auth.session_cookie")); sessionStr == "" {
 		// We were successfully identified as nobody ;)
 		return
 	}
 
-	c.Redirect("/", http.StatusFound)
+	c.WriteHeader(http.StatusForbidden)
+}
+
+// JSONDecoder unmarshals the context's body into a variable of type "to" into the context's "request" data field.
+// If this fails, we exit by sending an internal server error code.
+// Note that the "to" variable will be overwritten.
+func JSONDecoder(to interface{}) macaron.Handler {
+	return func(c *macaron.Context) {
+		if c.Req.Request.Body == nil {
+			log.Warn("Got no JSON request payload, expected a %t", to)
+			c.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		defer c.Req.Request.Body.Close()
+		t := reflect.TypeOf(to)
+		log.Trace("Unmarshaling JSON payload into a %v", t)
+
+		err := json.NewDecoder(c.Req.Request.Body).Decode(to)
+		if err != nil {
+			log.Error(0, "Could not unmarshal payload into a %t: %v", to, err)
+			c.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		c.Data["request"] = to
+	}
+}
+
+// JSONEncoder marshals the payload inside of c.Data["resposne"] as JSON and sends it to the client.
+// There are some notables cases though:
+// If "response" is a models.APIError, we'll marshal and send it with the APIError's Code.
+// If "response" is a regular error, we'll send the same message as if it were an APIError, but with code 500 instead.
+// Otherwise, we'll send a response with a 200 OK and the JSON-ified payload.
+func JSONEncoder(c *macaron.Context) {
+	resp, ok := c.Data["response"]
+	if !ok {
+		// TODO: Decide whether this is the correct logging level
+		log.Error(0, "No payload to marshal")
+		c.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	switch res := resp.(type) {
+	case models.APIError:
+		if res.Code != 0 {
+			c.JSON(res.Code, res)
+			return
+		}
+		c.JSON(http.StatusInternalServerError, res)
+		return
+	case error:
+		c.JSON(http.StatusInternalServerError, struct {
+			Message string `json:"message"`
+		}{
+			res.Error(),
+		})
+		return
+	default:
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 }
