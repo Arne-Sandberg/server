@@ -3,13 +3,15 @@ package models
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 const SessionTokenLenght = 32
 
 type Session struct {
-	UID   int    `storm:"index"`
-	Token string `storm:"id,unique"`
+	UID       int    `storm:"index"`
+	Token     string `storm:"id,unique"`
+	ExpiresAt time.Time
 }
 
 func (s Session) GetCookieString() string {
@@ -23,5 +25,5 @@ func ParseSessionCookieString(cookie string) (Session, error) {
 	if err != nil {
 		return Session{}, err
 	}
-	return Session{uid, tok}, nil
+	return Session{UID: uid, Token: tok}, nil
 }

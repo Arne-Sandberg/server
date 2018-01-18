@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/riesinger/freecloud/config"
 	"github.com/riesinger/freecloud/models"
 	"github.com/riesinger/freecloud/utils"
 
@@ -53,7 +54,11 @@ func NewSession(email string, password string) (models.Session, error) {
 
 // newUnverifiedSession issues a session token but does not verify the user's password
 func newUnverifiedSession(uid int) models.Session {
-	sess := models.Session{UID: uid, Token: utils.RandomString(SessionTokenLength)}
+	sess := models.Session{
+		UID:       uid,
+		Token:     utils.RandomString(SessionTokenLength),
+		ExpiresAt: time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry"))),
+	}
 	err := sProvider.StoreSession(sess)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
