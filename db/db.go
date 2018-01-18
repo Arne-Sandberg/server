@@ -6,12 +6,14 @@ import (
 	"github.com/asdine/storm"
 	"github.com/pkg/errors"
 	"github.com/riesinger/freecloud/auth"
+	"github.com/riesinger/freecloud/config"
 	"github.com/riesinger/freecloud/models"
 	log "gopkg.in/clog.v1"
 )
 
 type StormDB struct {
-	c *storm.DB
+	c    *storm.DB
+	done chan struct{}
 }
 
 func NewStormDB() (*StormDB, error) {
@@ -21,10 +23,36 @@ func NewStormDB() (*StormDB, error) {
 		return nil, err
 	}
 	log.Info("Initialized database")
-	return &StormDB{c: db}, nil
+	s := StormDB{c: db, done: make(chan struct{})}
+	go s.cleanupExpiredSessions(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))
+	return &s, nil
+}
+
+func (db *StormDB) cleanupExpiredSessions(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	log.Trace("Starting old session cleaner, running every %v", interval)
+	for {
+		select {
+		case <-db.done:
+			return
+		case <-ticker.C:
+			log.Trace("Cleaning old sessions")
+			var sessions []models.Session
+			db.c.All(&sessions)
+			for _, sess := range sessions {
+				if time.Now().UTC().After(sess.ExpiresAt) {
+					err := db.c.DeleteStruct(&sess)
+					if err != nil {
+						log.Error(0, "Deleting expired session failed: %v", err)
+					}
+				}
+			}
+		}
+	}
 }
 
 func (db *StormDB) Close() {
+	db.done <- struct{}{}
 	db.c.Close()
 }
 
@@ -91,6 +119,11 @@ func (db *StormDB) SessionIsValid(session models.Session) bool {
 	}
 	if s.UID != session.UID {
 		log.Warn("Session token existed, but has different UID: %d vs %d", s.UID, session.UID)
+		return false
+	}
+	log.Trace("Session expires at %v, now is %v", s.ExpiresAt, time.Now().UTC())
+	if time.Now().UTC().After(s.ExpiresAt) {
+		log.Info("Session has expired")
 		return false
 	}
 	return true

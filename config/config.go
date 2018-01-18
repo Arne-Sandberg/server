@@ -11,7 +11,10 @@ func setDefaults() {
 	viper.SetDefault("http.host", "localhost")
 	viper.SetDefault("http.port", 8080)
 	viper.SetDefault("auth.session_cookie", "fc-session")
+	// Session expiry is given in hours
+	viper.SetDefault("auth.session_expiry", 24)
 	viper.SetDefault("http.ssl", false)
+	// Upload limit is given in GB
 	viper.SetDefault("http.upload_limit", 10)
 	viper.SetDefault("fs.base_directory", "data")
 }
