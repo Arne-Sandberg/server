@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/riesinger/freecloud/router/handlers"
+
+	"github.com/riesinger/freecloud/models"
+
 	"github.com/riesinger/freecloud/auth"
 	"github.com/riesinger/freecloud/config"
 	"github.com/riesinger/freecloud/fs"
@@ -11,12 +15,8 @@ import (
 	macaron "gopkg.in/macaron.v1"
 )
 
-type server struct {
-	filesystem fs.Filesystem
-}
-
 var (
-	s server
+	s handlers.Server
 )
 
 // Start starts the router with the given settings
@@ -25,25 +25,31 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 		log.Warn("SSL is not implemented yet, falling back to HTTP")
 	}
 	log.Info("Starting router at http://%s:%d", hostname, port)
-	s = server{
-		filesystem: filesys,
-	}
+	s = handlers.NewServer(filesys)
+
 
 	m := macaron.New()
-	m.Use(s.Logging())
+	m.Use(Logging())
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Static("public", macaron.StaticOptions{SkipLogging: true}))
 	m.Use(macaron.Static("node_modules/uikit/dist", macaron.StaticOptions{SkipLogging: true}))
 	m.Use(macaron.Renderer())
 
-	m.Post("/upload", s.OnlyUsers, s.FileUpload)
-	m.Get("/", s.OnlyUsers, s.IndexHandler)
-	m.Get("/signup", s.OnlyAnonymous, s.SignupPageHandler)
-	m.Post("/signup", s.SignupHandler)
-	m.Get("/login", s.OnlyAnonymous, s.LoginPageHandler)
-	m.Post("/login", s.LoginHandler)
-	m.Post("/logout", s.OnlyUsers, s.LogoutHandler)
+	m.Group("/api/v1", func() {
+		m.Group("/auth", func() {
+			m.Post("/signup", OnlyAnonymous, JSONDecoder(&models.User{}), s.SignupHandler, JSONEncoder)
+			m.Post("/login", OnlyAnonymous, JSONDecoder(&models.User{}), s.LoginHandler, JSONEncoder)
+			m.Post("/logout", OnlyUsers, s.LogoutHandler, JSONEncoder)
+		})
 
+		m.Post("/files", OnlyUsers, s.UploadHandler, JSONEncoder)
+		m.Get("/directory/*", OnlyUsers, s.GetDirectoryHandler, JSONEncoder)
+	})
+
+	// TODO: implement handlers for the client's static files
+
+	// TODO: We need to differenciate between 404s coming from the API vs ones coming from the user typing a bad URL.
+	// We then should either send a simple 404 or redirect to sth like /#/404
 	m.NotFound(s.NotFoundHandler)
 
 	log.Fatal(0, "%v", http.ListenAndServe(fmt.Sprintf("%s:%d", hostname, port), m))
