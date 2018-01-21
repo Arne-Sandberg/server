@@ -27,7 +27,6 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	log.Info("Starting router at http://%s:%d", hostname, port)
 	s = handlers.NewServer(filesys)
 
-
 	m := macaron.New()
 	m.Use(Logging())
 	m.Use(macaron.Recovery())
@@ -41,6 +40,11 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 			m.Post("/login", OnlyAnonymous, JSONDecoder(&models.User{}), s.LoginHandler, JSONEncoder)
 			m.Post("/logout", OnlyUsers, s.LogoutHandler, JSONEncoder)
 		})
+
+		m.Get("/user/me", OnlyUsers, s.UserHandler, JSONEncoder)
+		//m.Patch("/user/me", OnlyUsers, JSONDecoder(&models.User{}), s.UpdateUserHandler, JSONEncoder)
+		m.Get("/user/*", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
+		//m.Patch("/user/*", OnlyAdmins, JSONDecoder(&models.User{}), s.AdminUpdateUserHandler, JSONEncoder)
 
 		m.Post("/files", OnlyUsers, s.UploadHandler, JSONEncoder)
 		m.Get("/directory/*", OnlyUsers, s.GetDirectoryHandler, JSONEncoder)

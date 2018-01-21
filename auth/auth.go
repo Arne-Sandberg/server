@@ -87,6 +87,13 @@ func NewUser(user *models.User) (session models.Session, err error) {
 		return
 	}
 
+	// If this is the first user (ID 1) he will become an admin
+	if user.ID == 1 {
+		log.Trace("Make first user an admin")
+		user.IsAdmin = true
+		err = cProvider.UpdateUser(user)
+	}
+
 	// Now, create a session for the user
 	return newUnverifiedSession(user.ID), nil
 }
