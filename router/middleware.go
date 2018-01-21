@@ -55,7 +55,7 @@ func OnlyAdmins(c *macaron.Context) {
 func OnlyUsers(c *macaron.Context) {
 	// First, check the Authorization header, as this is the preferred method
 	// for authentication.
-	sessionStr := c.Header().Get("Authorization")
+	sessionStr := c.Req.Header.Get("Authorization")
 	if sessionStr != "" {
 		validateSessionAndFillUserData(sessionStr, c)
 		return
