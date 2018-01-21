@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/riesinger/freecloud/config"
 	"github.com/riesinger/freecloud/models"
@@ -65,13 +66,22 @@ func (s Server) UploadHandler(c *macaron.Context) {
 
 func (s Server) GetDirectoryHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
-	path := c.Params("*")
+	path, err := url.PathUnescape(c.Params("*"))
+	if err != nil {
+		c.Data["response"] = fmt.Errorf("Invalid directory format")
+	}
 	log.Trace("Getting directory contents of %s for %s %s", path, user.FirstName, user.LastName)
 	fileInfos, err := s.filesystem.ListFilesForUser(user, path)
 	if err != nil {
 		c.Data["response"] = err
 		return
 	}
-	c.Data["response"] = fileInfos
+	c.Data["response"] = struct {
+		Success bool               `json:"success"`
+		Files   []*models.FileInfo `json:"files"`
+	}{
+		Success: true,
+		Files:   fileInfos,
+	}
 	return
 }
