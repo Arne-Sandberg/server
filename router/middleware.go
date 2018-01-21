@@ -53,13 +53,24 @@ func OnlyAdmins(c *macaron.Context) {
 // OnlyUsers only allows users to pass through, sending a http.StatusUnauthorized to non-users.
 // If a valid session/user pair is encountered, this fills the context's "session" and "user" fields.
 func OnlyUsers(c *macaron.Context) {
-	sessionStr := c.GetCookie(config.GetString("auth.session_cookie"))
-	if sessionStr == "" {
-		c.WriteHeader(http.StatusUnauthorized)
+	// First, check the Authorization header, as this is the preferred method
+	// for authentication.
+	sessionStr := c.Header().Get("Authorization")
+	if sessionStr != "" {
+		validateSessionAndFillUserData(sessionStr, c)
 		return
 	}
+	sessionStr = c.GetCookie(config.GetString("auth.session_cookie"))
+	if sessionStr != "" {
+		validateSessionAndFillUserData(sessionStr, c)
+		return
+	}
+	c.WriteHeader(http.StatusUnauthorized)
+	return
+}
 
-	session, err := models.ParseSessionCookieString(sessionStr)
+func validateSessionAndFillUserData(token string, c *macaron.Context) {
+	session, err := models.ParseSessionCookieString(token)
 	// This probably also means the session is invalid, so redirect time it is!
 	if err != nil {
 		log.Error(0, "Could not parse session token: %v", err)
@@ -89,11 +100,10 @@ func OnlyUsers(c *macaron.Context) {
 
 // OnlyAnonymous only allows non-users to pass through, otherwise we'll write a http.StatusForbidden
 func OnlyAnonymous(c *macaron.Context) {
-	if sessionStr := c.GetCookie(config.GetString("auth.session_cookie")); sessionStr == "" {
+	if c.GetCookie(config.GetString("auth.session_cookie")) == "" && c.Header().Get("Authorization") == "" {
 		// We were successfully identified as nobody ;)
 		return
 	}
-
 	c.WriteHeader(http.StatusForbidden)
 }
 
