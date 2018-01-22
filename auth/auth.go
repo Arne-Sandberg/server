@@ -68,7 +68,13 @@ func newUnverifiedSession(uid int) models.Session {
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
-	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 {
+	/*existingUser, err := cProvider.GetUserByEmail(user.Email)
+	if err != nil {
+		log.Error(0, "Checking for existing user failed: %v", err)
+		return
+	}*/
+
+	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 /*|| existingUser != nil*/ {
 		err = ErrInvalidSignupData
 		return
 	}
