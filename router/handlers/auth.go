@@ -6,8 +6,8 @@ import (
 	"github.com/riesinger/freecloud/auth"
 	"github.com/riesinger/freecloud/config"
 	"github.com/riesinger/freecloud/models"
-	"gopkg.in/macaron.v1"
 	log "gopkg.in/clog.v1"
+	"gopkg.in/macaron.v1"
 )
 
 func (s Server) LoginHandler(c *macaron.Context) {
@@ -36,7 +36,13 @@ func (s Server) LoginHandler(c *macaron.Context) {
 		return
 	}
 	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
-	c.Data["response"] = models.SuccessResponse
+	c.Data["response"] = struct {
+		Success bool   `json:"success"`
+		Token   string `json:"token"`
+	}{
+		Success: true,
+		Token:   session.GetCookieString(),
+	}
 }
 
 // LogoutHandler deletes the active user session and signs out the user.
@@ -78,5 +84,11 @@ func (s Server) SignupHandler(c *macaron.Context) {
 		return
 	}
 	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
-	c.Data["response"] = models.SuccessResponse
+	c.Data["response"] = struct {
+		Success bool   `json:"success"`
+		Token   string `json:"token"`
+	}{
+		Success: true,
+		Token:   session.GetCookieString(),
+	}
 }
