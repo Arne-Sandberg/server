@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/models"
-	"github.com/riesinger/freecloud/utils"
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/utils"
 
 	log "gopkg.in/clog.v1"
 )

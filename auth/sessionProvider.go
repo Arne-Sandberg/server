@@ -1,6 +1,6 @@
 package auth
 
-import "github.com/riesinger/freecloud/models"
+import "github.com/freecloudio/freecloud/models"
 
 type SessionProvider interface {
 	StoreSession(models.Session) error

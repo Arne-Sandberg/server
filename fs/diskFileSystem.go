@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/riesinger/freecloud/models"
+	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
 )
 

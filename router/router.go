@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/riesinger/freecloud/router/handlers"
+	"github.com/freecloudio/freecloud/router/handlers"
 
-	"github.com/riesinger/freecloud/models"
+	"github.com/freecloudio/freecloud/models"
 
-	"github.com/riesinger/freecloud/auth"
-	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/fs"
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/fs"
 	log "gopkg.in/clog.v1"
 	macaron "gopkg.in/macaron.v1"
 )
