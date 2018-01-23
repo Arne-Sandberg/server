@@ -7,6 +7,7 @@ import (
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
+	"github.com/asdine/storm/codec/msgpack"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
 )
@@ -17,7 +18,7 @@ type StormDB struct {
 }
 
 func NewStormDB() (*StormDB, error) {
-	db, err := storm.Open("freecloud.db")
+	db, err := storm.Open("freecloud.db", storm.Codec(msgpack.Codec))
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
 		return nil, err
