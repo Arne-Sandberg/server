@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/asdine/storm"
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/models"
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/pkg/errors"
-	"github.com/riesinger/freecloud/auth"
-	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/models"
 	log "gopkg.in/clog.v1"
 )
 
