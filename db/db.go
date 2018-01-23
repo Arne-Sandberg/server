@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/asdine/storm"
+	"github.com/asdine/storm/codec/msgpack"
 	"github.com/pkg/errors"
 	"github.com/riesinger/freecloud/auth"
 	"github.com/riesinger/freecloud/config"
@@ -17,7 +18,7 @@ type StormDB struct {
 }
 
 func NewStormDB() (*StormDB, error) {
-	db, err := storm.Open("freecloud.db")
+	db, err := storm.Open("freecloud.db", storm.Codec(msgpack.Codec))
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
 		return nil, err

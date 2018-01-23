@@ -118,7 +118,7 @@ func (r *Route) Name(name string) {
 	if len(name) == 0 {
 		panic("route name cannot be empty")
 	} else if r.router.namedRoutes[name] != nil {
-		panic("route with given name already exists")
+		panic("route with given name already exists: " + name)
 	}
 	r.router.namedRoutes[name] = r.leaf
 }
@@ -295,7 +295,7 @@ func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		h, p, ok := t.Match(req.URL.Path)
+		h, p, ok := t.Match(req.URL.EscapedPath())
 		if ok {
 			if splat, ok := p["*0"]; ok {
 				p["*"] = splat // Easy name.
