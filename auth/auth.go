@@ -20,6 +20,7 @@ var (
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
 	ErrInvalidSignupData  = errors.New("auth: Invalid signup data")
+	ErrUserAlreadyExists  = errors.New("auth: User already exists")
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
@@ -68,14 +69,14 @@ func newUnverifiedSession(uid int) models.Session {
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
-	/*existingUser, err := cProvider.GetUserByEmail(user.Email)
-	if err != nil {
-		log.Error(0, "Checking for existing user failed: %v", err)
-		return
-	}*/
-
-	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 /*|| existingUser != nil*/ {
+	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 {
 		err = ErrInvalidSignupData
+		return
+	}
+
+	existingUser, err := cProvider.GetUserByEmail(user.Email)
+	if (*existingUser != models.User{}) {
+		err = ErrUserAlreadyExists
 		return
 	}
 
