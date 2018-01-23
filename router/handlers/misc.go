@@ -1,27 +1,21 @@
 package handlers
 
-import macaron "gopkg.in/macaron.v1"
+import (
+	"net/http"
+	"strings"
 
-// IndexHandler handles the / route, which is only GETtable.
-// Note that this handler is not called if the user is not signed in. The /login handler
-// will be called instaead.
-// func (s Server) IndexHandler(c *macaron.Context) {
-// 	user := c.Data["user"].(*models.User)
-// 	files, err := s.filesystem.ListFilesForUser(user, ".")
-// 	if err != nil {
-// 		log.Error(0, "%v", err)
-// 		c.WriteHeader(http.StatusInternalServerError)
-// 		return
-// 	}
-// 	c.HTML(200, "index", struct {
-// 		Files       []os.FileInfo
-// 		CurrentUser *models.User
-// 	}{
-// 		files,
-// 		user,
-// 	})
-// }
+	macaron "gopkg.in/macaron.v1"
+)
 
 func (s Server) NotFoundHandler(c *macaron.Context) {
-	c.HTML(404, "notFound")
+	if strings.Contains(c.Req.RequestURI, "api/v") {
+		c.JSON(http.StatusNotFound, struct {
+			Message string `json:"message"`
+		}{
+			"404: not found",
+		})
+		return
+	}
+
+	c.Redirect("/#/404")
 }

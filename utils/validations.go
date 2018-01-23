@@ -11,5 +11,5 @@ func ValidateEmail(email string) bool {
 
 // ValidatePassword checks whether the password is longer than 6 characters
 func ValidatePassword(password string) bool {
-	return len(password) > 6
+	return len(password) >= 6
 }
