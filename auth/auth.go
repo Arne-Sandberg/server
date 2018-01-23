@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/freecloudio/freecloud/config"
@@ -117,4 +118,47 @@ func GetUserByID(uid int) (*models.User, error) {
 //RemoveSession removes the session from the session provider
 func RemoveSession(sess models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
+}
+
+func UpdateUser(uid int, updatedUser *models.User, allowedUpdates map[string]bool) (returnUser *models.User, err error) {
+	user, err := GetUserByID(uid)
+	if err != nil {
+		return
+	}
+
+	// Reset not allowed updates and do password update if allowed
+	if !allowedUpdates["Email"] {
+		updatedUser.Email = user.Email
+	}
+	if !allowedUpdates["FirstName"] {
+		updatedUser.FirstName = user.FirstName
+	}
+	if !allowedUpdates["LastName"] {
+		updatedUser.LastName = user.LastName
+	}
+	if !allowedUpdates["AvatarURL"] {
+		updatedUser.AvatarURL = user.AvatarURL
+	}
+	if !allowedUpdates["IsAdmin"] {
+		updatedUser.IsAdmin = user.IsAdmin
+	}
+	if allowedUpdates["Password"] && updatedUser.Password != user.Password {
+		updatedUser.Password, err = HashPassword(updatedUser.Password)
+		if err != nil {
+			err = fmt.Errorf("Error hashing password during user update: %v", err)
+			return
+		}
+	}
+
+	// Reset values that are not allowed to update generally and set updated time
+	updatedUser.LastSession = user.LastSession
+	updatedUser.Created = user.Created
+	updatedUser.ID = user.ID
+	updatedUser.Updated = time.Now().UTC()
+
+	err = cProvider.UpdateUser(updatedUser)
+	updatedUser.Password = ""
+	returnUser = updatedUser
+
+	return
 }
