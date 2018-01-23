@@ -20,7 +20,7 @@ func (s Server) UpdateUserHandler(c *macaron.Context) {
 }
 
 func (s Server) AdminUserHandler(c *macaron.Context) {
-	userID, err := strconv.Atoi(c.Params("*"))
+	userID, err := strconv.Atoi(c.Params(":id"))
 	if err != nil {
 		c.Data["response"] = err
 		return
@@ -30,6 +30,7 @@ func (s Server) AdminUserHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
+	user.Password = ""
 	c.Data["response"] = user
 }
 

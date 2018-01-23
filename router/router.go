@@ -43,7 +43,7 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 
 		m.Get("/user/me", OnlyUsers, s.UserHandler, JSONEncoder)
 		//m.Patch("/user/me", OnlyUsers, JSONDecoder(&models.User{}), s.UpdateUserHandler, JSONEncoder)
-		m.Get("/user/*", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
+		m.Get("/user/byID/:id", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
 		//m.Patch("/user/*", OnlyAdmins, JSONDecoder(&models.User{}), s.AdminUpdateUserHandler, JSONEncoder)
 
 		m.Post("/files", OnlyUsers, s.UploadHandler, JSONEncoder)
