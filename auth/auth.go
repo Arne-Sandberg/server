@@ -102,6 +102,8 @@ func NewUser(user *models.User) (session models.Session, err error) {
 		err = cProvider.UpdateUser(user)
 	}
 
+	log.Trace("End of NewUser: %v", user)
+
 	// Now, create a session for the user
 	return newUnverifiedSession(user.ID), nil
 }
