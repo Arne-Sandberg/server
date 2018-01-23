@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/riesinger/freecloud/auth"
-	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/models"
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
 )

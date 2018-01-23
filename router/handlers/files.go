@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/models"
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
 	macaron "gopkg.in/macaron.v1"
 )

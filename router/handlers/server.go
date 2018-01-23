@@ -3,7 +3,7 @@ package handlers
 import (
 	"errors"
 
-	"github.com/riesinger/freecloud/fs"
+	"github.com/freecloudio/freecloud/fs"
 )
 
 var ErrNoRequestData = errors.New("Expected request data from JSONDecoder, but got none")

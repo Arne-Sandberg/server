@@ -3,7 +3,7 @@ package fs
 import (
 	"os"
 
-	"github.com/riesinger/freecloud/models"
+	"github.com/freecloudio/freecloud/models"
 )
 
 // Filesystem is an interface for implementing various filesystem layers, such as a disk

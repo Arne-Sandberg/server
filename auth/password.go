@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/riesinger/freecloud/auth/hashers"
+	"github.com/freecloudio/freecloud/auth/hashers"
 )
 
 // HashPassword uses a hashing function found in hashers to encrypt a password.

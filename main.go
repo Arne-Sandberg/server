@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/riesinger/freecloud/auth"
-	"github.com/riesinger/freecloud/db"
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/db"
 
 	"gopkg.in/clog.v1"
 
-	"github.com/riesinger/freecloud/config"
-	"github.com/riesinger/freecloud/fs"
-	"github.com/riesinger/freecloud/router"
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/fs"
+	"github.com/freecloudio/freecloud/router"
 )
 
 func main() {
