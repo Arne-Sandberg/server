@@ -30,8 +30,6 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m := macaron.New()
 	m.Use(Logging())
 	m.Use(macaron.Recovery())
-	m.Use(macaron.Static("public", macaron.StaticOptions{SkipLogging: true}))
-	m.Use(macaron.Static("node_modules/uikit/dist", macaron.StaticOptions{SkipLogging: true}))
 	m.Use(macaron.Renderer())
 
 	m.Group("/api/v1", func() {
@@ -50,10 +48,8 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 		m.Get("/directory/*", OnlyUsers, s.GetDirectoryHandler, JSONEncoder)
 	})
 
-	// TODO: implement handlers for the client's static files
+	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
 
-	// TODO: We need to differenciate between 404s coming from the API vs ones coming from the user typing a bad URL.
-	// We then should either send a simple 404 or redirect to sth like /#/404
 	m.NotFound(s.NotFoundHandler)
 
 	log.Fatal(0, "%v", http.ListenAndServe(fmt.Sprintf("%s:%d", hostname, port), m))
