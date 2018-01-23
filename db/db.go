@@ -63,6 +63,17 @@ func (db *StormDB) CreateUser(user *models.User) (err error) {
 	err = db.c.Save(user)
 	if err != nil {
 		log.Error(0, "Could not save user: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) UpdateUser(user *models.User) (err error) {
+	user.Updated = time.Now().UTC()
+	err = db.c.Update(user)
+	if err != nil {
+		log.Error(0, "Could not update user: %v", err)
+		return
 	}
 	return
 }

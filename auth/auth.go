@@ -20,6 +20,7 @@ var (
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
 	ErrInvalidSignupData  = errors.New("auth: Invalid signup data")
+	ErrUserAlreadyExists  = errors.New("auth: User already exists")
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
@@ -73,6 +74,12 @@ func NewUser(user *models.User) (session models.Session, err error) {
 		return
 	}
 
+	existingUser, err := cProvider.GetUserByEmail(user.Email)
+	if (*existingUser != models.User{}) {
+		err = ErrUserAlreadyExists
+		return
+	}
+
 	user.Created = time.Now().UTC()
 	user.Updated = time.Now().UTC()
 	user.Password, err = HashPassword(user.Password)
@@ -85,6 +92,13 @@ func NewUser(user *models.User) (session models.Session, err error) {
 	err = cProvider.CreateUser(user)
 	if err != nil {
 		return
+	}
+
+	// If this is the first user (ID 1) he will become an admin
+	if user.ID == 1 {
+		log.Trace("Make first user an admin")
+		user.IsAdmin = true
+		err = cProvider.UpdateUser(user)
 	}
 
 	// Now, create a session for the user

@@ -2,7 +2,7 @@
   "name": "freecloud",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "git@github.com:riesinger/freecloud",
+  "repository": "git@github.com:freecloudio/freecloud",
   "author": "Pascal Riesinger",
   "license": "MIT",
   "scripts": {
