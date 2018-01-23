@@ -69,10 +69,6 @@ func newUnverifiedSession(uid int) models.Session {
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
-	// Set the user ID to zero because the user pointer is always the same and will contain the id of the last created user
-	// Setting it to zero prevents the data of the last user to be overwritten
-	user.ID = 0
-
 	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 {
 		err = ErrInvalidSignupData
 		return

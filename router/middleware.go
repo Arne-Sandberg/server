@@ -118,17 +118,16 @@ func JSONDecoder(to interface{}) macaron.Handler {
 			return
 		}
 		defer c.Req.Request.Body.Close()
-		t := reflect.TypeOf(to)
-		log.Trace("Unmarshaling JSON payload into a %v", t)
 
-		err := json.NewDecoder(c.Req.Request.Body).Decode(to)
+		decoded := reflect.New(reflect.Indirect(reflect.ValueOf(to)).Type()).Interface()
+		err := json.NewDecoder(c.Req.Request.Body).Decode(decoded)
 		if err != nil {
 			log.Error(0, "Could not unmarshal payload into a %t: %v", to, err)
 			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		c.Data["request"] = to
+		c.Data["request"] = decoded
 	}
 }
 
