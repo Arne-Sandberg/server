@@ -93,7 +93,6 @@ func validateSessionAndFillUserData(token string, c *macaron.Context) {
 		c.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	user.SignedIn = true
 	c.Data["user"] = user
 	c.Data["session"] = session
 }
