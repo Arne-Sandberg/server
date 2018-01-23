@@ -10,9 +10,15 @@ import (
 
 func (s Server) UserHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
+	
 	user.Password = ""
-
-	c.Data["response"] = user
+	c.Data["response"] = struct {
+		Success bool         `json:"success"`
+		User    *models.User `json:"user"`
+	}{
+		true,
+		user,
+	}
 }
 
 func (s Server) UpdateUserHandler(c *macaron.Context) {
@@ -30,8 +36,15 @@ func (s Server) AdminUserHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
+
 	user.Password = ""
-	c.Data["response"] = user
+	c.Data["response"] = struct {
+		Success bool         `json:"success"`
+		User    *models.User `json:"user"`
+	}{
+		true,
+		user,
+	}
 }
 
 func (s Server) AdminUpdateUserHandler(c *macaron.Context) {
