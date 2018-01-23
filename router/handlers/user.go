@@ -3,8 +3,8 @@ package handlers
 import (
 	"strconv"
 
-	"github.com/riesinger/freecloud/auth"
-	"github.com/riesinger/freecloud/models"
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/models"
 	macaron "gopkg.in/macaron.v1"
 )
 
