@@ -3,3 +3,9 @@ go:
   - 1.9.2
 before_script:
   - go vet ./...
+notifications:
+  email: false
+  slack:
+    secure: xdMXM8jvT3CL+5g3SJDpXXXdinADsRIS8eQCGZlj+Q5x0nQj0TGbaltdCMQcdzNN2RP+wm1wGNOxfKGcrJx6kzd3rOl1QAJnA9pBfUJAT6OBRjIyw0j6jLLV1gs82Qoi4wiSWi/UI1NHElQasC5+p1XVl4cMG0HxNHzD/HXXI3LGSmKxjPT5pR9M31LPAFbS/D0AWx/YpmQmoaLhii+HRTCJ3k41ozUvhsVGT24mnkm79jIT1CFj01BuXwFcKkXhMnN4zXdVaLF8eVnHZ/pytvhHKnIlSXysfSgQXUeYoNvo7gD4fq/C5wqMJlmNB7GQZizewOq6+pN6ahHd1RAQBTHCgSntLsfOoA6VEV4zcR8GMjdH9bzHcnXMdPTY50jyEvtx9T74NNU11KCfjgNhZOkEzidmNewJhBJVpuD9mNcJqWyjLGcJSyeR2RyaLt2tRLannVXNYA1v6cD4/DCaC8V9YK5ZHg23oXO081kpapIiGddTPaWaPmJQdVFMkinA0j+ResTqbW2eycQNAysLzfwO/DBydy8d3Kv/0sGVWRyu+gtJpJ7fVnl8nl/LeNue1tAAc1LbKAp0LmElysVJht4O5aj8WURAREMirliIyjkxqLwrdWhUlnnWeiuXQn43dKz1ZdaKpHrjn+AgPCUQdHtM6vzFxecixfIbKYj6y2I=
+    on_success: change
+    on_failure: always
