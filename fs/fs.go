@@ -8,7 +8,14 @@ import (
 )
 
 var (
+	// ErrUpwardsNavigation gets raised when a possible upwards navigations gets detected (such as paths containing "../"" or "~")
 	ErrUpwardsNavigation = errors.New("upward navigating directories is not allowed")
+	// ErrForbiddenPathName indicates a path having weird characters that nobody should use, also these characters are forbidden on Windows
+	ErrForbiddenPathName = errors.New("paths cannot contain the following characters: <>:\"\\|?*")
+)
+
+const (
+	forbiddenPathCharacters = "<>:\"\\|?*"
 )
 
 // Filesystem is an interface for implementing various filesystem layers, such as a disk
