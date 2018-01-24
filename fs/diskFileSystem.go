@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
@@ -116,6 +117,13 @@ func (dfs *DiskFilesystem) createUserDirIfNotExist(user *models.User) error {
 	} else if err != nil {
 		log.Warn("Could not check if user directory exists, assuming it does: %v", err)
 		return nil
+	}
+	return nil
+}
+
+func (dfs *DiskFilesystem) rejectIfNavigatingUpwards(path string) error {
+	if strings.Contains(path, "../") || strings.Contains(path, "/..") {
+		return ErrUpwardsNavigation
 	}
 	return nil
 }
