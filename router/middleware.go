@@ -112,7 +112,7 @@ func OnlyAnonymous(c *macaron.Context) {
 func JSONDecoder(to interface{}) macaron.Handler {
 	return func(c *macaron.Context) {
 		if c.Req.Request.Body == nil {
-			log.Warn("Got no JSON request payload, expected a %t", to)
+			log.Warn("Got no JSON request payload, expected a %T", to)
 			c.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -121,8 +121,8 @@ func JSONDecoder(to interface{}) macaron.Handler {
 		decoded := reflect.New(reflect.Indirect(reflect.ValueOf(to)).Type()).Interface()
 		err := json.NewDecoder(c.Req.Request.Body).Decode(decoded)
 		if err != nil {
-			log.Error(0, "Could not unmarshal payload into a %t: %v", to, err)
-			c.WriteHeader(http.StatusInternalServerError)
+			log.Error(0, "Could not unmarshal payload into a %T: %v", to, err)
+			c.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
