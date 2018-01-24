@@ -1,9 +1,14 @@
 package fs
 
 import (
+	"errors"
 	"os"
 
 	"github.com/freecloudio/freecloud/models"
+)
+
+var (
+	ErrUpwardsNavigation = errors.New("upward navigating directories is not allowed")
 )
 
 // Filesystem is an interface for implementing various filesystem layers, such as a disk
