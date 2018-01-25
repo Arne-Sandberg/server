@@ -32,7 +32,6 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m.Use(macaron.Recovery())
 	m.Use(macaron.Renderer())
 
-<<<<<<< HEAD
 	m.Group("/api/v1", func() {
 		m.Group("/auth", func() {
 			m.Post("/signup", OnlyAnonymous, JSONDecoder(&models.User{}), s.SignupHandler, JSONEncoder)
@@ -53,16 +52,6 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
-=======
-	m.Post("/upload", s.IsUser, s.FileUpload)
-	m.Get("/", s.IsUser, s.IndexHandler)
-	m.Get("/d/*", s.IsUser, s.IndexHandler)
-	m.Get("/signup", s.SignupPageHandler)
-	m.Post("/signup", s.SignupHandler)
-	m.Get("/login", s.LoginPageHandler)
-	m.Post("/login", s.LoginHandler)
-	m.Post("/logout", s.IsUser, s.LogoutHandler)
->>>>>>> 73c4b9c17a26bc7085683e106a87656bfeca4288
 
 	m.NotFound(s.NotFoundHandler)
 
