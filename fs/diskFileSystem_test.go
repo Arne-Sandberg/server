@@ -15,6 +15,7 @@ func TestRejectInsanePath(t *testing.T) {
 	}{
 		{"simple valid dir", args{"/this/should/work"}, nil},
 		{"complex valid dir", args{"/this/should/.also/Work!/"}, nil},
+		{"valid path \\", args{"/those/\\/Windows/users/"}, nil},
 		{"invalid path upward between", args{"/this/../should/fail"}, ErrUpwardsNavigation},
 		{"invalid path upward start", args{"../not/valid!"}, ErrUpwardsNavigation},
 		{"invalid path upward end", args{"/invalid/path!/.."}, ErrUpwardsNavigation},
@@ -22,7 +23,6 @@ func TestRejectInsanePath(t *testing.T) {
 		{"invalid path >", args{"/path/>/to/the/right"}, ErrForbiddenPathName},
 		{"invalid path :", args{"/typing/:/paths/is/boring"}, ErrForbiddenPathName},
 		{"invalid path \"", args{"/quoted/\"/path"}, ErrForbiddenPathName},
-		{"invalid path \\", args{"/those/\\/Windows/users/"}, ErrForbiddenPathName},
 		{"invalid path |", args{"/repetitive/|/task!"}, ErrForbiddenPathName},
 		{"invalid path ?", args{"/are/we/there/yet?"}, ErrForbiddenPathName},
 		{"invalid path *", args{"/finally/*_*"}, ErrForbiddenPathName},
