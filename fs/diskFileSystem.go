@@ -63,6 +63,7 @@ func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
 // CreateDirectory creates a new directory at "path".
 // Before doing so, it check the path for sanity.
 func (dfs *DiskFilesystem) CreateDirectory(path string) error {
+	log.Trace("Path for new directory is '%s'", path)
 	if err := dfs.rejectInsanePath(path); err != nil {
 		return err
 	}
