@@ -187,8 +187,11 @@ func UpdateUser(uid int, updates map[string]interface{}) (user *models.User, err
 			err = ErrInvalidUserData
 			return
 		}
+	} else {
+		// I expect that the lastSession will only be updated if nothing else of the data is updated.
+		// That way the "Updated" only represents changes to the core user data
+		user.Updated = time.Now().UTC()
 	}
-	user.Updated = time.Now().UTC()
 
 	err = cProvider.UpdateUser(user)
 	user.Password = ""
