@@ -85,3 +85,20 @@ func (s Server) GetDirectoryHandler(c *macaron.Context) {
 	}
 	return
 }
+
+func (s Server) CreateDirectoryHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	path, err := url.PathUnescape(c.Params("*"))
+	if err != nil {
+		c.Data["response"] = fmt.Errorf("Invalid directory format")
+	}
+	log.Trace("Creating directory '%s' for %s %s", path, user.FirstName, user.LastName)
+	err = s.filesystem.CreateDirectoryForUser(user, path)
+	// TODO: match agains path errors and return a http.StatusBadRequest on those
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+	c.Data["response"] = models.SuccessResponse
+	return
+}

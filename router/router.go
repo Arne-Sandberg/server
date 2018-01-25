@@ -45,7 +45,10 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 		m.Patch("/user/byID/:id", OnlyAdmins, GeneralJSONDecoder, s.AdminUpdateUserHandler, JSONEncoder)
 
 		m.Post("/files", OnlyUsers, s.UploadHandler, JSONEncoder)
+		// * matchers are used here, because of a planned transition from URLEncoded paths to raw paths.
+		// We still need to investigate if those are save
 		m.Get("/directory/*", OnlyUsers, s.GetDirectoryHandler, JSONEncoder)
+		m.Post("/directory/*", OnlyUsers, s.CreateDirectoryHandler, JSONEncoder)
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
