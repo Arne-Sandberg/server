@@ -34,15 +34,15 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 
 	m.Group("/api/v1", func() {
 		m.Group("/auth", func() {
-			m.Post("/signup", OnlyAnonymous, JSONDecoder(&models.User{}), s.SignupHandler, JSONEncoder)
-			m.Post("/login", OnlyAnonymous, JSONDecoder(&models.User{}), s.LoginHandler, JSONEncoder)
+			m.Post("/signup", JSONDecoder(&models.User{}), s.SignupHandler, JSONEncoder)
+			m.Post("/login", JSONDecoder(&models.User{}), s.LoginHandler, JSONEncoder)
 			m.Post("/logout", OnlyUsers, s.LogoutHandler, JSONEncoder)
 		})
 
 		m.Get("/user/me", OnlyUsers, s.UserHandler, JSONEncoder)
-		//m.Patch("/user/me", OnlyUsers, JSONDecoder(&models.User{}), s.UpdateUserHandler, JSONEncoder)
+		m.Patch("/user/me", OnlyUsers, GeneralJSONDecoder, s.UpdateUserHandler, JSONEncoder)
 		m.Get("/user/byID/:id", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
-		//m.Patch("/user/*", OnlyAdmins, JSONDecoder(&models.User{}), s.AdminUpdateUserHandler, JSONEncoder)
+		m.Patch("/user/byID/:id", OnlyAdmins, GeneralJSONDecoder, s.AdminUpdateUserHandler, JSONEncoder)
 
 		m.Post("/files", OnlyUsers, s.UploadHandler, JSONEncoder)
 		// * matchers are used here, because of a planned transition from URLEncoded paths to raw paths.

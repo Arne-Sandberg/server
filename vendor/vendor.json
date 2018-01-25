@@ -33,6 +33,12 @@
 			"revisionTime": "2016-06-27T17:00:12Z"
 		},
 		{
+			"checksumSHA1": "bi9S0c68XOEK1tO25X5PPGekLRo=",
+			"path": "github.com/go-restit/lzjson",
+			"revision": "efe3c53acc682f0a1f43cecd3e3e0d535af3e73e",
+			"revisionTime": "2016-12-06T09:51:09Z"
+		},
+		{
 			"checksumSHA1": "HtpYAWHvd9mq+mHkpo7z8PGzMik=",
 			"path": "github.com/hashicorp/hcl",
 			"revision": "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8",
@@ -327,5 +333,5 @@
 			"revisionTime": "2018-01-09T11:43:31Z"
 		}
 	],
-	"rootPath": "github.com/riesinger/freecloud"
+	"rootPath": "github.com/freecloudio/freecloud"
 }
