@@ -26,6 +26,7 @@ func TestRejectInsanePath(t *testing.T) {
 		{"invalid path |", args{"/repetitive/|/task!"}, ErrForbiddenPathName},
 		{"invalid path ?", args{"/are/we/there/yet?"}, ErrForbiddenPathName},
 		{"invalid path *", args{"/finally/*_*"}, ErrForbiddenPathName},
+		{"valid short path", args{"home"}, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
