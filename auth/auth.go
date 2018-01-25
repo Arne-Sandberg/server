@@ -64,6 +64,15 @@ func newUnverifiedSession(uid int) models.Session {
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
 	}
+
+	updates := map[string]interface{}{
+		"lastSession": time.Now().UTC(),
+	}
+	_, err = UpdateUser(uid, updates)
+	if err != nil {
+		log.Error(0, "Could not update user with lastSession %v", err)
+	}
+
 	return sess
 }
 
@@ -100,8 +109,6 @@ func NewUser(user *models.User) (session models.Session, err error) {
 		user.IsAdmin = true
 		err = cProvider.UpdateUser(user)
 	}
-
-	log.Trace("End of NewUser: %v", user)
 
 	// Now, create a session for the user
 	return newUnverifiedSession(user.ID), nil
@@ -170,6 +177,13 @@ func UpdateUser(uid int, updates map[string]interface{}) (user *models.User, err
 		}
 		user.Password, err = HashPassword(newPassword)
 		if err != nil {
+			err = ErrInvalidUserData
+			return
+		}
+	}
+	if lastSession, ok := updates["lastSession"]; ok == true {
+		user.LastSession, ok = lastSession.(time.Time)
+		if ok != true {
 			err = ErrInvalidUserData
 			return
 		}
