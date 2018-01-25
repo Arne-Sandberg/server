@@ -76,7 +76,7 @@ func (s Server) SignupHandler(c *macaron.Context) {
 
 	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(user)
-	if err == auth.ErrInvalidSignupData || err == auth.ErrUserAlreadyExists {
+	if err == auth.ErrInvalidUserData || err == auth.ErrUserAlreadyExists {
 		c.Data["response"] = models.APIError{Code: http.StatusBadRequest, Message: err.Error()}
 		return
 	} else if err != nil {

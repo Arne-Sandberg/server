@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/freecloudio/freecloud/config"
@@ -20,7 +19,7 @@ var (
 
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
-	ErrInvalidSignupData  = errors.New("auth: Invalid signup data")
+	ErrInvalidUserData    = errors.New("auth: Invalid user data")
 	ErrUserAlreadyExists  = errors.New("auth: User already exists")
 )
 
@@ -70,8 +69,8 @@ func newUnverifiedSession(uid int) models.Session {
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
-	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || len(user.FirstName) == 0 || len(user.LastName) == 0 {
-		err = ErrInvalidSignupData
+	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || !utils.ValidateFirstName(user.FirstName) || !utils.ValidateLastName(user.LastName) {
+		err = ErrInvalidUserData
 		return
 	}
 
@@ -122,45 +121,63 @@ func RemoveSession(sess models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
-func UpdateUser(uid int, updatedUser *models.User, allowedUpdates map[string]bool) (returnUser *models.User, err error) {
-	user, err := GetUserByID(uid)
+func UpdateUser(uid int, updates map[string]interface{}) (user *models.User, err error) {
+	user, err = GetUserByID(uid)
 	if err != nil {
 		return
 	}
 
-	// Reset not allowed updates and do password update if allowed
-	if !allowedUpdates["Email"] {
-		updatedUser.Email = user.Email
-	}
-	if !allowedUpdates["FirstName"] {
-		updatedUser.FirstName = user.FirstName
-	}
-	if !allowedUpdates["LastName"] {
-		updatedUser.LastName = user.LastName
-	}
-	if !allowedUpdates["AvatarURL"] {
-		updatedUser.AvatarURL = user.AvatarURL
-	}
-	if !allowedUpdates["IsAdmin"] {
-		updatedUser.IsAdmin = user.IsAdmin
-	}
-	if allowedUpdates["Password"] && updatedUser.Password != user.Password {
-		updatedUser.Password, err = HashPassword(updatedUser.Password)
-		if err != nil {
-			err = fmt.Errorf("Error hashing password during user update: %v", err)
+	if email, ok := updates["email"]; ok == true {
+		user.Email, ok = email.(string)
+		if ok != true || !utils.ValidateEmail(user.Email) {
+			err = ErrInvalidUserData
 			return
 		}
 	}
+	if firstName, ok := updates["firstName"]; ok == true {
+		user.FirstName, ok = firstName.(string)
+		if ok != true || !utils.ValidateFirstName(user.FirstName) {
+			err = ErrInvalidUserData
+			return
+		}
+	}
+	if lastName, ok := updates["lastName"]; ok == true {
+		user.LastName, ok = lastName.(string)
+		if ok != true || !utils.ValidateLastName(user.LastName) {
+			err = ErrInvalidUserData
+			return
+		}
+	}
+	if avatarURL, ok := updates["avatarURL"]; ok == true {
+		user.AvatarURL, ok = avatarURL.(string)
+		if ok != true || !utils.ValidateAvatarURL(user.AvatarURL) {
+			err = ErrInvalidUserData
+			return
+		}
+	}
+	if isAdmin, ok := updates["isAdmin"]; ok == true {
+		user.IsAdmin, ok = isAdmin.(bool)
+		if ok != true {
+			err = ErrInvalidUserData
+			return
+		}
+	}
+	if password, ok := updates["password"]; ok == true {
+		newPassword, ok := password.(string)
+		if ok != true || !utils.ValidatePassword(user.Password) {
+			err = ErrInvalidUserData
+			return
+		}
+		user.Password, err = HashPassword(newPassword)
+		if err != nil {
+			err = ErrInvalidUserData
+			return
+		}
+	}
+	user.Updated = time.Now().UTC()
 
-	// Reset values that are not allowed to update generally and set updated time
-	updatedUser.LastSession = user.LastSession
-	updatedUser.Created = user.Created
-	updatedUser.ID = user.ID
-	updatedUser.Updated = time.Now().UTC()
-
-	err = cProvider.UpdateUser(updatedUser)
-	updatedUser.Password = ""
-	returnUser = updatedUser
+	err = cProvider.UpdateUser(user)
+	user.Password = ""
 
 	return
 }

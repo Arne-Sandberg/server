@@ -5,23 +5,24 @@ import (
 
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
+	"github.com/go-restit/lzjson"
 	macaron "gopkg.in/macaron.v1"
 )
 
 var (
-	allowedUserUpdates = map[string]bool{
-		"FirstName": true,
-		"LastName":  true,
-		"AvatarURL": true,
-		"Password":  true,
+	allowedUserUpdates = []string{
+		"firstName",
+		"lastName",
+		"avatarURL",
+		"password",
 	}
-	allowedAdminUpdates = map[string]bool{
-		"FirstName": true,
-		"LastName":  true,
-		"AvatarURL": true,
-		"Password":  true,
-		"IsAdmin":   true,
-		"Email":     true,
+	allowedAdminUpdates = []string{
+		"firstName",
+		"lastName",
+		"avatarURL",
+		"password",
+		"isAdmin",
+		"email",
 	}
 )
 
@@ -40,9 +41,9 @@ func (s Server) UserHandler(c *macaron.Context) {
 
 func (s Server) UpdateUserHandler(c *macaron.Context) {
 	userID := c.Data["user"].(*models.User).ID
-	updatedUser := c.Data["request"].(*models.User)
+	userUpdateJSON := c.Data["request"].(lzjson.Node)
 
-	updatedUser, err := auth.UpdateUser(userID, updatedUser, allowedUserUpdates)
+	updatedUser, err := auth.UpdateUser(userID, fillUserUpdates(userUpdateJSON, false))
 
 	if err != nil {
 		c.Data["response"] = err
@@ -85,9 +86,9 @@ func (s Server) AdminUpdateUserHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
-	updatedUser := c.Data["request"].(*models.User)
+	userUpdateJSON := c.Data["request"].(lzjson.Node)
 
-	updatedUser, err = auth.UpdateUser(userID, updatedUser, allowedAdminUpdates)
+	updatedUser, err := auth.UpdateUser(userID, fillUserUpdates(userUpdateJSON, true))
 
 	if err != nil {
 		c.Data["response"] = err
@@ -100,4 +101,28 @@ func (s Server) AdminUpdateUserHandler(c *macaron.Context) {
 			updatedUser,
 		}
 	}
+}
+
+func fillUserUpdates(userUpdateJSON lzjson.Node, admin bool) (updates map[string]interface{}) {
+	updates = make(map[string]interface{})
+
+	var allowedUpdates *[]string
+	if admin {
+		allowedUpdates = &allowedAdminUpdates
+	} else {
+		allowedUpdates = &allowedUserUpdates
+	}
+
+	var temp interface{}
+	for _, identifier := range *allowedUpdates {
+		value := userUpdateJSON.Get(identifier)
+		if err := value.ParseError(); err != nil {
+			continue
+		}
+
+		value.Unmarshal(&temp)
+		updates[identifier] = temp
+	}
+
+	return
 }
