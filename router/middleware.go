@@ -9,6 +9,7 @@ import (
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
+	"github.com/go-restit/lzjson"
 
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
@@ -102,6 +103,15 @@ func OnlyAnonymous(c *macaron.Context) {
 		return
 	}
 	c.WriteHeader(http.StatusForbidden)
+}
+
+// GeneralJSONDecoder unmarshals the context's body into a json object of the lzjson package
+// This object can hold up any json structure and the further handlers need to unpack it themself
+func GeneralJSONDecoder(c *macaron.Context) {
+	json := lzjson.Decode(c.Req.Request.Body)
+	defer c.Req.Request.Body.Close()
+
+	c.Data["request"] = json
 }
 
 // JSONDecoder unmarshals the context's body into a variable of type "to" into the context's "request" data field.

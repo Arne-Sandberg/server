@@ -15,7 +15,7 @@ var (
 )
 
 const (
-	forbiddenPathCharacters = "<>:\"\\|?*"
+	forbiddenPathCharacters = "<>:\"|?*"
 )
 
 // Filesystem is an interface for implementing various filesystem layers, such as a disk
