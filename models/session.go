@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const SessionTokenLenght = 32
+const SessionTokenLength = 32
 
 type Session struct {
 	UID       int    `storm:"index"`
@@ -14,13 +14,13 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
-func (s Session) GetCookieString() string {
+func (s Session) GetTokenString() string {
 	return fmt.Sprintf("%s%d", s.Token, s.UID)
 }
 
-func ParseSessionCookieString(cookie string) (Session, error) {
-	tok := cookie[:SessionTokenLenght]
-	uidStr := cookie[SessionTokenLenght:]
+func ParseSessionTokenString(cookie string) (Session, error) {
+	tok := cookie[:SessionTokenLength]
+	uidStr := cookie[SessionTokenLength:]
 	uid, err := strconv.Atoi(uidStr)
 	if err != nil {
 		return Session{}, err

@@ -4,16 +4,12 @@ import (
 	"net/http"
 
 	"github.com/freecloudio/freecloud/auth"
-	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
 )
 
 func (s Server) LoginHandler(c *macaron.Context) {
-	// Delete cookies in case the auth fails; if it succeeds this will be overwritten by the real cookie
-	c.SetCookie(config.GetString("auth.session_cookie"), "", -1) // Set a MaxAge of -1 to delete the cookie
-
 	userIntf, ok := c.Data["request"]
 	if !ok {
 		log.Error(0, "%v", ErrNoRequestData)
@@ -35,13 +31,12 @@ func (s Server) LoginHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
-	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
 	c.Data["response"] = struct {
 		Success bool   `json:"success"`
 		Token   string `json:"token"`
 	}{
 		Success: true,
-		Token:   session.GetCookieString(),
+		Token:   session.GetTokenString(),
 	}
 }
 
@@ -54,17 +49,12 @@ func (s Server) LogoutHandler(c *macaron.Context) {
 		c.Data["response"] = models.APIError{Code: http.StatusInternalServerError, Message: "Failed to delete session"}
 		return
 	}
-
-	c.SetCookie(config.GetString("auth.session_cookie"), "", -1) // Set a MaxAge of -1 to delete the cookie
 	c.Data["response"] = models.SuccessResponse
 }
 
 // SignupHandler handles the /signup route, when a POST request is made to it.
 // It creates a new user and returns a session and user cookie.
 func (s Server) SignupHandler(c *macaron.Context) {
-	// Delete cookies in case the auth fails; if it succeeds this will be overwritten by the real cookie
-	c.SetCookie(config.GetString("auth.session_cookie"), "", -1) // Set a MaxAge of -1 to delete the cookie
-
 	userIntf, ok := c.Data["request"]
 	if !ok {
 		log.Error(0, "%v", ErrNoRequestData)
@@ -83,12 +73,11 @@ func (s Server) SignupHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
-	c.SetCookie(config.GetString("auth.session_cookie"), session.GetCookieString())
 	c.Data["response"] = struct {
 		Success bool   `json:"success"`
 		Token   string `json:"token"`
 	}{
 		Success: true,
-		Token:   session.GetCookieString(),
+		Token:   session.GetTokenString(),
 	}
 }

@@ -71,18 +71,16 @@ func OnlyUsers(c *macaron.Context) {
 }
 
 func validateSessionAndFillUserData(token string, c *macaron.Context) {
-	session, err := models.ParseSessionCookieString(token)
+	session, err := models.ParseSessionTokenString(token)
 	// This probably also means the session is invalid, so redirect time it is!
 	if err != nil {
 		log.Error(0, "Could not parse session token: %v", err)
-		c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
 		c.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	valid := auth.ValidateSession(session)
 	if !valid {
 		log.Warn("Invalid session")
-		c.SetCookie(config.GetString("auth.session_cookie"), "", -1)
 		c.WriteHeader(http.StatusUnauthorized)
 		return
 	}
