@@ -64,6 +64,17 @@ func (s Server) UploadHandler(c *macaron.Context) {
 	c.WriteHeader(http.StatusCreated)
 }
 
+func (s Server) DownloadHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	path, err := url.PathUnescape(c.Params("*"))
+	fullPath, filename, err := s.filesystem.ResolveFilePath(user, path)
+	if err != nil {
+		// TODO: ERROR!
+		log.Error(0, "Could not resolve path for download: %v", err)
+	}
+	c.ServeFile(fullPath, filename)
+}
+
 func (s Server) GetDirectoryHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	path, err := url.PathUnescape(c.Params("*"))

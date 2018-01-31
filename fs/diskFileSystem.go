@@ -95,6 +95,15 @@ func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string
 	return dfs.CreateDirectory(filepath.Join(dfs.GetUserBaseDirectory(user), path))
 }
 
+func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error) {
+	fullPath = filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path)
+	if _, err = os.Stat(fullPath); err == os.ErrNotExist {
+		err = ErrFileNotExist
+	}
+	filename = filepath.Base(fullPath)
+	return
+}
+
 // ListFilesForUser returns a list of all files and folders in the given "path" (relative to the user's directory).
 // Before doing so, it checks the path for sanity.
 func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error) {

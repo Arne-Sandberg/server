@@ -12,6 +12,7 @@ var (
 	ErrUpwardsNavigation = errors.New("upward navigating directories is not allowed")
 	// ErrForbiddenPathName indicates a path having weird characters that nobody should use, also these characters are forbidden on Windows
 	ErrForbiddenPathName = errors.New("paths cannot contain the following characters: <>:\"\\|?*")
+	ErrFileNotExist      = errors.New("file does not exist")
 )
 
 const (
@@ -28,4 +29,7 @@ type Filesystem interface {
 	NewFileHandleForUser(user *models.User, path string) (*os.File, error)
 	CreateDirectoryForUser(user *models.User, path string) error
 	ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error)
+	// ResolveFilePath returns the full fulepath for a given file and user.
+	// This is used in the donload handler
+	ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error)
 }
