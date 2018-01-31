@@ -29,7 +29,7 @@ type Filesystem interface {
 	NewFileHandleForUser(user *models.User, path string) (*os.File, error)
 	CreateDirectoryForUser(user *models.User, path string) error
 	ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error)
-	// ResolveFilePath returns the full fulepath for a given file and user.
+	// ResolveFilePath returns the full path for a given file and user.
 	// This is used in the donload handler
 	ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error)
 }
