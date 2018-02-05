@@ -121,7 +121,7 @@ func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {
 		fileInfos[i] = &models.FileInfo{
-			Path:  filepath.Join(path, f.Name()),
+			Path:  path,
 			Name:  f.Name(),
 			IsDir: f.IsDir(),
 			Size:  f.Size(),
