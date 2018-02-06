@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/freecloudio/freecloud/utils"
@@ -20,8 +21,9 @@ import (
 const oneGigabyte = 1024 * 1024 * 1024 * 1024
 
 func (s Server) UploadHandler(c *macaron.Context) {
-	// TODO: check if the user actually exists
 	user := c.Data["user"].(*models.User)
+	path := c.Data["path"].(string)
+
 	// Parse the multipart form in the request
 	err := c.Req.ParseMultipartForm(config.GetInt64("http.upload_limit") * oneGigabyte)
 	if err != nil {
@@ -50,7 +52,7 @@ func (s Server) UploadHandler(c *macaron.Context) {
 		defer file.Close()
 
 		// Create the destination file making sure the path is writeable.
-		dst, err := s.filesystem.NewFileHandleForUser(user, files[i].Filename)
+		dst, err := s.filesystem.NewFileHandleForUser(user, filepath.Join(path, files[i].Filename))
 		if err != nil {
 			log.Error(0, "Could not open file for writing: %v", err)
 			c.Data["response"] = fmt.Errorf("Could not open file for writing: %v", err)
@@ -73,9 +75,9 @@ func (s Server) DownloadHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	path := c.Data["path"].(string)
 	fullPath, filename, err := s.filesystem.ResolveFilePath(user, path)
-	if err != nil {
+	if err != nil || filename == "" {
 		// TODO: ERROR!
-		log.Error(0, "Could not resolve path for download: %v", err)
+		log.Error(0, "Could not resolve filepath for download: %v", err)
 	}
 	c.ServeFile(fullPath, filename)
 }
@@ -177,8 +179,14 @@ func (s Server) RenameDirectoryHandler(c *macaron.Context) {
 
 	// Check for invalid directory (../1/* --> move to other peoples files)
 	// Do rename/move
+	// Forbid changes too root directory
 }
 
+// RedirectEmptyPath redirects an empty path to the root path (path: /)
 func (s Server) RedirectEmptyPath(c *macaron.Context) {
-	c.Redirect("/api/v1/path/%2F", http.StatusPermanentRedirect)
+	if !strings.HasSuffix(c.Req.RequestURI, "/") {
+		c.Req.RequestURI += "/"
+	}
+
+	c.Redirect(c.Req.RequestURI+"%2F", http.StatusPermanentRedirect)
 }

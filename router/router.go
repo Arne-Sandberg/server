@@ -50,10 +50,14 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 		// Data: Up- and Download of files, creation and modifying files and directories
 		m.Get("/download/*", OnlyUsers, ResolvePath, s.DownloadHandler, JSONEncoder)
 		m.Post("/zip", OnlyUsers, JSONDecoder(&apiModels.ZipRequest{}), s.ZipHandler, JSONEncoder)
-		//m.Post("/upload", OnlyUsers, s.UploadHandler, JSONEncoder))
+
+		m.Post("/upload/*", OnlyUsers, ResolvePath, s.UploadHandler, JSONEncoder)
+		m.Post("/upload/", s.RedirectEmptyPath)
+
 		m.Get("/path/*", OnlyUsers, ResolvePath, s.FileInfoHandler, JSONEncoder)
-		m.Get("/path/", s.RedirectEmptyPath) // Redirect empty path to the root (path: /)
+		m.Get("/path/", s.RedirectEmptyPath)
 		//m.Post("/path/*", OnlyUsers, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
+		//m.Post("/path/", s.RedirectEmptyPath)
 		//m.Patch("/path/*", OnlyUsers, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
 	})
 
