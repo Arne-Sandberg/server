@@ -171,6 +171,7 @@ func (dfs *DiskFilesystem) GetFileInfo(user *models.User, path string) (fileInfo
 		// TODO: This might not be valid once we enable file sharing between users
 		OwnerID:     user.ID,
 		LastChanged: osFileInfo.ModTime(),
+		MimeType:    mime.TypeByExtension(filepath.Ext(osFileInfo.Name())),
 	}
 
 	return
