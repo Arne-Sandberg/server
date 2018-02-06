@@ -2,10 +2,6 @@
 freecloud.exe
 freecloud
 
-# NodeJS files
-node_modules
-npm*log
-
 # Uploaded data
 data/*
 
