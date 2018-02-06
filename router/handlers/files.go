@@ -12,6 +12,7 @@ import (
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
+	apiModels "github.com/freecloudio/freecloud/models/api"
 	log "gopkg.in/clog.v1"
 	macaron "gopkg.in/macaron.v1"
 )
@@ -81,7 +82,7 @@ func (s Server) DownloadHandler(c *macaron.Context) {
 
 func (s Server) ZipHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
-	paths := c.Data["request"].(*models.ZipRequest).Paths
+	paths := c.Data["request"].(*apiModels.ZipRequest).Paths
 
 	var err error
 	for _, path := range paths {
@@ -114,24 +115,35 @@ func (s Server) ZipHandler(c *macaron.Context) {
 	}
 }
 
-func (s Server) GetDirectoryHandler(c *macaron.Context) {
+func (s Server) FileInfoHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
-	path, err := url.PathUnescape(c.Params("*"))
-	if err != nil {
-		c.Data["response"] = fmt.Errorf("Invalid directory format")
-	}
-	log.Trace("Getting directory contents of %s for %s %s", path, user.FirstName, user.LastName)
-	fileInfos, err := s.filesystem.ListFilesForUser(user, path)
+	path := c.Data["path"].(string)
+
+	log.Trace("Getting fileInfo of %s for %s %s", path, user.FirstName, user.LastName)
+
+	fileInfo, err := s.filesystem.GetFileInfo(user, path)
 	if err != nil {
 		c.Data["response"] = err
 		return
 	}
+
+	var content []*models.FileInfo
+	if fileInfo.IsDir {
+		content, err = s.filesystem.ListFilesForUser(user, path)
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
+	}
+
 	c.Data["response"] = struct {
-		Success bool               `json:"success"`
-		Files   []*models.FileInfo `json:"files"`
+		Success  bool               `json:"success"`
+		FileInfo *models.FileInfo   `json:"fileInfo"`
+		Content  []*models.FileInfo `json:"content"`
 	}{
-		Success: true,
-		Files:   fileInfos,
+		Success:  true,
+		FileInfo: fileInfo,
+		Content:  content,
 	}
 	return
 }

@@ -98,7 +98,7 @@ func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string
 }
 
 func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error) {
-	fullPath = filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path)
+	fullPath = dfs.getFullPath(user, path)
 	fileInfo, err := os.Stat(fullPath)
 	if os.IsNotExist(err) {
 		err = ErrFileNotExist
@@ -126,7 +126,7 @@ func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*
 	if err := dfs.createUserDirIfNotExist(user); err != nil {
 		return nil, err
 	}
-	info, err := ioutil.ReadDir(filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path))
+	info, err := ioutil.ReadDir(dfs.getFullPath(user, path))
 	if err != nil {
 		log.Error(0, "Could not list files in %s: %v", path, err)
 		return nil, err
@@ -144,6 +144,34 @@ func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*
 		}
 	}
 	return fileInfos, nil
+}
+
+func (dfs *DiskFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
+	if err = dfs.rejectInsanePath(path); err != nil {
+		return
+	}
+	if err = dfs.createUserDirIfNotExist(user); err != nil {
+		return
+	}
+
+	var osFileInfo os.FileInfo
+	osFileInfo, err = os.Stat(dfs.getFullPath(user, path))
+	if os.IsNotExist(err) {
+		err = ErrFileNotExist
+		return
+	}
+
+	fileInfo = &models.FileInfo{
+		Path:  path,
+		Name:  osFileInfo.Name(),
+		IsDir: osFileInfo.IsDir(),
+		Size:  osFileInfo.Size(),
+		// TODO: This might not be valid once we enable file sharing between users
+		OwnerID:     user.ID,
+		LastChanged: osFileInfo.ModTime(),
+	}
+
+	return
 }
 
 // createUserDirIfNotExist checks whether the base directory for the given user exists and creates it otherwise.
@@ -203,4 +231,8 @@ func (dfs *DiskFilesystem) ZipFiles(user *models.User, paths []string, outputNam
 	err = archiver.Zip.Make(fullZipPath, paths)
 
 	return
+}
+
+func (dfs *DiskFilesystem) getFullPath(user *models.User, path string) string {
+	return filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path)
 }

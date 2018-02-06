@@ -180,7 +180,7 @@ func JSONEncoder(c *macaron.Context) {
 func ResolvePath(c *macaron.Context) {
 	path, err := url.PathUnescape(c.Params("*"))
 	if err != nil {
-		c.Data["response"] = fmt.Errorf("Invalid directory format")
+		c.Data["response"] = fmt.Errorf("Invalid path format")
 	}
 	c.Data["path"] = path
 }
