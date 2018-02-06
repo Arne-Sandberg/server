@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"time"
 
 	"github.com/freecloudio/freecloud/utils"
+	"github.com/go-restit/lzjson"
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
@@ -172,21 +172,62 @@ func (s Server) CreateFileHandler(c *macaron.Context) {
 			return
 		}
 	}
-	c.Data["response"] = models.SuccessResponse
+
+	fileInfo, err := s.filesystem.GetFileInfo(user, filePath)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = struct {
+		Success  bool             `json:"success"`
+		FileInfo *models.FileInfo `json:"fileInfo"`
+	}{
+		true,
+		fileInfo,
+	}
+
 	return
 }
 
-func (s Server) RenameDirectoryHandler(c *macaron.Context) {
+func (s Server) UpdateFileHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
-	path, err := url.PathUnescape(c.Params("*"))
+	path := c.Data["path"].(string)
+	fileUpdateJSON := c.Data["request"].(lzjson.Node)
+
+	updatedFileInfo, err := s.filesystem.UpdateFile(user, path, fillFileUpdates(fileUpdateJSON))
+
 	if err != nil {
-		c.Data["response"] = fmt.Errorf("Invalid directory format")
+		c.Data["response"] = err
+	} else {
+		c.Data["response"] = struct {
+			Success  bool             `json:"success"`
+			FileInfo *models.FileInfo `json:"fileInfo"`
+		}{
+			true,
+			updatedFileInfo,
+		}
 	}
-	newPath := c.Data["request"].(*models.FileInfo).Path
+}
 
-	log.Trace("Renaming directory '%s' to '%s' for %s %s", path, newPath, user.FirstName, user.LastName)
+var allowedFileUpdates = []string{
+	"path",
+	"name",
+}
 
-	// Check for invalid directory (../1/* --> move to other peoples files)
-	// Do rename/move
-	// Forbid changes too root directory
+func fillFileUpdates(fileUpdateJSON lzjson.Node) (updates map[string]interface{}) {
+	updates = make(map[string]interface{})
+
+	var temp interface{}
+	for _, identifier := range allowedFileUpdates {
+		value := fileUpdateJSON.Get(identifier)
+		if err := value.ParseError(); err != nil {
+			continue
+		}
+
+		value.Unmarshal(&temp)
+		updates[identifier] = temp
+	}
+
+	return
 }

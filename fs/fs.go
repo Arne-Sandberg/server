@@ -35,4 +35,5 @@ type Filesystem interface {
 	ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error)
 	// ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 	ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error)
+	UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error)
 }
