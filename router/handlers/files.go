@@ -5,6 +5,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path/filepath"
+	"time"
+
+	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
@@ -66,13 +70,48 @@ func (s Server) UploadHandler(c *macaron.Context) {
 
 func (s Server) DownloadHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
-	path, err := url.PathUnescape(c.Params("*"))
+	path := c.Data["path"].(string)
 	fullPath, filename, err := s.filesystem.ResolveFilePath(user, path)
 	if err != nil {
 		// TODO: ERROR!
 		log.Error(0, "Could not resolve path for download: %v", err)
 	}
 	c.ServeFile(fullPath, filename)
+}
+
+func (s Server) ZipHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	paths := c.Data["request"].(*models.ZipRequest).Paths
+
+	var err error
+	for _, path := range paths {
+		path, _, err = s.filesystem.ResolveFilePath(user, path)
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
+	}
+
+	outputFileName := "_" + time.Now().UTC().Format("060102150405") + ".zip"
+	if len(paths) == 1 {
+		outputFileName = filepath.Base(paths[0]) + outputFileName
+	} else {
+		outputFileName = "fc" + outputFileName
+	}
+
+	fullZipPath, err := s.filesystem.ZipFiles(user, paths, outputFileName)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = struct {
+		Success bool   `json:"success"`
+		ZipPath string `json:"zipPath"`
+	}{
+		Success: true,
+		ZipPath: utils.ConvertToSlash(fullZipPath),
+	}
 }
 
 func (s Server) GetDirectoryHandler(c *macaron.Context) {
@@ -112,4 +151,18 @@ func (s Server) CreateDirectoryHandler(c *macaron.Context) {
 	}
 	c.Data["response"] = models.SuccessResponse
 	return
+}
+
+func (s Server) RenameDirectoryHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	path, err := url.PathUnescape(c.Params("*"))
+	if err != nil {
+		c.Data["response"] = fmt.Errorf("Invalid directory format")
+	}
+	newPath := c.Data["request"].(*models.FileInfo).Path
+
+	log.Trace("Renaming directory '%s' to '%s' for %s %s", path, newPath, user.FirstName, user.LastName)
+
+	// Check for invalid directory (../1/* --> move to other peoples files)
+	// Do rename/move
 }

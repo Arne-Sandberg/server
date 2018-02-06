@@ -1,7 +1,6 @@
 # Built binaries & files
 freecloud.exe
 freecloud
-public/css/*
 
 # NodeJS files
 node_modules

@@ -32,4 +32,6 @@ type Filesystem interface {
 	// ResolveFilePath returns the full path for a given file and user.
 	// This is used in the download handler
 	ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error)
+	// ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
+	ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error)
 }

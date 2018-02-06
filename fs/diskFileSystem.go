@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/freecloudio/freecloud/models"
+	"github.com/mholt/archiver"
 	log "gopkg.in/clog.v1"
 )
 
@@ -97,10 +99,21 @@ func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string
 
 func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error) {
 	fullPath = filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path)
-	if _, err = os.Stat(fullPath); err == os.ErrNotExist {
+	fileInfo, err := os.Stat(fullPath)
+	if os.IsNotExist(err) {
 		err = ErrFileNotExist
+		return
+	} else if err != nil {
+		err = fmt.Errorf("Error resolving file path: %v", err)
+		return
 	}
-	filename = filepath.Base(fullPath)
+
+	if fileInfo.IsDir() {
+		filename = ""
+	} else {
+		filename = filepath.Base(fullPath)
+	}
+
 	return
 }
 
@@ -165,4 +178,29 @@ func (dfs *DiskFilesystem) rejectInsanePath(path string) error {
 		return ErrForbiddenPathName
 	}
 	return nil
+}
+
+// ZipFiles zips all given absolute paths to a zip archive with the given name in the temp folder
+func (dfs *DiskFilesystem) ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error) {
+	for it := 0; it < len(paths); it++ {
+		paths[it], _, err = dfs.ResolveFilePath(user, paths[it])
+		if err != nil {
+			return
+		}
+	}
+
+	err = dfs.CreateDirectoryForUser(user, ".tmp")
+	if err != nil {
+		return
+	}
+
+	zipPath = filepath.Join(".tmp", outputName)
+	fullZipPath := filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), zipPath)
+	if err != nil {
+		return
+	}
+
+	err = archiver.Zip.Make(fullZipPath, paths)
+
+	return
 }
