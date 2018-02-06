@@ -2,7 +2,9 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"time"
 
@@ -172,4 +174,13 @@ func JSONEncoder(c *macaron.Context) {
 		return
 	}
 
+}
+
+// ResolvePath resolves the * parameter of a url and creates a user independent path of it
+func ResolvePath(c *macaron.Context) {
+	path, err := url.PathUnescape(c.Params("*"))
+	if err != nil {
+		c.Data["response"] = fmt.Errorf("Invalid path format")
+	}
+	c.Data["path"] = path
 }

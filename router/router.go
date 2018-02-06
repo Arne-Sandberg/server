@@ -7,6 +7,7 @@ import (
 	"github.com/freecloudio/freecloud/router/handlers"
 
 	"github.com/freecloudio/freecloud/models"
+	apiModels "github.com/freecloudio/freecloud/models/api"
 
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/config"
@@ -33,23 +34,27 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 	m.Use(macaron.Renderer())
 
 	m.Group("/api/v1", func() {
+		// Auth: Includes logging in/out and signup
 		m.Group("/auth", func() {
 			m.Post("/signup", JSONDecoder(&models.User{}), s.SignupHandler, JSONEncoder)
 			m.Post("/login", JSONDecoder(&models.User{}), s.LoginHandler, JSONEncoder)
 			m.Post("/logout", OnlyUsers, s.LogoutHandler, JSONEncoder)
 		})
 
+		// User: Includes getting and editing your user or as admin also for other users
 		m.Get("/user/me", OnlyUsers, s.UserHandler, JSONEncoder)
 		m.Patch("/user/me", OnlyUsers, GeneralJSONDecoder, s.UpdateUserHandler, JSONEncoder)
 		m.Get("/user/byID/:id", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
 		m.Patch("/user/byID/:id", OnlyAdmins, GeneralJSONDecoder, s.AdminUpdateUserHandler, JSONEncoder)
 
-		m.Post("/files", OnlyUsers, s.UploadHandler, JSONEncoder)
-		m.Get("/files/*", OnlyUsers, s.DownloadHandler)
-		// * matchers are used here, because of a planned transition from URLEncoded paths to raw paths.
-		// We still need to investigate if those are save
-		m.Get("/directory/*", OnlyUsers, s.GetDirectoryHandler, JSONEncoder)
-		m.Post("/directory/*", OnlyUsers, s.CreateDirectoryHandler, JSONEncoder)
+		// Data: Up- and Download of files, creation and modifying files and directories
+		m.Get("/download/*", OnlyUsers, ResolvePath, s.DownloadHandler, JSONEncoder)
+		m.Post("/zip", OnlyUsers, JSONDecoder(&apiModels.ZipRequest{}), s.ZipHandler, JSONEncoder)
+
+		m.Post("/upload/*", OnlyUsers, ResolvePath, s.UploadHandler, JSONEncoder)
+		m.Get("/path/*", OnlyUsers, ResolvePath, s.FileInfoHandler, JSONEncoder)
+		m.Post("/path/*", OnlyUsers, ResolvePath, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
+		//m.Patch("/path/*", OnlyUsers, ResolvePath, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
