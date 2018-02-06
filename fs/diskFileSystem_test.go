@@ -30,7 +30,7 @@ func TestRejectInsanePath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dfs := &DiskFilesystem{"."}
+			dfs := &DiskFilesystem{".", ".tmp", nil}
 			if err := dfs.rejectInsanePath(tt.args.path); err != tt.wantErr {
 				t.Errorf("rejectIfNavigatingUpwards() in test %s error = %v, wantErr %v", tt.name, err, tt.wantErr)
 			}
