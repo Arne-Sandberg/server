@@ -94,7 +94,7 @@ func (s Server) ZipHandler(c *macaron.Context) {
 		}
 	}
 
-	outputFileName := "_" + time.Now().UTC().Format("060102150405") + ".zip"
+	outputFileName := "_" + time.Now().UTC().Format("06-01-02_15-04-05") + ".zip"
 	if len(paths) == 1 {
 		outputFileName = filepath.Base(paths[0]) + outputFileName
 	} else {
