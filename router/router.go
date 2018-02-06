@@ -52,13 +52,9 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 		m.Post("/zip", OnlyUsers, JSONDecoder(&apiModels.ZipRequest{}), s.ZipHandler, JSONEncoder)
 
 		m.Post("/upload/*", OnlyUsers, ResolvePath, s.UploadHandler, JSONEncoder)
-		m.Post("/upload/", s.RedirectEmptyPath)
-
 		m.Get("/path/*", OnlyUsers, ResolvePath, s.FileInfoHandler, JSONEncoder)
-		m.Get("/path/", s.RedirectEmptyPath)
-		//m.Post("/path/*", OnlyUsers, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
-		//m.Post("/path/", s.RedirectEmptyPath)
-		//m.Patch("/path/*", OnlyUsers, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
+		m.Post("/path/*", OnlyUsers, ResolvePath, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
+		//m.Patch("/path/*", OnlyUsers, ResolvePath, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))

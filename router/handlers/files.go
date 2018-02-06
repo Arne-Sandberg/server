@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/freecloudio/freecloud/utils"
@@ -150,18 +149,28 @@ func (s Server) FileInfoHandler(c *macaron.Context) {
 	return
 }
 
-func (s Server) CreateDirectoryHandler(c *macaron.Context) {
+func (s Server) CreateFileHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
-	path, err := url.PathUnescape(c.Params("*"))
-	if err != nil {
-		c.Data["response"] = fmt.Errorf("Invalid directory format")
-	}
-	log.Trace("Creating directory '%s' for %s %s", path, user.FirstName, user.LastName)
-	err = s.filesystem.CreateDirectoryForUser(user, path)
-	// TODO: match agains path errors and return a http.StatusBadRequest on those
-	if err != nil {
-		c.Data["response"] = err
-		return
+	path := c.Data["path"].(string)
+	fileInfo := c.Data["request"].(*models.FileInfo)
+	filePath := filepath.Join(path, fileInfo.Name)
+
+	log.Trace("Creating file '%s' for %s %s", filePath, user.FirstName, user.LastName)
+
+	if fileInfo.IsDir {
+		err := s.filesystem.CreateDirectoryForUser(user, filePath)
+		// TODO: match agains path errors and return a http.StatusBadRequest on those
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
+	} else {
+		file, err := s.filesystem.NewFileHandleForUser(user, filePath)
+		defer file.Close()
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
 	}
 	c.Data["response"] = models.SuccessResponse
 	return
@@ -180,13 +189,4 @@ func (s Server) RenameDirectoryHandler(c *macaron.Context) {
 	// Check for invalid directory (../1/* --> move to other peoples files)
 	// Do rename/move
 	// Forbid changes too root directory
-}
-
-// RedirectEmptyPath redirects an empty path to the root path (path: /)
-func (s Server) RedirectEmptyPath(c *macaron.Context) {
-	if !strings.HasSuffix(c.Req.RequestURI, "/") {
-		c.Req.RequestURI += "/"
-	}
-
-	c.Redirect(c.Req.RequestURI+"%2F", http.StatusPermanentRedirect)
 }
