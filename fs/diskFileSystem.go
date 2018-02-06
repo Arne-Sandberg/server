@@ -250,6 +250,55 @@ func (dfs *DiskFilesystem) ZipFiles(user *models.User, paths []string, outputNam
 	return
 }
 
+func (dfs *DiskFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {
+	if err = dfs.rejectInsanePath(path); err != nil || dfs.getFullPath(user, path) == dfs.getFullPath(user, "/") {
+		err = ErrForbiddenPathName
+		return
+	}
+
+	var newPath, newName string
+	fileInfo, err = dfs.GetFileInfo(user, path)
+	if err != nil {
+		return
+	}
+
+	if rawNewPath, ok := updates["path"]; ok == true {
+		newPath, ok = rawNewPath.(string)
+		if ok != true {
+			err = fmt.Errorf("Given path is not a string")
+			return
+		}
+	}
+
+	if rawNewName, ok := updates["name"]; ok == true {
+		newName, ok = rawNewName.(string)
+		if ok != true {
+			err = fmt.Errorf("Given name is not a string")
+			return
+		}
+	}
+
+	if err = dfs.rejectInsanePath(newPath); err != nil || newPath == "" {
+		newPath = fileInfo.Path
+	}
+	if err = dfs.rejectInsanePath(newName); err != nil || newName == "" {
+		newName = fileInfo.Name
+	}
+	newCompletePath := dfs.getFullPath(user, filepath.Join(newPath, newName))
+	oldCompletePath := dfs.getFullPath(user, filepath.Join(fileInfo.Path, fileInfo.Name))
+
+	err = os.Rename(oldCompletePath, newCompletePath)
+	if err != nil {
+		err = fmt.Errorf("Renaming %v failed", path)
+		return
+	}
+
+	fileInfo.Path = newPath
+	fileInfo.Name = newName
+
+	return
+}
+
 func (dfs *DiskFilesystem) getFullPath(user *models.User, path string) string {
 	return filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path)
 }
