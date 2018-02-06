@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/freecloudio/freecloud/utils"
+
 	"github.com/freecloudio/freecloud/models"
 	"github.com/mholt/archiver"
 	log "gopkg.in/clog.v1"
@@ -132,6 +134,12 @@ func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*
 		log.Error(0, "Could not list files in %s: %v", path, err)
 		return nil, err
 	}
+
+	if path == "" {
+		path = "/"
+	}
+	path = utils.ConvertToSlash(path)
+
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {
 		fileInfos[i] = &models.FileInfo{
@@ -163,8 +171,14 @@ func (dfs *DiskFilesystem) GetFileInfo(user *models.User, path string) (fileInfo
 		return
 	}
 
+	filePath := filepath.Dir(path)
+	if filePath == "." {
+		filePath = "/"
+	}
+	filePath = utils.ConvertToSlash(filePath)
+
 	fileInfo = &models.FileInfo{
-		Path:  path,
+		Path:  filePath,
 		Name:  osFileInfo.Name(),
 		IsDir: osFileInfo.IsDir(),
 		Size:  osFileInfo.Size(),

@@ -178,3 +178,7 @@ func (s Server) RenameDirectoryHandler(c *macaron.Context) {
 	// Check for invalid directory (../1/* --> move to other peoples files)
 	// Do rename/move
 }
+
+func (s Server) RedirectEmptyPath(c *macaron.Context) {
+	c.Redirect("/api/v1/path/%2F", http.StatusPermanentRedirect)
+}
