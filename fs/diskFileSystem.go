@@ -2,6 +2,7 @@ package fs
 
 import (
 	"io/ioutil"
+	"mime"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -128,6 +129,7 @@ func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*
 			// TODO: This might not be valid once we enable file sharing between users
 			OwnerID:     user.ID,
 			LastChanged: f.ModTime(),
+			MimeType:    mime.TypeByExtension(filepath.Ext(f.Name())),
 		}
 	}
 	return fileInfos, nil
