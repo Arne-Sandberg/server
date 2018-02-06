@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/models"
@@ -18,7 +20,9 @@ import (
 
 // DiskFilesystem implements the Filesystem interface, writing actual files to the disk
 type DiskFilesystem struct {
-	base string
+	base    string
+	tmpName string
+	done    chan struct{}
 }
 
 // NewDiskFilesystem sets up a disk filesystem and returns it
@@ -47,8 +51,57 @@ func NewDiskFilesystem(baseDir string) (dfs *DiskFilesystem, err error) {
 	}
 
 	log.Info("Initialized filesystem at base directory %s", base)
-	dfs = &DiskFilesystem{base}
+	dfs = &DiskFilesystem{base: base, tmpName: config.GetString("fs.tmp_folder_name"), done: make(chan struct{})}
+
+	go dfs.cleanupTempFolderRoutine(time.Hour * time.Duration(config.GetInt("fs.tmp_data_expiry")))
+
 	return
+}
+
+func (dfs *DiskFilesystem) cleanupTempFolderRoutine(interval time.Duration) {
+	log.Trace("Starting temp folder cleaner, running now and every %v", interval)
+	dfs.cleanupTempFolder()
+
+	ticker := time.NewTicker(interval)
+	for {
+		select {
+		case <-dfs.done:
+			return
+		case <-ticker.C:
+			dfs.cleanupTempFolder()
+		}
+	}
+}
+
+func (dfs *DiskFilesystem) cleanupTempFolder() {
+	log.Trace("Cleaning temp folder")
+
+	infoList, err := ioutil.ReadDir(dfs.base)
+	if err != nil {
+		log.Warn("Cleaning temp folder failed: %v", err)
+	}
+
+	for _, info := range infoList {
+		if !info.IsDir() {
+			continue
+		}
+
+		tmpFolderPath := filepath.Join(dfs.base, info.Name(), dfs.tmpName)
+		tmpInfoList, err := ioutil.ReadDir(tmpFolderPath)
+		if err != nil {
+			log.Warn("Error reading temp folder in %v during temp cleanup: %v", tmpFolderPath, err)
+		}
+
+		for _, tmpInfo := range tmpInfoList {
+			if time.Now().After(tmpInfo.ModTime().Add(time.Hour * time.Duration(config.GetInt("fs.tmp_data_expiry")))) {
+				err = os.RemoveAll(filepath.Join(tmpFolderPath, tmpInfo.Name()))
+				if err != nil {
+					log.Warn("Error deleting file %v in temp folder %v during temp cleanup: %v", tmpInfo.Name(), tmpFolderPath, err)
+					continue
+				}
+			}
+		}
+	}
 }
 
 // NewFileHandle opens an *os.File handle for writing to.
@@ -100,6 +153,7 @@ func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string
 	return dfs.CreateDirectory(filepath.Join(dfs.GetUserBaseDirectory(user), path))
 }
 
+// ResolveFilePath resolves the given path for a user and returns the full path, if it is a file the filename oder an error if the file does not exist
 func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error) {
 	fullPath = dfs.getFullPath(user, path)
 	fileInfo, err := os.Stat(fullPath)
@@ -234,12 +288,12 @@ func (dfs *DiskFilesystem) ZipFiles(user *models.User, paths []string, outputNam
 		}
 	}
 
-	err = dfs.CreateDirectoryForUser(user, ".tmp")
+	err = dfs.CreateDirectoryForUser(user, dfs.tmpName)
 	if err != nil {
 		return
 	}
 
-	zipPath = filepath.Join(".tmp", outputName)
+	zipPath = filepath.Join(dfs.tmpName, outputName)
 	fullZipPath := filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), zipPath)
 	if err != nil {
 		return
