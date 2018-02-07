@@ -4,17 +4,15 @@ import (
 	"time"
 
 	"github.com/asdine/storm"
-	"github.com/freecloudio/freecloud/auth"
-	"github.com/freecloudio/freecloud/config"
-	"github.com/freecloudio/freecloud/models"
 	"github.com/asdine/storm/codec/msgpack"
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/models"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
 )
 
 type StormDB struct {
-	c    *storm.DB
-	done chan struct{}
+	c *storm.DB
 }
 
 func NewStormDB() (*StormDB, error) {
@@ -24,36 +22,26 @@ func NewStormDB() (*StormDB, error) {
 		return nil, err
 	}
 	log.Info("Initialized database")
-	s := StormDB{c: db, done: make(chan struct{})}
-	go s.cleanupExpiredSessions(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))
+	s := StormDB{c: db}
+
 	return &s, nil
 }
 
-func (db *StormDB) cleanupExpiredSessions(interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	log.Trace("Starting old session cleaner, running every %v", interval)
-	for {
-		select {
-		case <-db.done:
-			return
-		case <-ticker.C:
-			log.Trace("Cleaning old sessions")
-			var sessions []models.Session
-			db.c.All(&sessions)
-			for _, sess := range sessions {
-				if time.Now().UTC().After(sess.ExpiresAt) {
-					err := db.c.DeleteStruct(&sess)
-					if err != nil {
-						log.Error(0, "Deleting expired session failed: %v", err)
-					}
-				}
+func (db *StormDB) CleanupExpiredSessions() {
+	log.Trace("Cleaning old sessions")
+	var sessions []models.Session
+	db.c.All(&sessions)
+	for _, sess := range sessions {
+		if time.Now().UTC().After(sess.ExpiresAt) {
+			err := db.c.DeleteStruct(&sess)
+			if err != nil {
+				log.Error(0, "Deleting expired session failed: %v", err)
 			}
 		}
 	}
 }
 
 func (db *StormDB) Close() {
-	db.done <- struct{}{}
 	db.c.Close()
 }
 

@@ -58,6 +58,10 @@ func NewDiskFilesystem(baseDir string) (dfs *DiskFilesystem, err error) {
 	return
 }
 
+func (dfs *DiskFilesystem) Close() {
+	dfs.done <- struct{}{}
+}
+
 func (dfs *DiskFilesystem) cleanupTempFolderRoutine(interval time.Duration) {
 	log.Trace("Starting temp folder cleaner, running now and every %v", interval)
 	dfs.cleanupTempFolder()
@@ -153,7 +157,7 @@ func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string
 	return dfs.CreateDirectory(filepath.Join(dfs.GetUserBaseDirectory(user), path))
 }
 
-// ResolveFilePath resolves the given path for a user and returns the full path, if it is a file the filename oder an error if the file does not exist
+// ResolveFilePath resolves the given path for a user and returns the full path, if it is a file the filename or an error if the file does not exist
 func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error) {
 	fullPath = dfs.getFullPath(user, path)
 	fileInfo, err := os.Stat(fullPath)
