@@ -14,9 +14,9 @@ import (
 const SessionTokenLength = 32
 
 var (
-	cProvider CredentialsProvider
-	sProvider SessionProvider
-
+	cProvider             CredentialsProvider
+	sProvider             SessionProvider
+	done                  chan struct{}
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
 	ErrInvalidUserData    = errors.New("auth: Invalid user data")
@@ -27,6 +27,28 @@ var (
 func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider) {
 	cProvider = credentialsProvider
 	sProvider = sessionProvider
+
+	done = make(chan struct{})
+	go cleanupExpiredSessionsRoutine(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))
+}
+
+func Finish() {
+	done <- struct{}{}
+}
+
+func cleanupExpiredSessionsRoutine(interval time.Duration) {
+	log.Trace("Starting old session cleaner, running now and every %v", interval)
+	sProvider.CleanupExpiredSessions()
+
+	ticker := time.NewTicker(interval)
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			sProvider.CleanupExpiredSessions()
+		}
+	}
 }
 
 // NewSession verifies the user's credentials and then returns a new Session

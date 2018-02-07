@@ -16,8 +16,8 @@ import (
 
 func main() {
 	config.Init()
-	// auth.Init()
 	setupLogger()
+
 	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"))
 	if err != nil {
 		os.Exit(3)
