@@ -14,9 +14,10 @@ import (
 const SessionTokenLength = 32
 
 var (
-	cProvider             CredentialsProvider
-	sProvider             SessionProvider
-	done                  chan struct{}
+	cProvider CredentialsProvider
+	sProvider SessionProvider
+	done      chan struct{}
+
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
 	ErrInvalidUserData    = errors.New("auth: Invalid user data")

@@ -3,6 +3,8 @@ package db
 import (
 	"time"
 
+	"github.com/asdine/storm/q"
+
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/freecloudio/freecloud/auth"
@@ -127,4 +129,64 @@ func (db *StormDB) SessionIsValid(session models.Session) bool {
 		return false
 	}
 	return true
+}
+
+func (db *StormDB) InsertFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.Save(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not insert file: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.DeleteStruct(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not delete file: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.Update(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not update fileInfo: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) ClearFilesExceptShared() (err error) {
+	err = db.c.DeleteStruct(&models.FileInfo{OriginalFileID: 0})
+	if err != nil {
+		log.Error(0, "Could not delete non shared files: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo models.FileInfo, content []models.FileInfo, err error) {
+	dirInfo, err = db.GetFileInfo(userID, path, dirName)
+	if err != nil {
+		return
+	}
+
+	err = db.c.Select(q.Eq("ParentID", dirInfo.ID)).OrderBy("Name").Find(&content)
+	if err != nil {
+		log.Error(0, "Could not get dir content for %v %v for user %v: %v", path, dirName, userID, err)
+		return
+	}
+
+	return
+}
+
+func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo models.FileInfo, err error) {
+	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(&fileInfo)
+	if err != nil {
+		log.Error(0, "Could not get fileInfo for %v %v for user %v: %v", path, fileName, userID, err)
+		return
+	}
+	return
 }
