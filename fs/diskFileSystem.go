@@ -3,15 +3,12 @@ package fs
 import (
 	"fmt"
 	"io/ioutil"
-	"mime"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/freecloudio/freecloud/config"
-	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/models"
 	"github.com/mholt/archiver"
@@ -136,31 +133,9 @@ func (dfs *DiskFilesystem) CreateDirectory(path string) error {
 	return err
 }
 
-// GetUserBaseDirectory returns the user directory's name relative to the base directory.
-func (dfs *DiskFilesystem) GetUserBaseDirectory(user *models.User) string {
-	return strconv.Itoa(user.ID)
-}
-
-// NewFileHandleForUser opens an *os.File in the user directory handle for writing to.
-// It relies on NewFileHandle for checking the path's sanity.
-func (dfs *DiskFilesystem) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
-	if err := dfs.createUserDirIfNotExist(user); err != nil {
-		return nil, err
-	}
-	return dfs.NewFileHandle(filepath.Join(dfs.GetUserBaseDirectory(user), path))
-}
-
-// CreateDirectoryForUser creates a new directory at "path" (relative to the user's directory).
-// It relies on CreateDirectory for checking the path's sanity.
-func (dfs *DiskFilesystem) CreateDirectoryForUser(user *models.User, path string) error {
-	// We don't need to check whether the user directory exists, as it will get created automatically if it doesn't.
-	return dfs.CreateDirectory(filepath.Join(dfs.GetUserBaseDirectory(user), path))
-}
-
-// ResolveFilePath resolves the given path for a user and returns the full path, if it is a file the filename or an error if the file does not exist
-func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (fullPath string, filename string, err error) {
-	fullPath = dfs.getFullPath(user, path)
-	fileInfo, err := os.Stat(fullPath)
+// GetOSFileInfo checks whether a path exists and returns the os file info for it
+func (dfs *DiskFilesystem) GetOSFileInfo(path string) (osFileInfo os.FileInfo, err error) {
+	osFileInfo, err = os.Stat(filepath.Join(dfs.base, path))
 	if os.IsNotExist(err) {
 		err = ErrFileNotExist
 		return
@@ -169,105 +144,55 @@ func (dfs *DiskFilesystem) ResolveFilePath(user *models.User, path string) (full
 		return
 	}
 
-	if fileInfo.IsDir() {
-		filename = ""
-	} else {
-		filename = filepath.Base(fullPath)
-	}
-
 	return
 }
 
-// ListFilesForUser returns a list of all files and folders in the given "path" (relative to the user's directory).
-// Before doing so, it checks the path for sanity.
-func (dfs *DiskFilesystem) ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error) {
-	if err := dfs.rejectInsanePath(path); err != nil {
-		return nil, err
-	}
-	if err := dfs.createUserDirIfNotExist(user); err != nil {
-		return nil, err
-	}
-	info, err := ioutil.ReadDir(dfs.getFullPath(user, path))
-	if err != nil {
-		log.Error(0, "Could not list files in %s: %v", path, err)
-		return nil, err
-	}
-
-	if path == "" {
-		path = "/"
-	}
-	path = utils.ConvertToSlash(path)
-
-	fileInfos := make([]*models.FileInfo, len(info), len(info))
-	for i, f := range info {
-		fileInfos[i] = &models.FileInfo{
-			Path:  path,
-			Name:  f.Name(),
-			IsDir: f.IsDir(),
-			Size:  f.Size(),
-			// TODO: This might not be valid once we enable file sharing between users
-			OwnerID:     user.ID,
-			LastChanged: f.ModTime(),
-			MimeType:    mime.TypeByExtension(filepath.Ext(f.Name())),
-		}
-	}
-	return fileInfos, nil
-}
-
-func (dfs *DiskFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
-	if err = dfs.rejectInsanePath(path); err != nil {
-		return
-	}
-	if err = dfs.createUserDirIfNotExist(user); err != nil {
-		return
-	}
-
-	var osFileInfo os.FileInfo
-	osFileInfo, err = os.Stat(dfs.getFullPath(user, path))
-	if os.IsNotExist(err) {
-		err = ErrFileNotExist
-		return
-	}
-
-	filePath := filepath.Dir(path)
-	if filePath == "." {
-		filePath = "/"
-	}
-	filePath = utils.ConvertToSlash(filePath)
-
-	fileInfo = &models.FileInfo{
-		Path:  filePath,
-		Name:  osFileInfo.Name(),
-		IsDir: osFileInfo.IsDir(),
-		Size:  osFileInfo.Size(),
-		// TODO: This might not be valid once we enable file sharing between users
-		OwnerID:     user.ID,
-		LastChanged: osFileInfo.ModTime(),
-		MimeType:    mime.TypeByExtension(filepath.Ext(osFileInfo.Name())),
-	}
-
-	return
-}
-
-// createUserDirIfNotExist checks whether the base directory for the given user exists and creates it otherwise.
-// This does not do any sanity checking, as the base path should always be sane.
-func (dfs *DiskFilesystem) createUserDirIfNotExist(user *models.User) error {
-	path := filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user))
+// CreateDirIfNotExist checks whether directory exists and creates it otherwise
+func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) error {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		log.Info("User directory does not exist, creating it now")
-		// We can safely assume that the actual base directory exists, as it is created on initialization
-		// TODO: check whether these permissions make sense
-		err := os.Mkdir(path, 0755)
-		if err != nil {
-			log.Error(0, "Could not create user directory: %v", err)
-			return err
-		}
+		log.Info("Directory does not exist, creating it now")
+		dfs.CreateDirectory(path)
 	} else if err != nil {
-		log.Warn("Could not check if user directory exists, assuming it does: %v", err)
+		log.Warn("Could not check if directory exists, assuming it does: %v", err)
 		return nil
 	}
 	return nil
+}
+
+// ZipFiles zips all given absolute paths to a zip archive with the given path in the temp folder
+func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (zipPath string, err error) {
+	for it := 0; it < len(paths); it++ {
+		paths[it] = filepath.Join(dfs.base, paths[it])
+	}
+
+	fullZipPath := filepath.Join(dfs.base, outputPath)
+	if err != nil {
+		return
+	}
+
+	err = archiver.Zip.Make(fullZipPath, paths)
+
+	return
+}
+
+func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (fileInfo *models.FileInfo, err error) {
+	if err = dfs.rejectInsanePath(oldPath); err != nil {
+		err = ErrForbiddenPathName
+		return
+	}
+	if err = dfs.rejectInsanePath(newPath); err != nil {
+		err = ErrForbiddenPathName
+		return
+	}
+
+	err = os.Rename(filepath.Join(dfs.base, oldPath), filepath.Join(dfs.base, newPath))
+	if err != nil {
+		err = fmt.Errorf("Moving %v to %v failed", oldPath, newPath)
+		return
+	}
+
+	return
 }
 
 // rejectInsanePath does a sanity check on a given path and returns:
@@ -281,82 +206,4 @@ func (dfs *DiskFilesystem) rejectInsanePath(path string) error {
 		return ErrForbiddenPathName
 	}
 	return nil
-}
-
-// ZipFiles zips all given absolute paths to a zip archive with the given name in the temp folder
-func (dfs *DiskFilesystem) ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error) {
-	for it := 0; it < len(paths); it++ {
-		paths[it], _, err = dfs.ResolveFilePath(user, paths[it])
-		if err != nil {
-			return
-		}
-	}
-
-	err = dfs.CreateDirectoryForUser(user, dfs.tmpName)
-	if err != nil {
-		return
-	}
-
-	zipPath = filepath.Join(dfs.tmpName, outputName)
-	fullZipPath := filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), zipPath)
-	if err != nil {
-		return
-	}
-
-	err = archiver.Zip.Make(fullZipPath, paths)
-
-	return
-}
-
-func (dfs *DiskFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {
-	if err = dfs.rejectInsanePath(path); err != nil || dfs.getFullPath(user, path) == dfs.getFullPath(user, "/") {
-		err = ErrForbiddenPathName
-		return
-	}
-
-	var newPath, newName string
-	fileInfo, err = dfs.GetFileInfo(user, path)
-	if err != nil {
-		return
-	}
-
-	if rawNewPath, ok := updates["path"]; ok == true {
-		newPath, ok = rawNewPath.(string)
-		if ok != true {
-			err = fmt.Errorf("Given path is not a string")
-			return
-		}
-	}
-
-	if rawNewName, ok := updates["name"]; ok == true {
-		newName, ok = rawNewName.(string)
-		if ok != true {
-			err = fmt.Errorf("Given name is not a string")
-			return
-		}
-	}
-
-	if err = dfs.rejectInsanePath(newPath); err != nil || newPath == "" {
-		newPath = fileInfo.Path
-	}
-	if err = dfs.rejectInsanePath(newName); err != nil || newName == "" {
-		newName = fileInfo.Name
-	}
-	newCompletePath := dfs.getFullPath(user, filepath.Join(newPath, newName))
-	oldCompletePath := dfs.getFullPath(user, filepath.Join(fileInfo.Path, fileInfo.Name))
-
-	err = os.Rename(oldCompletePath, newCompletePath)
-	if err != nil {
-		err = fmt.Errorf("Renaming %v failed", path)
-		return
-	}
-
-	fileInfo.Path = newPath
-	fileInfo.Name = newName
-
-	return
-}
-
-func (dfs *DiskFilesystem) getFullPath(user *models.User, path string) string {
-	return filepath.Join(dfs.base, dfs.GetUserBaseDirectory(user), path)
 }
