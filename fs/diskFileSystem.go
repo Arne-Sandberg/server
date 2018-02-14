@@ -3,12 +3,13 @@ package fs
 import (
 	"fmt"
 	"io/ioutil"
+	"mime"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/models"
 	"github.com/mholt/archiver"
@@ -108,8 +109,8 @@ func (dfs *DiskFilesystem) cleanupTempFolder() {
 // NewFileHandle opens an *os.File handle for writing to.
 // Before opening the file, it check the path for sanity.
 func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
-	if err := dfs.rejectInsanePath(path); err != nil {
-		return nil, err
+	if !utils.ValidatePath(path) {
+		return nil, ErrForbiddenPathName
 	}
 	f, err := os.Create(filepath.Join(dfs.base, path))
 	if err != nil {
@@ -123,14 +124,27 @@ func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
 // Before doing so, it check the path for sanity.
 func (dfs *DiskFilesystem) CreateDirectory(path string) error {
 	log.Trace("Path for new directory is '%s'", path)
-	if err := dfs.rejectInsanePath(path); err != nil {
-		return err
+	if !utils.ValidatePath(path) {
+		return ErrForbiddenPathName
 	}
 	err := os.MkdirAll(filepath.Join(dfs.base, path), 0755)
 	if err != nil {
 		log.Error(0, "Could not create directory %s: %v", path, err)
 	}
 	return err
+}
+
+// CreateDirIfNotExist checks whether directory exists and creates it otherwise
+func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) error {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		log.Info("Directory does not exist, creating it now")
+		dfs.CreateDirectory(path)
+	} else if err != nil {
+		log.Warn("Could not check if directory exists, assuming it does: %v", err)
+		return nil
+	}
+	return nil
 }
 
 // GetOSFileInfo checks whether a path exists and returns the os file info for it
@@ -147,17 +161,36 @@ func (dfs *DiskFilesystem) GetOSFileInfo(path string) (osFileInfo os.FileInfo, e
 	return
 }
 
-// CreateDirIfNotExist checks whether directory exists and creates it otherwise
-func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) error {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		log.Info("Directory does not exist, creating it now")
-		dfs.CreateDirectory(path)
-	} else if err != nil {
-		log.Warn("Could not check if directory exists, assuming it does: %v", err)
-		return nil
+// ListFilesForUser returns a list of all files and folders in the given "path" (relative to the user's directory).
+// Before doing so, it checks the path for sanity.
+func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
+	if !utils.ValidatePath(path) {
+		return nil, ErrForbiddenPathName
 	}
-	return nil
+
+	info, err := ioutil.ReadDir(filepath.Join(dfs.base, userPath, path))
+	if err != nil {
+		log.Error(0, "Could not list files in %s: %v", path, err)
+		return nil, err
+	}
+
+	if path == "" {
+		path = "/"
+	}
+	path = utils.ConvertToSlash(path)
+
+	fileInfos := make([]*models.FileInfo, len(info), len(info))
+	for i, f := range info {
+		fileInfos[i] = &models.FileInfo{
+			Path:        path,
+			Name:        f.Name(),
+			IsDir:       f.IsDir(),
+			Size:        f.Size(),
+			LastChanged: f.ModTime(),
+			MimeType:    mime.TypeByExtension(filepath.Ext(f.Name())),
+		}
+	}
+	return fileInfos, nil
 }
 
 // ZipFiles zips all given absolute paths to a zip archive with the given path in the temp folder
@@ -177,11 +210,11 @@ func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (zipPath 
 }
 
 func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (fileInfo *models.FileInfo, err error) {
-	if err = dfs.rejectInsanePath(oldPath); err != nil {
+	if !utils.ValidatePath(oldPath) {
 		err = ErrForbiddenPathName
 		return
 	}
-	if err = dfs.rejectInsanePath(newPath); err != nil {
+	if !utils.ValidatePath(newPath) {
 		err = ErrForbiddenPathName
 		return
 	}
@@ -193,17 +226,4 @@ func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (fileInfo *models.F
 	}
 
 	return
-}
-
-// rejectInsanePath does a sanity check on a given path and returns:
-// - ErrUpwardsNavigation if upwards navigation is detected
-// - ErrForbiddenPathName if there are weird characters in the path
-// - nil otherwise
-func (dfs *DiskFilesystem) rejectInsanePath(path string) error {
-	if strings.Contains(path, "../") || strings.Contains(path, "/..") || strings.Contains(path, "~") || strings.Contains(path, "\\..") || strings.Contains(path, "..\\") {
-		return ErrUpwardsNavigation
-	} else if strings.ContainsAny(path, forbiddenPathCharacters) {
-		return ErrForbiddenPathName
-	}
-	return nil
 }

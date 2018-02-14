@@ -14,6 +14,17 @@ type VirtualFilesystem struct {
 	db vfsDatabase
 }
 
+func CreateVirtualFileSystem(fs Filesystem, db vfsDatabase) *VirtualFilesystem {
+	vfs := &VirtualFilesystem{fs, db}
+	vfs.ScanFSForChanges()
+
+	return vfs
+}
+
+func (vfs *VirtualFilesystem) ScanFSForChanges() error {
+
+}
+
 func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
 
 }
@@ -27,6 +38,10 @@ func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (
 }
 
 func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
+
+}
+
+func (vfs *VirtualFilesystem) GetDownloadURL(user *models.User, path string) (downloadURL string, err error) {
 
 }
 

@@ -28,3 +28,12 @@ func ValidateLastName(lastName string) bool {
 func ValidateAvatarURL(avatarURL string) bool {
 	return true // TODO: Check whether there needs to be a check for a valid avatar URL
 }
+
+const (
+	forbiddenPathCharacters = "<>:\"|?*"
+)
+
+// ValidatePath checks whether the path contains any forbidden characters
+func ValidatePath(path string) bool {
+	return !(strings.Contains(path, "../") || strings.Contains(path, "/..") || strings.Contains(path, "~") || strings.Contains(path, "\\..") || strings.Contains(path, "..\\") || strings.ContainsAny(path, forbiddenPathCharacters))
+}
