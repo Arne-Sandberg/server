@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/freecloudio/freecloud/utils"
 
@@ -27,7 +28,7 @@ type VirtualFilesystem struct {
 
 func CreateVirtualFileSystem(fs Filesystem, db vfsDatabase) *VirtualFilesystem {
 	vfs := &VirtualFilesystem{fs, db}
-	vfs.ScanFSForChanges()
+	//vfs.ScanFSForChanges()
 
 	return vfs
 }
@@ -50,13 +51,16 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 }
 
 func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name string) (folderSize int64, err error) {
+	// Get all needed data, paths, etc.
 	userPath := vfs.getUserPath(user)
 	fullPath := filepath.Join(userPath, path, name)
 	osPathInfo, err := vfs.fs.GetOSFileInfo(fullPath)
+	// Return if the scanning dir is a file
 	if err != nil || !osPathInfo.IsDir() {
 		return osPathInfo.Size(), fmt.Errorf("Path is not a directory")
 	}
 
+	// Get dir contents of fs and db
 	fsFiles, err := vfs.fs.GetDirectoryContent(fullPath)
 	if err != nil {
 		return
@@ -67,6 +71,7 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 	}
 
 	for _, fsFile := range fsFiles {
+		// Find fs file in dbFiles by name
 		dbIt := -1
 		for it, dbFile := range dbFiles {
 			if dbFile.Name == fsFile.Name {
@@ -76,17 +81,18 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 		}
 
 		if dbIt == -1 {
-			//File not yet in db
+			// File not yet in db --> Add it
 			fsFile.OwnerID = user.ID
 			fsFile.ParentID = dbPathInfo.ID
+			fsFile.Path = vfs.removeUserFromPath(user, fsFile.Path)
 			err = vfs.db.InsertFile(fsFile)
 			if err != nil {
 				log.Error(0, "Error inserting into db: %v", err)
 				return
 			}
 		} else {
+			// File found in db files --> Check whether an update is needed
 			dbFile := dbFiles[dbIt]
-			//Maybe update file in db
 			if (!fsFile.IsDir && fsFile.Size != dbFile.Size) || fsFile.LastChanged != dbFile.LastChanged || fsFile.IsDir != dbFile.IsDir {
 				dbFile.Size = fsFile.Size
 				dbFile.LastChanged = fsFile.LastChanged
@@ -98,12 +104,13 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 				}
 			}
 
-			// Delete file from db list
+			// Delete file from db list as it is now used
 			dbFiles[dbIt] = dbFiles[len(dbFiles)-1]
 			dbFiles[len(dbFiles)-1] = nil
 			dbFiles = dbFiles[:len(dbFiles)-1]
 		}
 
+		// If it is a file directly add the size; If it is an dir then scan it and add the size of the dir
 		if !fsFile.IsDir {
 			folderSize += fsFile.Size
 		} else {
@@ -125,6 +132,7 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 		}
 	}
 
+	// If the size of the folder has changed then update it in the db
 	if dbPathInfo.Size != folderSize {
 		dbPathInfo.Size = folderSize
 		err = vfs.db.UpdateFile(dbPathInfo)
@@ -138,9 +146,10 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 }
 
 func (vfs *VirtualFilesystem) getUserPath(user *models.User) string {
-	return filepath.Join(strconv.Itoa(user.ID))
+	return "/" + filepath.Join(strconv.Itoa(user.ID))
 }
 
+// splitPath splits the given full path into the path and the name of the file/dir
 func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 	if origPath == "/" || origPath == "." || origPath == "" {
 		return "/", ""
@@ -151,6 +160,13 @@ func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 		path += "/"
 	}
 	name = filepath.Base(origPath)
+	return
+}
+
+func (vfs *VirtualFilesystem) removeUserFromPath(user *models.User, origPath string) (path string) {
+	userPath := vfs.getUserPath(user)
+	path = strings.Replace(origPath, userPath, "", 1)
+	path = strings.TrimPrefix(path, strconv.Itoa(user.ID))
 	return
 }
 

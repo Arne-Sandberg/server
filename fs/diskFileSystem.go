@@ -178,9 +178,6 @@ func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models
 		path = "/"
 	}
 	path = utils.ConvertToSlash(path)
-	if path[len(path)-1] != '/' {
-		path += "/"
-	}
 
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {

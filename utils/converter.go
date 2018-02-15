@@ -12,5 +12,10 @@ var multiSlashReg = regexp.MustCompile(`(\/)+`)
 func ConvertToSlash(path string) string {
 	path = filepath.Clean(path)
 	path = strings.Replace(path, "\\", "/", -1)
-	return multiSlashReg.ReplaceAllString(path, "/")
+	path = multiSlashReg.ReplaceAllString(path, "/")
+	if len(path) > 0 && path[0] != '/' {
+		path = "/" + path
+	}
+
+	return path
 }
