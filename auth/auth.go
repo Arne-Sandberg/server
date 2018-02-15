@@ -146,6 +146,10 @@ func GetUserByID(uid int) (*models.User, error) {
 	return cProvider.GetUserByID(uid)
 }
 
+func GetExisingUsers() ([]models.User, error) {
+	return cProvider.GetExisingUsers()
+}
+
 //RemoveSession removes the session from the session provider
 func RemoveSession(sess models.Session) (err error) {
 	return sProvider.RemoveSession(sess)

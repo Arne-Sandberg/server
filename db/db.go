@@ -82,6 +82,11 @@ func (db *StormDB) GetUserByEmail(email string) (user *models.User, err error) {
 	return
 }
 
+func (db *StormDB) GetExisingUsers() (existingUsers []models.User, err error) {
+	err = db.c.All(&existingUsers)
+	return
+}
+
 func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
 
 	var user models.User
@@ -158,7 +163,7 @@ func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo models.FileInfo, content []models.FileInfo, err error) {
+func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
 	dirInfo, err = db.GetFileInfo(userID, path, dirName)
 	if err != nil {
 		return
@@ -173,8 +178,9 @@ func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInf
 	return
 }
 
-func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo models.FileInfo, err error) {
-	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(&fileInfo)
+func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error) {
+	fileInfo = &models.FileInfo{}
+	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for %v %v for user %v: %v", path, fileName, userID, err)
 		return
