@@ -23,15 +23,17 @@ func main() {
 		os.Exit(3)
 	}
 
-	database, err := db.NewStormDB()
+	database, err := db.NewStormDB(config.GetString("db.name"))
 	if err != nil {
 		clog.Fatal(0, "Database setup failed, bailing out!")
 		os.Exit(1)
 	}
 
 	auth.Init(database, database)
+	
+	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database)
 
-	router.Start(config.GetInt("http.port"), config.GetString("http.host"), filesystem, database)
+	router.Start(config.GetInt("http.port"), config.GetString("http.host"), virtualFS, database)
 }
 
 func setupLogger() {

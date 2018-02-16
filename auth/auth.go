@@ -146,7 +146,7 @@ func GetUserByID(uid int) (*models.User, error) {
 	return cProvider.GetUserByID(uid)
 }
 
-func GetExisingUsers() ([]models.User, error) {
+func GetExisingUsers() ([]*models.User, error) {
 	return cProvider.GetExisingUsers()
 }
 

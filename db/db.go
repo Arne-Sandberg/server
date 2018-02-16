@@ -17,8 +17,8 @@ type StormDB struct {
 	c *storm.DB
 }
 
-func NewStormDB() (*StormDB, error) {
-	db, err := storm.Open("freecloud.db", storm.Codec(msgpack.Codec))
+func NewStormDB(name string) (*StormDB, error) {
+	db, err := storm.Open(name, storm.Codec(msgpack.Codec))
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
 		return nil, err
@@ -82,8 +82,10 @@ func (db *StormDB) GetUserByEmail(email string) (user *models.User, err error) {
 	return
 }
 
-func (db *StormDB) GetExisingUsers() (existingUsers []models.User, err error) {
-	err = db.c.All(&existingUsers)
+func (db *StormDB) GetExisingUsers() (existingUsers []*models.User, err error) {
+	var users []*models.User
+	err = db.c.All(&users)
+	existingUsers = users
 	return
 }
 
@@ -164,13 +166,17 @@ func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
+	content = make([]*models.FileInfo, 0)
 	dirInfo, err = db.GetFileInfo(userID, path, dirName)
 	if err != nil {
 		return
 	}
 
 	err = db.c.Select(q.Eq("ParentID", dirInfo.ID)).OrderBy("Name").Find(&content)
-	if err != nil {
+	if err != nil && err.Error() == "not found" {  // TODO: Is this needed? Should reference to the error directly
+		content = make([]*models.FileInfo, 0)
+		err = nil
+	} else if err != nil {
 		log.Error(0, "Could not get dir content for %v %v for user %v: %v", path, dirName, userID, err)
 		return
 	}

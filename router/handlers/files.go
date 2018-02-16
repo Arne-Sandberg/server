@@ -73,7 +73,7 @@ func (s Server) UploadHandler(c *macaron.Context) {
 func (s Server) DownloadHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	path := c.Data["path"].(string)
-	fullPath, filename, err := s.filesystem.ResolveFilePath(user, path)
+	fullPath, filename, err := s.filesystem.GetDownloadURL(user, path)
 	if err != nil || filename == "" {
 		// TODO: ERROR!
 		log.Error(0, "Could not resolve filepath for download: %v", err)
@@ -82,17 +82,18 @@ func (s Server) DownloadHandler(c *macaron.Context) {
 }
 
 func (s Server) ZipHandler(c *macaron.Context) {
+	//TODO
 	user := c.Data["user"].(*models.User)
 	paths := c.Data["request"].(*apiModels.ZipRequest).Paths
 
 	var err error
-	for _, path := range paths {
+	/*for _, path := range paths {
 		path, _, err = s.filesystem.ResolveFilePath(user, path)
 		if err != nil {
 			c.Data["response"] = err
 			return
 		}
-	}
+	}*/
 
 	outputFileName := "_" + time.Now().UTC().Format("06-01-02_15-04-05") + ".zip"
 	if len(paths) == 1 {

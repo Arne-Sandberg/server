@@ -35,17 +35,3 @@ func TestSplitPath(t *testing.T) {
 		}
 	}
 }
-
-func TestRemoveUserFromPath(t *testing.T) {
-	var l = map[string]string{
-		"/1/path/to/file.txt": "/path/to/file.txt",
-		"1/path/to/file.txt":  "/path/to/file.txt",
-	}
-
-	vfs := CreateVirtualFileSystem(nil, nil)
-	for input, expOutput := range l {
-		if path := vfs.removeUserFromPath(&models.User{ID: 1}, input); path != expOutput {
-			t.Errorf("Expected result %v for input %s but got: %v", expOutput, input, path)
-		}
-	}
-}

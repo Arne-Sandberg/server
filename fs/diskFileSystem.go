@@ -135,16 +135,18 @@ func (dfs *DiskFilesystem) CreateDirectory(path string) error {
 }
 
 // CreateDirIfNotExist checks whether directory exists and creates it otherwise
-func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) error {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
+func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) (created bool, err error) {
+	_, fileErr := os.Stat(filepath.Join(dfs.base, path))
+	if os.IsNotExist(fileErr) {
 		log.Info("Directory does not exist, creating it now")
-		dfs.CreateDirectory(path)
-	} else if err != nil {
+		err = dfs.CreateDirectory(path)
+		return true, err
+	} else if fileErr != nil {
+		err = fileErr
 		log.Warn("Could not check if directory exists, assuming it does: %v", err)
-		return nil
+		return false, err
 	}
-	return nil
+	return false, nil
 }
 
 // GetOSFileInfo checks whether a path exists and returns the os file info for it
@@ -161,7 +163,7 @@ func (dfs *DiskFilesystem) GetOSFileInfo(path string) (osFileInfo os.FileInfo, e
 	return
 }
 
-// ListFilesForUser returns a list of all files and folders in the given "path" (relative to the user's directory).
+// GetDirectoryContent returns a list of all files and folders in the given "path" (relative to the user's directory).
 // Before doing so, it checks the path for sanity.
 func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
 	if !utils.ValidatePath(path) {

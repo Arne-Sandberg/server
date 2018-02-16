@@ -6,7 +6,7 @@ import "github.com/freecloudio/freecloud/models"
 type CredentialsProvider interface {
 	GetUserByID(uid int) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
-	GetExisingUsers() (existingUsers []models.User, err error)
+	GetExisingUsers() (existingUsers []*models.User, err error)
 	CreateUser(user *models.User) error
 	UpdateUser(user *models.User) error
 }

@@ -2,9 +2,10 @@ package fs
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
+	"time"
 
 	"github.com/freecloudio/freecloud/utils"
 
@@ -17,6 +18,7 @@ type vfsDatabase interface {
 	InsertFile(fileInfo *models.FileInfo) (err error)
 	RemoveFile(fileInfo *models.FileInfo) (err error)
 	UpdateFile(fileInfo *models.FileInfo) (err error)
+	// Must return an empty instead of an error if nothing could be found
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
 }
@@ -26,14 +28,15 @@ type VirtualFilesystem struct {
 	db vfsDatabase
 }
 
-func CreateVirtualFileSystem(fs Filesystem, db vfsDatabase) *VirtualFilesystem {
-	vfs := &VirtualFilesystem{fs, db}
-	//vfs.ScanFSForChanges()
+func NewVirtualFilesystem(fs Filesystem, db vfsDatabase) (vfs *VirtualFilesystem, err error) {
+	vfs = &VirtualFilesystem{fs, db}
+	err = vfs.ScanFSForChanges()
 
-	return vfs
+	return
 }
 
 func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
+	log.Trace("Get existing users")
 	existingUsers, err := auth.GetExisingUsers()
 	if err != nil {
 		log.Error(0, "Could not get exising users: %v", err)
@@ -41,10 +44,31 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 	}
 
 	for _, user := range existingUsers {
-		_, err = vfs.scanDirForChanges(&user, "/", "")
+		//Create user dir if not existing and add it to db
+		created, err := vfs.fs.CreateDirIfNotExist(vfs.getUserPath(user))
+		if err != nil {
+			log.Error(0, "Error creating folder for user id %v", user.ID)
+			continue
+		}
+		_, err = vfs.db.GetFileInfo(user.ID, "/", "")
+		if created || err != nil {
+			err = vfs.db.InsertFile(&models.FileInfo{
+				Path:        "/",
+				Name:        "",
+				IsDir:       true,
+				OwnerID:     user.ID,
+				LastChanged: time.Now(),
+			})
+			if err != nil {
+				log.Error(0, "Error inserting created root folder for user id %v", user.ID)
+				continue
+			}
+		}
+
+		_, err = vfs.scanDirForChanges(user, "/", "")
 		if err != nil {
 			log.Error(0, "Could not scan directory for user %v: %v", user.ID, err)
-			return
+			return err
 		}
 	}
 	return
@@ -53,15 +77,15 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name string) (folderSize int64, err error) {
 	// Get all needed data, paths, etc.
 	userPath := vfs.getUserPath(user)
-	fullPath := filepath.Join(userPath, path, name)
-	osPathInfo, err := vfs.fs.GetOSFileInfo(fullPath)
+	osPathInfo, err := vfs.fs.GetOSFileInfo(filepath.Join(userPath, path, name))
 	// Return if the scanning dir is a file
 	if err != nil || !osPathInfo.IsDir() {
 		return osPathInfo.Size(), fmt.Errorf("Path is not a directory")
 	}
 
 	// Get dir contents of fs and db
-	fsFiles, err := vfs.fs.GetDirectoryContent(fullPath)
+	fsPath := filepath.Join(path, name)
+	fsFiles, err := vfs.fs.GetDirectoryContent(userPath, fsPath)
 	if err != nil {
 		return
 	}
@@ -84,7 +108,6 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 			// File not yet in db --> Add it
 			fsFile.OwnerID = user.ID
 			fsFile.ParentID = dbPathInfo.ID
-			fsFile.Path = vfs.removeUserFromPath(user, fsFile.Path)
 			err = vfs.db.InsertFile(fsFile)
 			if err != nil {
 				log.Error(0, "Error inserting into db: %v", err)
@@ -163,40 +186,38 @@ func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 	return
 }
 
-func (vfs *VirtualFilesystem) removeUserFromPath(user *models.User, origPath string) (path string) {
-	userPath := vfs.getUserPath(user)
-	path = strings.Replace(origPath, userPath, "", 1)
-	path = strings.TrimPrefix(path, strconv.Itoa(user.ID))
-	return
-}
-
-/*
 func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
 	// TODO
+	return nil, nil
 }
 
 func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path string) error {
 	// TODO
+	return nil
 }
 
 func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error) {
 	// TODO
+	return nil, nil
 }
 
 func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
 	// TODO
+	return nil, nil
 }
 
-func (vfs *VirtualFilesystem) GetDownloadURL(user *models.User, path string) (downloadURL string, err error) {
+func (vfs *VirtualFilesystem) GetDownloadURL(user *models.User, path string) (downloadURL, filename string, err error) {
 	// TODO
+	return "", "", nil
 }
 
 // ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error) {
 	// TODO
+	return "", nil
 }
 
 func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {
 	// TODO
+	return nil, nil
 }
-*/
