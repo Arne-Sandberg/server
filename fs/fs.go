@@ -20,7 +20,7 @@ type Filesystem interface {
 	NewFileHandle(path string) (*os.File, error)
 	CreateDirectory(path string) error
 	CreateDirIfNotExist(path string) (created bool, err error)
-	GetOSFileInfo(path string) (osFileInfo os.FileInfo, err error)
+	GetFileInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error)
 	GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error)
 	// ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 	ZipFiles(paths []string, outputName string) (zipPath string, err error)

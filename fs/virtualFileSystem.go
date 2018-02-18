@@ -77,10 +77,10 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name string) (folderSize int64, err error) {
 	// Get all needed data, paths, etc.
 	userPath := vfs.getUserPath(user)
-	osPathInfo, err := vfs.fs.GetOSFileInfo(filepath.Join(userPath, path, name))
+	pathInfo, err := vfs.fs.GetFileInfo(userPath, path, name)
 	// Return if the scanning dir is a file
-	if err != nil || !osPathInfo.IsDir() {
-		return osPathInfo.Size(), fmt.Errorf("Path is not a directory")
+	if err != nil || !pathInfo.IsDir {
+		return pathInfo.Size, fmt.Errorf("Path is not a directory")
 	}
 
 	// Get dir contents of fs and db
@@ -187,8 +187,36 @@ func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 }
 
 func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
-	// TODO
-	return nil, nil
+	return vfs.fs.NewFileHandle(filepath.Join(vfs.getUserPath(user), path))
+}
+
+func (vfs *VirtualFilesystem) FinishFileHandle(user *models.User, path string) (err error) {
+	filePath, fileName := vfs.splitPath(path)
+	userPath := vfs.getUserPath(user)
+	fileInfo, err := vfs.fs.GetFileInfo(userPath, filePath, fileName)
+	if err != nil {
+		log.Error(0, "Could not get fileInfo for finished fileHandle: %v", err)
+		return
+	}
+
+	folderPath, folderName := vfs.splitPath(filePath)
+	folderInfo, err := vfs.db.GetFileInfo(user.ID, folderPath, folderName)
+	if err != nil {
+		log.Error(0, "Could not find parent folder of finishes fileHandle in db: %v", err)
+		return
+	}
+
+	fileInfo.OwnerID = user.ID
+	fileInfo.ParentID = folderInfo.ID
+	err = vfs.db.InsertFile(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not insert finishes fileHandle into db: %v", err)
+		return
+	}
+
+	//TODO: Make asynchronus scan call?!?
+
+	return
 }
 
 func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path string) error {

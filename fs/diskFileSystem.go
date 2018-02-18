@@ -149,20 +149,6 @@ func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) (created bool, err e
 	return false, nil
 }
 
-// GetOSFileInfo checks whether a path exists and returns the os file info for it
-func (dfs *DiskFilesystem) GetOSFileInfo(path string) (osFileInfo os.FileInfo, err error) {
-	osFileInfo, err = os.Stat(filepath.Join(dfs.base, path))
-	if os.IsNotExist(err) {
-		err = ErrFileNotExist
-		return
-	} else if err != nil {
-		err = fmt.Errorf("Error resolving file path: %v", err)
-		return
-	}
-
-	return
-}
-
 // GetDirectoryContent returns a list of all files and folders in the given "path" (relative to the user's directory).
 // Before doing so, it checks the path for sanity.
 func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
@@ -183,16 +169,34 @@ func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models
 
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {
-		fileInfos[i] = &models.FileInfo{
-			Path:        path,
-			Name:        f.Name(),
-			IsDir:       f.IsDir(),
-			Size:        f.Size(),
-			LastChanged: f.ModTime(),
-			MimeType:    mime.TypeByExtension(filepath.Ext(f.Name())),
-		}
+		fileInfos[i] = dfs.generateFileInfo(f, path)
 	}
 	return fileInfos, nil
+}
+
+func (dfs *DiskFilesystem) GetFileInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
+	osFileInfo, err := os.Stat(filepath.Join(dfs.base, userPath, path, name))
+	if os.IsNotExist(err) {
+		err = ErrFileNotExist
+		return
+	} else if err != nil {
+		err = fmt.Errorf("Error resolving file path: %v", err)
+		return
+	}
+
+	fileInfo = dfs.generateFileInfo(osFileInfo, path)
+	return
+}
+
+func (dfs *DiskFilesystem) generateFileInfo(osFileInfo os.FileInfo, path string) *models.FileInfo {
+	return &models.FileInfo{
+		Path:        path,
+		Name:        osFileInfo.Name(),
+		IsDir:       osFileInfo.IsDir(),
+		Size:        osFileInfo.Size(),
+		LastChanged: osFileInfo.ModTime(),
+		MimeType:    mime.TypeByExtension(filepath.Ext(osFileInfo.Name())),
+	}
 }
 
 // ZipFiles zips all given absolute paths to a zip archive with the given path in the temp folder
