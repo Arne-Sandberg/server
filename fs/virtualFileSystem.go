@@ -21,6 +21,7 @@ type vfsDatabase interface {
 	// Must return an empty instead of an error if nothing could be found
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
+	GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error)
 }
 
 type VirtualFilesystem struct {
@@ -172,6 +173,10 @@ func (vfs *VirtualFilesystem) getUserPath(user *models.User) string {
 	return "/" + filepath.Join(strconv.Itoa(user.ID))
 }
 
+func (vfs *VirtualFilesystem) getUserPathWithID(userID int) string {
+	return "/" + filepath.Join(strconv.Itoa(userID))
+}
+
 // splitPath splits the given full path into the path and the name of the file/dir
 func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 	if origPath == "/" || origPath == "." || origPath == "" {
@@ -195,14 +200,12 @@ func (vfs *VirtualFilesystem) FinishFileHandle(user *models.User, path string) (
 	userPath := vfs.getUserPath(user)
 	fileInfo, err := vfs.fs.GetFileInfo(userPath, filePath, fileName)
 	if err != nil {
-		log.Error(0, "Could not get fileInfo for finished fileHandle: %v", err)
 		return
 	}
 
 	folderPath, folderName := vfs.splitPath(filePath)
 	folderInfo, err := vfs.db.GetFileInfo(user.ID, folderPath, folderName)
 	if err != nil {
-		log.Error(0, "Could not find parent folder of finishes fileHandle in db: %v", err)
 		return
 	}
 
@@ -210,7 +213,6 @@ func (vfs *VirtualFilesystem) FinishFileHandle(user *models.User, path string) (
 	fileInfo.ParentID = folderInfo.ID
 	err = vfs.db.InsertFile(fileInfo)
 	if err != nil {
-		log.Error(0, "Could not insert finishes fileHandle into db: %v", err)
 		return
 	}
 
@@ -246,7 +248,6 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	}
 	err = vfs.db.InsertFile(dirInfo)
 	if err != nil {
-		log.Error(0, "Error inserting directory for user %v into db: %v", user.ID, err)
 		return
 	}
 
@@ -257,7 +258,6 @@ func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (
 	folderPath, folderName := vfs.splitPath(path)
 	dirInfo, content, err = vfs.db.GetDirectoryContent(user.ID, folderPath, folderName)
 	if err != nil {
-		log.Error(0, "Error getting directory %v for user %v: %v", path, user.ID, err)
 		return
 	}
 	return
@@ -267,16 +267,33 @@ func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileI
 	filePath, fileName := vfs.splitPath(path)
 	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
 	if err != nil {
-		log.Error(0, "Error getting file info for path %v for user %v: %v", path, user.ID, err)
 		return
 	}
 	return
 }
 
 func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (downloadURL, filename string, err error) {
-	userPath := vfs.getUserPath(user)
-	_, fileName := vfs.splitPath(path)
-	return vfs.fs.GetDownloadPath(filepath.Join(userPath, path)), fileName, nil
+	filePath, fileName := vfs.splitPath(path)
+	fileInfo, err := vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	if err != nil {
+		return
+	}
+
+	if fileInfo.OriginalFileID > 0 {
+		var origFileInfo *models.FileInfo
+		origFileInfo, err = vfs.db.GetFileInfoWithID(fileInfo.OriginalFileID)
+		if err != nil {
+			return
+		}
+		userPath := vfs.getUserPathWithID(origFileInfo.OwnerID)
+		downloadURL = vfs.fs.GetDownloadPath(filepath.Join(userPath, fileInfo.Path, fileInfo.Name))
+	} else {
+		userPath := vfs.getUserPath(user)
+		downloadURL = vfs.fs.GetDownloadPath(filepath.Join(userPath, path))
+	}
+
+	filename = fileName
+	return
 }
 
 // ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder

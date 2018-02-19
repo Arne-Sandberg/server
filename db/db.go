@@ -173,7 +173,7 @@ func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInf
 	}
 
 	err = db.c.Select(q.Eq("ParentID", dirInfo.ID)).OrderBy("Name").Find(&content)
-	if err != nil && err.Error() == "not found" {  // TODO: Is this needed? Should reference to the error directly
+	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		content = make([]*models.FileInfo, 0)
 		err = nil
 	} else if err != nil {
@@ -189,6 +189,16 @@ func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo *mod
 	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for %v %v for user %v: %v", path, fileName, userID, err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error) {
+	fileInfo = &models.FileInfo{}
+	err = db.c.One("ID", fileID)
+	if err != nil {
+		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
 		return
 	}
 	return
