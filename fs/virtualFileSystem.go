@@ -219,24 +219,64 @@ func (vfs *VirtualFilesystem) FinishFileHandle(user *models.User, path string) (
 	return
 }
 
-func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path string) error {
-	// TODO
-	return nil
+func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path string) (err error) {
+	folderPath, folderName := vfs.splitPath(path)
+	userPath := vfs.getUserPath(user)
+
+	parFolderPath, parFolderName := vfs.splitPath(folderPath)
+	parFolderInfo, err := vfs.db.GetFileInfo(user.ID, parFolderPath, parFolderName)
+	if err != nil {
+		log.Error(0, "Could not find parent folder of finishes fileHandle in db: %v", err)
+		return
+	}
+
+	err = vfs.fs.CreateDirectory(filepath.Join(userPath, path))
+	if err != nil {
+		log.Error(0, "Error creating directory for user %v: %v", user.ID, err)
+		return
+	}
+
+	dirInfo := &models.FileInfo{
+		Path:        folderPath,
+		Name:        folderName,
+		IsDir:       true,
+		OwnerID:     user.ID,
+		LastChanged: time.Now(),
+		ParentID:    parFolderInfo.ID,
+	}
+	err = vfs.db.InsertFile(dirInfo)
+	if err != nil {
+		log.Error(0, "Error inserting directory for user %v into db: %v", user.ID, err)
+		return
+	}
+
+	return
 }
 
-func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) ([]*models.FileInfo, error) {
-	// TODO
-	return nil, nil
+func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
+	folderPath, folderName := vfs.splitPath(path)
+	dirInfo, content, err = vfs.db.GetDirectoryContent(user.ID, folderPath, folderName)
+	if err != nil {
+		log.Error(0, "Error getting directory %v for user %v: %v", path, user.ID, err)
+		return
+	}
+	return
 }
 
 func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
-	// TODO
-	return nil, nil
+	filePath, fileName := vfs.splitPath(path)
+	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	if err != nil {
+		log.Error(0, "Error getting file info for path %v for user %v: %v", path, user.ID, err)
+		return
+	}
+	return
 }
 
-func (vfs *VirtualFilesystem) GetDownloadURL(user *models.User, path string) (downloadURL, filename string, err error) {
-	// TODO
-	return "", "", nil
+func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (downloadURL, filename string, err error) {
+	userPath := vfs.getUserPath(user)
+	_, fileName := vfs.splitPath(path)
+	return vfs.fs.GetDownloadPath(filepath.Join(userPath, path)), fileName, nil
 }
 
 // ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder

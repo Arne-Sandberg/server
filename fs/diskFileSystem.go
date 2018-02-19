@@ -199,6 +199,10 @@ func (dfs *DiskFilesystem) generateFileInfo(osFileInfo os.FileInfo, path string)
 	}
 }
 
+func (dfs *DiskFilesystem) GetDownloadPath(path string) string {
+	return filepath.Join(dfs.base, path)
+}
+
 // ZipFiles zips all given absolute paths to a zip archive with the given path in the temp folder
 func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (zipPath string, err error) {
 	for it := 0; it < len(paths); it++ {
