@@ -196,7 +196,7 @@ func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo *mod
 
 func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = db.c.One("ID", fileID)
+	err = db.c.One("ID", fileID, fileInfo)
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
 		return

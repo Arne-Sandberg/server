@@ -73,7 +73,7 @@ func (s Server) UploadHandler(c *macaron.Context) {
 func (s Server) DownloadHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	path := c.Data["path"].(string)
-	fullPath, filename, err := s.filesystem.GetDownloadURL(user, path)
+	fullPath, filename, err := s.filesystem.GetDownloadPath(user, path)
 	if err != nil || filename == "" {
 		// TODO: ERROR!
 		log.Error(0, "Could not resolve filepath for download: %v", err)
@@ -123,19 +123,10 @@ func (s Server) FileInfoHandler(c *macaron.Context) {
 
 	log.Trace("Getting fileInfo of %s for %s %s", path, user.FirstName, user.LastName)
 
-	fileInfo, err := s.filesystem.GetFileInfo(user, path)
+	fileInfo, content, err := s.filesystem.ListFilesForUser(user, path)
 	if err != nil {
 		c.Data["response"] = err
 		return
-	}
-
-	var content []*models.FileInfo
-	if fileInfo.IsDir {
-		content, err = s.filesystem.ListFilesForUser(user, path)
-		if err != nil {
-			c.Data["response"] = err
-			return
-		}
 	}
 
 	c.Data["response"] = struct {

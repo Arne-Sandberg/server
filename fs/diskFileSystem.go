@@ -24,7 +24,7 @@ type DiskFilesystem struct {
 }
 
 // NewDiskFilesystem sets up a disk filesystem and returns it
-func NewDiskFilesystem(baseDir string) (dfs *DiskFilesystem, err error) {
+func NewDiskFilesystem(baseDir, tmpName string) (dfs *DiskFilesystem, err error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -49,7 +49,7 @@ func NewDiskFilesystem(baseDir string) (dfs *DiskFilesystem, err error) {
 	}
 
 	log.Info("Initialized filesystem at base directory %s", base)
-	dfs = &DiskFilesystem{base: base, tmpName: config.GetString("fs.tmp_folder_name"), done: make(chan struct{})}
+	dfs = &DiskFilesystem{base: base, tmpName: tmpName, done: make(chan struct{})}
 
 	go dfs.cleanupTempFolderRoutine(time.Hour * time.Duration(config.GetInt("fs.tmp_data_expiry")))
 
@@ -203,8 +203,8 @@ func (dfs *DiskFilesystem) GetDownloadPath(path string) string {
 	return filepath.Join(dfs.base, path)
 }
 
-// ZipFiles zips all given absolute paths to a zip archive with the given path in the temp folder
-func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (zipPath string, err error) {
+// ZipFiles zips all given absolute paths to a zip archive with the given path
+func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (err error) {
 	for it := 0; it < len(paths); it++ {
 		paths[it] = filepath.Join(dfs.base, paths[it])
 	}
@@ -215,7 +215,10 @@ func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (zipPath 
 	}
 
 	err = archiver.Zip.Make(fullZipPath, paths)
-
+	if err != nil {
+		log.Error(0, "Error zipping files into %v: %v", outputPath, err)
+		return
+	}
 	return
 }
 

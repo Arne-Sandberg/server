@@ -25,12 +25,13 @@ type vfsDatabase interface {
 }
 
 type VirtualFilesystem struct {
-	fs Filesystem
-	db vfsDatabase
+	fs      Filesystem
+	db      vfsDatabase
+	tmpName string
 }
 
-func NewVirtualFilesystem(fs Filesystem, db vfsDatabase) (vfs *VirtualFilesystem, err error) {
-	vfs = &VirtualFilesystem{fs, db}
+func NewVirtualFilesystem(fs Filesystem, db vfsDatabase, tmpName string) (vfs *VirtualFilesystem, err error) {
+	vfs = &VirtualFilesystem{fs, db, tmpName}
 	err = vfs.ScanFSForChanges()
 
 	return
@@ -298,8 +299,36 @@ func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (d
 
 // ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error) {
-	// TODO
-	return "", nil
+	userPath := vfs.getUserPath(user)
+	for it := 0; it < len(paths); it++ {
+		filePath, fileName := vfs.splitPath(paths[it])
+		var fileInfo *models.FileInfo
+		fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+		if err != nil {
+			return
+		}
+
+		if fileInfo.OriginalFileID > 0 {
+			var origFileInfo *models.FileInfo
+			origFileInfo, err = vfs.db.GetFileInfoWithID(fileInfo.OriginalFileID)
+			if err != nil {
+				return
+			}
+			origUserPath := vfs.getUserPathWithID(origFileInfo.OwnerID)
+			paths[it] = filepath.Join(origUserPath, paths[it])
+		} else {
+			paths[it] = filepath.Join(userPath, paths[it])
+		}
+	}
+
+	zipPath = filepath.Join(vfs.tmpName, outputName)
+	outputPath := filepath.Join(userPath, zipPath)
+
+	err = vfs.fs.ZipFiles(paths, outputPath)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {

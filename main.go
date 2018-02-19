@@ -18,7 +18,7 @@ func main() {
 	config.Init()
 	setupLogger()
 
-	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"))
+	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"), config.GetString("fs.tmp_folder_name")) // TODO: Remove temp folder name from dfs and move completely to vfs
 	if err != nil {
 		os.Exit(3)
 	}
@@ -30,8 +30,8 @@ func main() {
 	}
 
 	auth.Init(database, database)
-	
-	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database)
+
+	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
 
 	router.Start(config.GetInt("http.port"), config.GetString("http.host"), virtualFS, database)
 }
