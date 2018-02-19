@@ -8,14 +8,14 @@ import (
 
 func TestGetUserPath(t *testing.T) {
 	var l = map[models.User]string{
-		models.User{ID: 0}: "0",
-		models.User{ID: 1}: "1",
+		models.User{ID: 0}: "/0",
+		models.User{ID: 1}: "/1",
 	}
 
-	vfs := CreateVirtualFileSystem(nil, nil)
+	vfs := VirtualFilesystem{}
 	for input, expOutput := range l {
 		if output := vfs.getUserPath(&input); output != expOutput {
-			t.Errorf("Expected result %s for input %s but got: %s", expOutput, input, output)
+			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
 		}
 	}
 }
@@ -28,7 +28,7 @@ func TestSplitPath(t *testing.T) {
 		".":                    [2]string{"/", ""},
 	}
 
-	vfs := CreateVirtualFileSystem(nil, nil)
+	vfs := VirtualFilesystem{}
 	for input, expOutput := range l {
 		if path, name := vfs.splitPath(input); path != expOutput[0] || name != expOutput[1] {
 			t.Errorf("Expected result %v for input %s but got: %v and %v", expOutput, input, path, name)

@@ -171,7 +171,7 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 }
 
 func (vfs *VirtualFilesystem) getUserPath(user *models.User) string {
-	return "/" + filepath.Join(strconv.Itoa(user.ID))
+	return vfs.getUserPathWithID(user.ID)
 }
 
 func (vfs *VirtualFilesystem) getUserPathWithID(userID int) string {
