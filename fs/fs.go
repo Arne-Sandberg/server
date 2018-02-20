@@ -26,5 +26,5 @@ type Filesystem interface {
 	GetDownloadPath(path string) string
 	// ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 	ZipFiles(paths []string, outputPath string) (err error)
-	MoveFile(oldPath, newPath string) (fileInfo *models.FileInfo, err error)
+	MoveFile(oldPath, newPath string) (err error)
 }

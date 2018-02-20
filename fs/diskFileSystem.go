@@ -222,7 +222,7 @@ func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (err erro
 	return
 }
 
-func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (fileInfo *models.FileInfo, err error) {
+func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (err error) {
 	if !utils.ValidatePath(oldPath) {
 		err = ErrForbiddenPathName
 		return

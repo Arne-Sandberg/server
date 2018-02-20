@@ -332,6 +332,55 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 }
 
 func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {
-	// TODO
-	return nil, nil
+	if !utils.ValidatePath(path) {
+		err = ErrForbiddenPathName
+		return
+	}
+
+	filePath, fileName := vfs.splitPath(path)
+	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	if err != nil {
+		return
+	}
+
+	var newPath string
+	if rawNewPath, ok := updates["path"]; ok == true {
+		newPath, ok = rawNewPath.(string)
+		if ok != true {
+			err = fmt.Errorf("Given path is not a string")
+			return
+		}
+	}
+
+	var newName string
+	if rawNewName, ok := updates["name"]; ok == true {
+		newName, ok = rawNewName.(string)
+		if ok != true {
+			err = fmt.Errorf("Given name is not a string")
+			return
+		}
+	}
+
+	if newPath == "" || !utils.ValidatePath(newPath) {
+		newPath = fileInfo.Path
+	}
+	if newName == "" || !utils.ValidatePath(newName) {
+		newName = fileInfo.Name
+	}
+
+	if newPath != fileInfo.Path || newName != fileInfo.Name {
+		// TODO: Update file in db
+
+		if fileInfo.OriginalFileID <= 0 {
+			userPath := vfs.getUserPath(user)
+			newPath := filepath.Join(userPath, newPath, newName)
+			oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+			err = vfs.fs.MoveFile(oldPath, newPath)
+			if err != nil {
+				log.Error(0, "Error moving file from %v tp %v: %v", oldPath, newPath, err)
+				return
+			}
+		}
+	}
+	return
 }
