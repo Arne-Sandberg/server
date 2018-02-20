@@ -55,6 +55,8 @@ func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.C
 		m.Get("/path/*", OnlyUsers, ResolvePath, s.FileInfoHandler, JSONEncoder)
 		m.Post("/path/*", OnlyUsers, ResolvePath, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
 		m.Patch("/path/*", OnlyUsers, ResolvePath, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
+
+		m.Get("/stats", OnlyAdmins, s.StatsHandler, JSONEncoder)
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
