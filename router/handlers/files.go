@@ -51,7 +51,8 @@ func (s Server) UploadHandler(c *macaron.Context) {
 		defer file.Close()
 
 		// Create the destination file making sure the path is writeable.
-		dst, err := s.filesystem.NewFileHandleForUser(user, filepath.Join(path, files[i].Filename))
+		filePath := filepath.Join(path, files[i].Filename)
+		dst, err := s.filesystem.NewFileHandleForUser(user, filePath)
 		if err != nil {
 			log.Error(0, "Could not open file for writing: %v", err)
 			c.Data["response"] = fmt.Errorf("Could not open file for writing: %v", err)
@@ -62,6 +63,13 @@ func (s Server) UploadHandler(c *macaron.Context) {
 		// Copy the uploaded file to the destination file
 		if _, err := io.Copy(dst, file); err != nil {
 			log.Error(0, "Could not copy the file: %v", err)
+			c.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		err = s.filesystem.FinishNewFile(user, filePath)
+		if err != nil {
+			log.Error(0, "Could not finish new file: %v", err)
 			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -159,6 +167,11 @@ func (s Server) CreateFileHandler(c *macaron.Context) {
 	} else {
 		file, err := s.filesystem.NewFileHandleForUser(user, filePath)
 		defer file.Close()
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
+		err = s.filesystem.FinishNewFile(user, filePath)
 		if err != nil {
 			c.Data["response"] = err
 			return

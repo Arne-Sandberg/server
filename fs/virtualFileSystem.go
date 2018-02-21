@@ -2,9 +2,11 @@ package fs
 
 import (
 	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/freecloudio/freecloud/utils"
@@ -63,6 +65,27 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 			})
 			if err != nil {
 				log.Error(0, "Error inserting created root folder for user id %v", user.ID)
+				continue
+			}
+		}
+
+		//Create tmp dir for every user
+		created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(vfs.getUserPath(user), vfs.tmpName))
+		if err != nil {
+			log.Error(0, "Error creating tmp folder for user id %v", user.ID)
+			continue
+		}
+		_, err = vfs.db.GetFileInfo(user.ID, "/", vfs.tmpName)
+		if created || err != nil {
+			err = vfs.db.InsertFile(&models.FileInfo{
+				Path:        "/",
+				Name:        vfs.tmpName,
+				IsDir:       true,
+				OwnerID:     user.ID,
+				LastChanged: time.Now(),
+			})
+			if err != nil {
+				log.Error(0, "Error inserting created tmp folder for user id %v", user.ID)
 				continue
 			}
 		}
@@ -185,7 +208,9 @@ func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 	}
 
 	path = utils.ConvertToSlash(filepath.Dir(origPath))
-	if path[len(path)-1] != '/' {
+	if strings.HasSuffix(path, ".") {
+		path = path[:len(path)-1]
+	} else if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
 	name = filepath.Base(origPath)
@@ -196,7 +221,7 @@ func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path strin
 	return vfs.fs.NewFileHandle(filepath.Join(vfs.getUserPath(user), path))
 }
 
-func (vfs *VirtualFilesystem) FinishFileHandle(user *models.User, path string) (err error) {
+func (vfs *VirtualFilesystem) FinishNewFile(user *models.User, path string) (err error) {
 	filePath, fileName := vfs.splitPath(path)
 	userPath := vfs.getUserPath(user)
 	fileInfo, err := vfs.fs.GetFileInfo(userPath, filePath, fileName)
@@ -217,7 +242,7 @@ func (vfs *VirtualFilesystem) FinishFileHandle(user *models.User, path string) (
 		return
 	}
 
-	//TODO: Make asynchronus scan call?!?
+	//TODO: Make asynchronus scan call for dir sizes?!?
 
 	return
 }
@@ -229,7 +254,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	parFolderPath, parFolderName := vfs.splitPath(folderPath)
 	parFolderInfo, err := vfs.db.GetFileInfo(user.ID, parFolderPath, parFolderName)
 	if err != nil {
-		log.Error(0, "Could not find parent folder of finishes fileHandle in db: %v", err)
+		log.Error(0, "Could not find parent folder of folder in db: %v", err)
 		return
 	}
 
@@ -328,6 +353,11 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 	if err != nil {
 		return
 	}
+
+	err = vfs.FinishNewFile(user, zipPath)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -369,18 +399,38 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 	}
 
 	if newPath != fileInfo.Path || newName != fileInfo.Name {
-		// TODO: Update file in db
+		userPath := vfs.getUserPath(user)
+		oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+
+		//TODO: FIX ME!
+		if newPath != fileInfo.Path {
+			fileInfo.Path = newPath
+			folderPath, folderName := vfs.splitPath(fileInfo.Path)
+			var folderInfo *models.FileInfo
+			folderInfo, err = vfs.db.GetFileInfo(user.ID, folderPath, folderName)
+			if err != nil {
+				log.Error(0, "Error getting parent for changed file %v%v: %v", newPath, newName, err)
+				return
+			}
+			fileInfo.ParentID = folderInfo.ID
+		}
+		if newName != fileInfo.Name {
+			fileInfo.Name = newName
+			fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
+		}
+		fileInfo.LastChanged = time.Now()
 
 		if fileInfo.OriginalFileID <= 0 {
-			userPath := vfs.getUserPath(user)
-			newPath := filepath.Join(userPath, newPath, newName)
-			oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+			newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 			err = vfs.fs.MoveFile(oldPath, newPath)
 			if err != nil {
-				log.Error(0, "Error moving file from %v tp %v: %v", oldPath, newPath, err)
+				log.Error(0, "Error moving file: %v", oldPath, newPath, err)
 				return
 			}
 		}
 	}
+
+	//TODO: Make asynchronus scan call for dir sizes?!?
+
 	return
 }

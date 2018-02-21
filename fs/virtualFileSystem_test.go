@@ -26,6 +26,7 @@ func TestSplitPath(t *testing.T) {
 		"/file2.txt":           [2]string{"/", "file2.txt"},
 		"/":                    [2]string{"/", ""},
 		".":                    [2]string{"/", ""},
+		"testFolder":           [2]string{"/", "testFolder"},
 	}
 
 	vfs := VirtualFilesystem{}

@@ -188,7 +188,7 @@ func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo *mod
 	fileInfo = &models.FileInfo{}
 	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
 	if err != nil {
-		log.Error(0, "Could not get fileInfo for %v %v for user %v: %v", path, fileName, userID, err)
+		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, fileName, userID, err)
 		return
 	}
 	return
