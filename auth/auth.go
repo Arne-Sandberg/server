@@ -140,6 +140,19 @@ func NewUser(user *models.User) (session models.Session, err error) {
 	return newUnverifiedSession(user.ID), nil
 }
 
+func GetAllUsers() ([]*models.User, error) {
+	users, err := cProvider.GetAllUsers()
+	if err != nil {
+		log.Error(0, "Could not get all users, %v:", err)
+		return nil, err
+	}
+	for i := 0; i < len(users); i++ {
+		// Mask out the password
+		users[i].Password = ""
+	}
+	return users, nil
+}
+
 // ValidateSession checks if the session is valid.
 func ValidateSession(sess models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)

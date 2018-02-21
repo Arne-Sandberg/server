@@ -80,6 +80,12 @@ func (db *StormDB) GetUserByEmail(email string) (user *models.User, err error) {
 	return
 }
 
+func (db *StormDB) GetAllUsers() ([]*models.User, error) {
+	var users []*models.User
+	err := db.c.All(&users)
+	return users, err
+}
+
 func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
 
 	var user models.User
