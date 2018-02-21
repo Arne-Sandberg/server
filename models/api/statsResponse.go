@@ -7,6 +7,7 @@ type StatsResponse struct {
 	Version    string        `json:"version,omitempty"`
 	Uptime     time.Duration `json:"uptime,omitempty"`
 	Memory     MemoryStats   `json:"memory,omitempty"`
+	GoVersion  string        `json:"goVersion,omitempty"`
 	Goroutines int           `json:"goroutines"`
 	Sessions   int           `json:"sessions"`
 }

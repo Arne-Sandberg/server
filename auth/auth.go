@@ -98,6 +98,10 @@ func newUnverifiedSession(uid int) models.Session {
 	return sess
 }
 
+func TotalSessionCount() int {
+	return sProvider.TotalSessionCount()
+}
+
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
 	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || !utils.ValidateFirstName(user.FirstName) || !utils.ValidateLastName(user.LastName) {

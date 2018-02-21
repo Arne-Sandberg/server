@@ -102,6 +102,14 @@ func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid boo
 	return
 }
 
+func (db *StormDB) TotalSessionCount() int {
+	c, err := db.c.Count(&models.Session{})
+	if err != nil {
+		log.Error(0, "Error counting total sessions: %v", err)
+	}
+	return c
+}
+
 func (db *StormDB) StoreSession(session models.Session) error {
 	return db.c.Save(&session)
 }
