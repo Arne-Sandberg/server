@@ -98,6 +98,10 @@ func newUnverifiedSession(uid int) models.Session {
 	return sess
 }
 
+func TotalSessionCount() int {
+	return sProvider.TotalSessionCount()
+}
+
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
 func NewUser(user *models.User) (session models.Session, err error) {
 	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || !utils.ValidateFirstName(user.FirstName) || !utils.ValidateLastName(user.LastName) {
@@ -134,6 +138,19 @@ func NewUser(user *models.User) (session models.Session, err error) {
 
 	// Now, create a session for the user
 	return newUnverifiedSession(user.ID), nil
+}
+
+func GetAllUsers() ([]*models.User, error) {
+	users, err := cProvider.GetAllUsers()
+	if err != nil {
+		log.Error(0, "Could not get all users, %v:", err)
+		return nil, err
+	}
+	for i := 0; i < len(users); i++ {
+		// Mask out the password
+		users[i].Password = ""
+	}
+	return users, nil
 }
 
 // ValidateSession checks if the session is valid.

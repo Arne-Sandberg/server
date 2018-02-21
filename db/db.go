@@ -80,6 +80,12 @@ func (db *StormDB) GetUserByEmail(email string) (user *models.User, err error) {
 	return
 }
 
+func (db *StormDB) GetAllUsers() ([]*models.User, error) {
+	var users []*models.User
+	err := db.c.All(&users)
+	return users, err
+}
+
 func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
 
 	var user models.User
@@ -100,6 +106,14 @@ func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid boo
 	}
 
 	return
+}
+
+func (db *StormDB) TotalSessionCount() int {
+	c, err := db.c.Count(&models.Session{})
+	if err != nil {
+		log.Error(0, "Error counting total sessions: %v", err)
+	}
+	return c
 }
 
 func (db *StormDB) StoreSession(session models.Session) error {
