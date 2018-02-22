@@ -172,6 +172,15 @@ func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
+func (db *StormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.DeleteStruct(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not delete fileInfo: %v", err)
+		return
+	}
+	return
+}
+
 func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
 	dirInfo, err = db.GetFileInfo(userID, path, dirName)
 	if err != nil || !dirInfo.IsDir {

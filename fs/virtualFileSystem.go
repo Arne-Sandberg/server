@@ -20,6 +20,7 @@ type vfsDatabase interface {
 	InsertFile(fileInfo *models.FileInfo) (err error)
 	RemoveFile(fileInfo *models.FileInfo) (err error)
 	UpdateFile(fileInfo *models.FileInfo) (err error)
+	DeleteFile(fileInfo *models.FileInfo) (err error)
 	// Must return an empty instead of an error if nothing could be found
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
@@ -231,10 +232,19 @@ func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 }
 
 func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
+	if !utils.ValidatePath(path) {
+		return nil, ErrForbiddenPathName
+	}
+
 	return vfs.fs.NewFileHandle(filepath.Join(vfs.getUserPath(user), path))
 }
 
 func (vfs *VirtualFilesystem) FinishNewFile(user *models.User, path string) (err error) {
+	if !utils.ValidatePath(path) {
+		err = ErrForbiddenPathName
+		return
+	}
+
 	filePath, fileName := vfs.splitPath(path)
 	userPath := vfs.getUserPath(user)
 	fileInfo, err := vfs.fs.GetFileInfo(userPath, filePath, fileName)
@@ -261,19 +271,26 @@ func (vfs *VirtualFilesystem) FinishNewFile(user *models.User, path string) (err
 }
 
 func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path string) (err error) {
+	if !utils.ValidatePath(path) {
+		err = ErrForbiddenPathName
+		return
+	}
+
 	folderPath, folderName := vfs.splitPath(path)
 	userPath := vfs.getUserPath(user)
 
 	parFolderPath, parFolderName := vfs.splitPath(folderPath)
 	parFolderInfo, err := vfs.db.GetFileInfo(user.ID, parFolderPath, parFolderName)
 	if err != nil {
-		log.Error(0, "Could not find parent folder of folder in db: %v", err)
+		err = fmt.Errorf("Could not find parent folder of folder in db: %v", err)
+		log.Error(0, "%v", err)
 		return
 	}
 
 	err = vfs.fs.CreateDirectory(filepath.Join(userPath, path))
 	if err != nil {
-		log.Error(0, "Error creating directory for user %v: %v", user.ID, err)
+		err = fmt.Errorf("Error creating directory for user %v: %v", user.ID, err)
+		log.Error(0, "%v", err)
 		return
 	}
 
@@ -337,6 +354,11 @@ func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (d
 
 // ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error) {
+	if !utils.ValidatePath(outputName) {
+		err = ErrForbiddenPathName
+		return
+	}
+
 	userPath := vfs.getUserPath(user)
 	for it := 0; it < len(paths); it++ {
 		filePath, fileName := vfs.splitPath(paths[it])
@@ -375,11 +397,6 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 }
 
 func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {
-	if !utils.ValidatePath(path) {
-		err = ErrForbiddenPathName
-		return
-	}
-
 	filePath, fileName := vfs.splitPath(path)
 	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
 	if err != nil {
@@ -461,6 +478,42 @@ func (vfs *VirtualFilesystem) moveFileInDB(user *models.User, fileInfo *models.F
 		folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
 		for _, contentInfo := range folderContent {
 			err = vfs.moveFileInDB(user, contentInfo, fileInfo)
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err error) {
+	filePath, fileName := vfs.splitPath(path)
+	var fileInfo *models.FileInfo
+	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	if err != nil {
+		return
+	}
+
+	err = vfs.deleteFileInDB(fileInfo)
+	if err != nil {
+		return
+	}
+
+	err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (vfs *VirtualFilesystem) deleteFileInDB(fileInfo *models.FileInfo) (err error) {
+	err = vfs.db.DeleteFile(fileInfo)
+
+	if fileInfo.IsDir {
+		var folderContent []*models.FileInfo
+		folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
+		for _, contentInfo := range folderContent {
+			err = vfs.deleteFileInDB(contentInfo)
 			if err != nil {
 				return
 			}

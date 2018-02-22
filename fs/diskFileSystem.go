@@ -234,9 +234,23 @@ func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (err error) {
 
 	err = os.Rename(filepath.Join(dfs.base, oldPath), filepath.Join(dfs.base, newPath))
 	if err != nil {
-		err = fmt.Errorf("Moving %v to %v failed", oldPath, newPath)
+		log.Error(0, "Moving %v to %v failed", oldPath, newPath)
 		return
 	}
 
+	return
+}
+
+func (dfs *DiskFilesystem) DeleteFile(path string) (err error) {
+	if !utils.ValidatePath(path) {
+		err = ErrForbiddenPathName
+		return
+	}
+
+	err = os.RemoveAll(filepath.Join(dfs.base, path))
+	if err != nil {
+		log.Error(0, "Deleting %v failed", path)
+		return
+	}
 	return
 }

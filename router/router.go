@@ -56,6 +56,7 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		m.Get("/path/*", OnlyUsers, ResolvePath, s.FileInfoHandler, JSONEncoder)
 		m.Post("/path/*", OnlyUsers, ResolvePath, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
 		m.Patch("/path/*", OnlyUsers, ResolvePath, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
+		m.Delete("/path/*", OnlyUsers, ResolvePath, s.FileDeleteHandler, JSONEncoder)
 
 		m.Get("/stats", OnlyAdmins, s.StatsHandler, JSONEncoder)
 	})
