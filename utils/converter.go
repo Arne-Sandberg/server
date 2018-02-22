@@ -9,8 +9,16 @@ import (
 var multiSlashReg = regexp.MustCompile(`(\/)+`)
 
 // ConvertToSlash takes a string (most likely a path) and converts all back-slashes to normal slashes
-func ConvertToSlash(path string) string {
+func ConvertToSlash(path string, isDir bool) string {
 	path = filepath.Clean(path)
 	path = strings.Replace(path, "\\", "/", -1)
-	return multiSlashReg.ReplaceAllString(path, "/")
+	path = multiSlashReg.ReplaceAllString(path, "/")
+	if len(path) > 0 && path[0] != '/' {
+		path = "/" + path
+	}
+	if isDir && !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+
+	return path
 }

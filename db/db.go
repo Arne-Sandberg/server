@@ -3,6 +3,8 @@ package db
 import (
 	"time"
 
+	"github.com/asdine/storm/q"
+
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/freecloudio/freecloud/auth"
@@ -15,8 +17,8 @@ type StormDB struct {
 	c *storm.DB
 }
 
-func NewStormDB() (*StormDB, error) {
-	db, err := storm.Open("freecloud.db", storm.Codec(msgpack.Codec))
+func NewStormDB(name string) (*StormDB, error) {
+	db, err := storm.Open(name, storm.Codec(msgpack.Codec))
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
 		return nil, err
@@ -141,4 +143,75 @@ func (db *StormDB) SessionIsValid(session models.Session) bool {
 		return false
 	}
 	return true
+}
+
+func (db *StormDB) InsertFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.Save(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not insert file: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.DeleteStruct(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not delete file: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
+	err = db.c.Update(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not update fileInfo: %v", err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
+	dirInfo, err = db.GetFileInfo(userID, path, dirName)
+	if err != nil || !dirInfo.IsDir {
+		return
+	}
+
+	content, err = db.GetDirectoryContentWithID(dirInfo.ID)
+	return
+}
+
+func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error) {
+	content = make([]*models.FileInfo, 0)
+	err = db.c.Select(q.Eq("ParentID", directoryID)).OrderBy("Name").Find(&content)
+	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+		content = make([]*models.FileInfo, 0)
+		err = nil
+	} else if err != nil {
+		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
+		return
+	}
+
+	return
+}
+
+func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error) {
+	fileInfo = &models.FileInfo{}
+	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
+	if err != nil {
+		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, fileName, userID, err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error) {
+	fileInfo = &models.FileInfo{}
+	err = db.c.One("ID", fileID, fileInfo)
+	if err != nil {
+		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
+		return
+	}
+	return
 }

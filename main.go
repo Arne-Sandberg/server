@@ -24,12 +24,12 @@ func main() {
 	config.Init()
 	setupLogger()
 
-	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"))
+	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"), config.GetString("fs.tmp_folder_name")) // TODO: Remove temp folder name from dfs and move completely to vfs
 	if err != nil {
 		os.Exit(3)
 	}
 
-	database, err := db.NewStormDB()
+	database, err := db.NewStormDB(config.GetString("db.name"))
 	if err != nil {
 		clog.Fatal(0, "Database setup failed, bailing out!")
 		os.Exit(1)
@@ -37,7 +37,9 @@ func main() {
 
 	auth.Init(database, database)
 
-	router.Start(config.GetInt("http.port"), config.GetString("http.host"), filesystem, database)
+	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
+
+	router.Start(config.GetInt("http.port"), config.GetString("http.host"), virtualFS, database)
 }
 
 func setupLogger() {

@@ -19,6 +19,7 @@ func setDefaults() {
 	viper.SetDefault("fs.base_directory", "data")
 	viper.SetDefault("fs.tmp_folder_name", ".tmp")
 	viper.SetDefault("fs.tmp_data_expiry", 24)
+	viper.SetDefault("db.name", "freecloud.db")
 }
 
 func GetString(key string) string {

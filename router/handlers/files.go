@@ -51,7 +51,8 @@ func (s Server) UploadHandler(c *macaron.Context) {
 		defer file.Close()
 
 		// Create the destination file making sure the path is writeable.
-		dst, err := s.filesystem.NewFileHandleForUser(user, filepath.Join(path, files[i].Filename))
+		filePath := filepath.Join(path, files[i].Filename)
+		dst, err := s.filesystem.NewFileHandleForUser(user, filePath)
 		if err != nil {
 			log.Error(0, "Could not open file for writing: %v", err)
 			c.Data["response"] = fmt.Errorf("Could not open file for writing: %v", err)
@@ -65,6 +66,13 @@ func (s Server) UploadHandler(c *macaron.Context) {
 			c.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		err = s.filesystem.FinishNewFile(user, filePath)
+		if err != nil {
+			log.Error(0, "Could not finish new file: %v", err)
+			c.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	c.WriteHeader(http.StatusCreated)
@@ -73,7 +81,7 @@ func (s Server) UploadHandler(c *macaron.Context) {
 func (s Server) DownloadHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	path := c.Data["path"].(string)
-	fullPath, filename, err := s.filesystem.ResolveFilePath(user, path)
+	fullPath, filename, err := s.filesystem.GetDownloadPath(user, path)
 	if err != nil || filename == "" {
 		// TODO: ERROR!
 		log.Error(0, "Could not resolve filepath for download: %v", err)
@@ -82,17 +90,9 @@ func (s Server) DownloadHandler(c *macaron.Context) {
 }
 
 func (s Server) ZipHandler(c *macaron.Context) {
+	//TODO
 	user := c.Data["user"].(*models.User)
 	paths := c.Data["request"].(*apiModels.ZipRequest).Paths
-
-	var err error
-	for _, path := range paths {
-		path, _, err = s.filesystem.ResolveFilePath(user, path)
-		if err != nil {
-			c.Data["response"] = err
-			return
-		}
-	}
 
 	outputFileName := "_" + time.Now().UTC().Format("06-01-02_15-04-05") + ".zip"
 	if len(paths) == 1 {
@@ -112,7 +112,7 @@ func (s Server) ZipHandler(c *macaron.Context) {
 		ZipPath string `json:"zipPath"`
 	}{
 		Success: true,
-		ZipPath: utils.ConvertToSlash(fullZipPath),
+		ZipPath: utils.ConvertToSlash(fullZipPath, false),
 	}
 }
 
@@ -122,19 +122,10 @@ func (s Server) FileInfoHandler(c *macaron.Context) {
 
 	log.Trace("Getting fileInfo of %s for %s %s", path, user.FirstName, user.LastName)
 
-	fileInfo, err := s.filesystem.GetFileInfo(user, path)
+	fileInfo, content, err := s.filesystem.ListFilesForUser(user, path)
 	if err != nil {
 		c.Data["response"] = err
 		return
-	}
-
-	var content []*models.FileInfo
-	if fileInfo.IsDir {
-		content, err = s.filesystem.ListFilesForUser(user, path)
-		if err != nil {
-			c.Data["response"] = err
-			return
-		}
 	}
 
 	c.Data["response"] = struct {
@@ -167,6 +158,11 @@ func (s Server) CreateFileHandler(c *macaron.Context) {
 	} else {
 		file, err := s.filesystem.NewFileHandleForUser(user, filePath)
 		defer file.Close()
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
+		err = s.filesystem.FinishNewFile(user, filePath)
 		if err != nil {
 			c.Data["response"] = err
 			return

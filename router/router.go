@@ -21,12 +21,12 @@ var (
 )
 
 // Start starts the router with the given settings
-func Start(port int, hostname string, filesys fs.Filesystem, credProvider auth.CredentialsProvider) {
+func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvider auth.CredentialsProvider) {
 	if config.GetBool("http.ssl") {
 		log.Warn("SSL is not implemented yet, falling back to HTTP")
 	}
 	log.Info("Starting router at http://%s:%d", hostname, port)
-	s = handlers.NewServer(filesys)
+	s = handlers.NewServer(virtualFS)
 
 	m := macaron.New()
 	m.Use(Logging())
