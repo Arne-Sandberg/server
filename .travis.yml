@@ -1,8 +1,11 @@
 language: go
 go:
-- 1.9.2
+- "1.x"
+- "1.9.x"
+- "1.9"
 before_script:
 - go vet ./...
+script: go test -race -v ./...
 notifications:
   email: false
   slack:
