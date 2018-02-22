@@ -2,7 +2,7 @@ language: go
 go:
 - "1.x"
 - "1.9.x"
-- "1.9.0"
+- "1.9"
 before_script:
 - go vet ./...
 script: go test -race -v ./...
