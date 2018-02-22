@@ -73,6 +73,13 @@ func (s Server) SignupHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
+
+	err = s.filesystem.ScanUserFolderForChanges(user)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
 	c.Data["response"] = struct {
 		Success bool   `json:"success"`
 		Token   string `json:"token"`

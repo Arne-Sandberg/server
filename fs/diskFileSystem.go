@@ -165,7 +165,7 @@ func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models
 	if path == "" {
 		path = "/"
 	}
-	path = utils.ConvertToSlash(path)
+	path = utils.ConvertToSlash(path, true)
 
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {
@@ -190,7 +190,7 @@ func (dfs *DiskFilesystem) GetFileInfo(userPath, path, name string) (fileInfo *m
 
 func (dfs *DiskFilesystem) generateFileInfo(osFileInfo os.FileInfo, path string) *models.FileInfo {
 	return &models.FileInfo{
-		Path:        path,
+		Path:        utils.ConvertToSlash(path, true),
 		Name:        osFileInfo.Name(),
 		IsDir:       osFileInfo.IsDir(),
 		Size:        osFileInfo.Size(),

@@ -166,18 +166,23 @@ func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
-	content = make([]*models.FileInfo, 0)
 	dirInfo, err = db.GetFileInfo(userID, path, dirName)
-	if err != nil {
+	if err != nil || !dirInfo.IsDir {
 		return
 	}
 
-	err = db.c.Select(q.Eq("ParentID", dirInfo.ID)).OrderBy("Name").Find(&content)
+	content, err = db.GetDirectoryContentWithID(dirInfo.ID)
+	return
+}
+
+func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error) {
+	content = make([]*models.FileInfo, 0)
+	err = db.c.Select(q.Eq("ParentID", directoryID)).OrderBy("Name").Find(&content)
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		content = make([]*models.FileInfo, 0)
 		err = nil
 	} else if err != nil {
-		log.Error(0, "Could not get dir content for %v %v for user %v: %v", path, dirName, userID, err)
+		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
 		return
 	}
 

@@ -22,6 +22,7 @@ type vfsDatabase interface {
 	UpdateFile(fileInfo *models.FileInfo) (err error)
 	// Must return an empty instead of an error if nothing could be found
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
+	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
 	GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error)
 }
@@ -48,53 +49,61 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 	}
 
 	for _, user := range existingUsers {
-		//Create user dir if not existing and add it to db
-		created, err := vfs.fs.CreateDirIfNotExist(vfs.getUserPath(user))
+		err = vfs.ScanUserFolderForChanges(user)
 		if err != nil {
-			log.Error(0, "Error creating folder for user id %v", user.ID)
 			continue
 		}
-		_, err = vfs.db.GetFileInfo(user.ID, "/", "")
-		if created || err != nil {
-			err = vfs.db.InsertFile(&models.FileInfo{
-				Path:        "/",
-				Name:        "",
-				IsDir:       true,
-				OwnerID:     user.ID,
-				LastChanged: time.Now(),
-			})
-			if err != nil {
-				log.Error(0, "Error inserting created root folder for user id %v", user.ID)
-				continue
-			}
-		}
+	}
+	return
+}
 
-		//Create tmp dir for every user
-		created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(vfs.getUserPath(user), vfs.tmpName))
+func (vfs *VirtualFilesystem) ScanUserFolderForChanges(user *models.User) (err error) {
+	//Create user dir if not existing and add it to db
+	created, err := vfs.fs.CreateDirIfNotExist(vfs.getUserPath(user))
+	if err != nil {
+		log.Error(0, "Error creating folder for user id %v", user.ID)
+		return
+	}
+	_, err = vfs.db.GetFileInfo(user.ID, "/", "")
+	if created || err != nil {
+		err = vfs.db.InsertFile(&models.FileInfo{
+			Path:        "/",
+			Name:        "",
+			IsDir:       true,
+			OwnerID:     user.ID,
+			LastChanged: time.Now(),
+		})
 		if err != nil {
-			log.Error(0, "Error creating tmp folder for user id %v", user.ID)
-			continue
+			log.Error(0, "Error inserting created root folder for user id %v", user.ID)
+			return
 		}
-		_, err = vfs.db.GetFileInfo(user.ID, "/", vfs.tmpName)
-		if created || err != nil {
-			err = vfs.db.InsertFile(&models.FileInfo{
-				Path:        "/",
-				Name:        vfs.tmpName,
-				IsDir:       true,
-				OwnerID:     user.ID,
-				LastChanged: time.Now(),
-			})
-			if err != nil {
-				log.Error(0, "Error inserting created tmp folder for user id %v", user.ID)
-				continue
-			}
-		}
+	}
 
-		_, err = vfs.scanDirForChanges(user, "/", "")
+	//Create tmp dir for every user
+	created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(vfs.getUserPath(user), vfs.tmpName))
+	if err != nil {
+		log.Error(0, "Error creating tmp folder for user id %v", user.ID)
+		return
+	}
+	_, err = vfs.db.GetFileInfo(user.ID, "/", vfs.tmpName)
+	if created || err != nil {
+		err = vfs.db.InsertFile(&models.FileInfo{
+			Path:        "/",
+			Name:        vfs.tmpName,
+			IsDir:       true,
+			OwnerID:     user.ID,
+			LastChanged: time.Now(),
+		})
 		if err != nil {
-			log.Error(0, "Could not scan directory for user %v: %v", user.ID, err)
-			return err
+			log.Error(0, "Error inserting created tmp folder for user id %v", user.ID)
+			return
 		}
+	}
+
+	_, err = vfs.scanDirForChanges(user, "/", "")
+	if err != nil {
+		log.Error(0, "Could not scan directory for user %v: %v", user.ID, err)
+		return err
 	}
 	return
 }
@@ -203,16 +212,19 @@ func (vfs *VirtualFilesystem) getUserPathWithID(userID int) string {
 
 // splitPath splits the given full path into the path and the name of the file/dir
 func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
-	if origPath == "/" || origPath == "." || origPath == "" {
+	if origPath == "/" || origPath == "\\" || origPath == "." || origPath == "" {
 		return "/", ""
 	}
 
-	path = utils.ConvertToSlash(filepath.Dir(origPath))
-	if strings.HasSuffix(path, ".") {
-		path = path[:len(path)-1]
-	} else if !strings.HasSuffix(path, "/") {
-		path += "/"
+	if strings.HasSuffix(origPath, "/") || strings.HasSuffix(origPath, "\\") {
+		origPath = origPath[:len(origPath)-1]
 	}
+
+	path = utils.ConvertToSlash(filepath.Dir(origPath), true)
+	if strings.HasSuffix(path, "./") {
+		path = path[:len(path)-2]
+	}
+
 	name = filepath.Base(origPath)
 	return
 }
@@ -265,7 +277,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	}
 
 	dirInfo := &models.FileInfo{
-		Path:        folderPath,
+		Path:        utils.ConvertToSlash(folderPath, true),
 		Name:        folderName,
 		IsDir:       true,
 		OwnerID:     user.ID,
@@ -402,23 +414,21 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		userPath := vfs.getUserPath(user)
 		oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 
-		//TODO: FIX ME!
-		if newPath != fileInfo.Path {
-			fileInfo.Path = newPath
-			folderPath, folderName := vfs.splitPath(fileInfo.Path)
-			var folderInfo *models.FileInfo
-			folderInfo, err = vfs.db.GetFileInfo(user.ID, folderPath, folderName)
-			if err != nil {
-				log.Error(0, "Error getting parent for changed file %v%v: %v", newPath, newName, err)
-				return
-			}
-			fileInfo.ParentID = folderInfo.ID
-		}
+		fileInfo.LastChanged = time.Now()
 		if newName != fileInfo.Name {
 			fileInfo.Name = newName
 			fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
 		}
-		fileInfo.LastChanged = time.Now()
+
+		folderPath, folderName := vfs.splitPath(newPath)
+		var folderInfo *models.FileInfo
+		folderInfo, err = vfs.db.GetFileInfo(user.ID, folderPath, folderName)
+		if err != nil {
+			log.Error(0, "Error getting parent for changed file %v%v: %v", fileInfo.Path, fileInfo.Name, err)
+			return
+		}
+
+		err = vfs.moveFileInDB(user, fileInfo, folderInfo)
 
 		if fileInfo.OriginalFileID <= 0 {
 			newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
@@ -432,5 +442,28 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 
 	//TODO: Make asynchronus scan call for dir sizes?!?
 
+	return
+}
+
+func (vfs *VirtualFilesystem) moveFileInDB(user *models.User, fileInfo *models.FileInfo, parentFileInfo *models.FileInfo) (err error) {
+	fileInfo.Path = utils.ConvertToSlash(filepath.Join(parentFileInfo.Path, parentFileInfo.Name), true)
+	fileInfo.ParentID = parentFileInfo.ID
+
+	err = vfs.db.UpdateFile(fileInfo)
+	if err != nil {
+		log.Error(0, "Error updating file in db: %v", err)
+		return
+	}
+
+	if fileInfo.IsDir {
+		var folderContent []*models.FileInfo
+		folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
+		for _, contentInfo := range folderContent {
+			err = vfs.moveFileInDB(user, contentInfo, fileInfo)
+			if err != nil {
+				return
+			}
+		}
+	}
 	return
 }

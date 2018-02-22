@@ -94,15 +94,6 @@ func (s Server) ZipHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	paths := c.Data["request"].(*apiModels.ZipRequest).Paths
 
-	var err error
-	/*for _, path := range paths {
-		path, _, err = s.filesystem.ResolveFilePath(user, path)
-		if err != nil {
-			c.Data["response"] = err
-			return
-		}
-	}*/
-
 	outputFileName := "_" + time.Now().UTC().Format("06-01-02_15-04-05") + ".zip"
 	if len(paths) == 1 {
 		outputFileName = filepath.Base(paths[0]) + outputFileName
@@ -121,7 +112,7 @@ func (s Server) ZipHandler(c *macaron.Context) {
 		ZipPath string `json:"zipPath"`
 	}{
 		Success: true,
-		ZipPath: utils.ConvertToSlash(fullZipPath),
+		ZipPath: utils.ConvertToSlash(fullZipPath, false),
 	}
 }
 
