@@ -470,7 +470,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 				}
 			}
 		} else {
-			err = vfs.copyFile(user, fileInfo, folderInfo)
+			err = vfs.copyFile(user, fileInfo, newName, folderInfo)
 			if err != nil {
 				return
 			}
@@ -505,9 +505,12 @@ func (vfs *VirtualFilesystem) moveFileInDB(user *models.User, fileInfo *models.F
 	return
 }
 
-func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileInfo, parentFileInfo *models.FileInfo) (err error) {
-	parentPath := filepath.Join(parentFileInfo.Path, parentFileInfo.Name)
-	newPath := filepath.Join(parentPath, fileInfo.Name)
+func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileInfo, newName string, parentFileInfo *models.FileInfo) (err error) {
+	if newName == "" {
+		newName = fileInfo.Name
+	}
+	parentPath := utils.ConvertToSlash(filepath.Join(parentFileInfo.Path, parentFileInfo.Name), true)
+	newPath := filepath.Join(parentPath, newName)
 
 	if fileInfo.OriginalFileID <= 0 {
 		if fileInfo.IsDir {
@@ -516,18 +519,24 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 				return
 			}
 
-			//TODO: Proper copying of content
+			var newFolderInfo *models.FileInfo
+			newFolderInfo, err = vfs.db.GetFileInfo(user.ID, parentPath, newName)
+			if err != nil {
+				return
+			}
+
 			var folderContent []*models.FileInfo
 			folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
 			for _, contentInfo := range folderContent {
-				err = vfs.copyFile(user, contentInfo, newFileInfo)
+				err = vfs.copyFile(user, contentInfo, "", newFolderInfo)
 				if err != nil {
 					return
 				}
 			}
 		} else {
 			userPath := vfs.getUserPath(user)
-			err = vfs.fs.CopyFile(filepath.Join(userPath, parentPath), filepath.Join(userPath, newPath))
+			oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+			err = vfs.fs.CopyFile(filepath.Join(userPath, oldPath), filepath.Join(userPath, newPath))
 			if err != nil {
 				return
 			}
@@ -537,7 +546,15 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 			}
 		}
 	} else {
-		//TODO: Add file to db as it is shared
+		newFileInfo := *fileInfo
+		newFileInfo.Path = parentPath
+		newFileInfo.ParentID = parentFileInfo.ID
+		newFileInfo.Name = newName
+
+		err = vfs.db.InsertFile(&newFileInfo)
+		if err != nil {
+			return
+		}
 	}
 
 	return
