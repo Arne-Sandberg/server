@@ -28,7 +28,7 @@ func TestConvertToSlash(t *testing.T) {
 
 	for input, expOutput := range l {
 		if output := ConvertToSlash(input.Path, input.IsDir); output != expOutput {
-			t.Errorf("Expected result %s for input %s but got: %s", expOutput, input, output)
+			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
 		}
 	}
 }
