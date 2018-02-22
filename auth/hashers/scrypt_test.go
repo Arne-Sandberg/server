@@ -39,8 +39,6 @@ func TestPasswordHashing(t *testing.T) {
 	if h1 == h2 {
 		t.Errorf("Hashing the same password twice yielded the same result: %s", h1)
 		return
-	} else {
-		t.Logf("h1: %s, h2: %s", h1, h2)
 	}
 	// first, hash a password, then test it against itself
 	hash, err := HashScrypt("h4x0r!")
