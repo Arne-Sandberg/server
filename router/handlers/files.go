@@ -209,6 +209,7 @@ func (s Server) UpdateFileHandler(c *macaron.Context) {
 var allowedFileUpdates = []string{
 	"path",
 	"name",
+	"copy",
 }
 
 func fillFileUpdates(fileUpdateJSON lzjson.Node) (updates map[string]interface{}) {

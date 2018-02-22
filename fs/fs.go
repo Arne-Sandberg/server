@@ -27,5 +27,6 @@ type Filesystem interface {
 	// ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 	ZipFiles(paths []string, outputPath string) (err error)
 	MoveFile(oldPath, newPath string) (err error)
+	CopyFile(oldPath, newPath string) (err error)
 	DeleteFile(path string) (err error)
 }

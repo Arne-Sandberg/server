@@ -421,6 +421,15 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		}
 	}
 
+	var copy bool
+	if rawCopy, ok := updates["copy"]; ok == true {
+		copy, ok = rawCopy.(bool)
+		if ok != true {
+			err = fmt.Errorf("Given copy flag is not a bool")
+			return
+		}
+	}
+
 	if newPath == "" || !utils.ValidatePath(newPath) {
 		newPath = fileInfo.Path
 	}
@@ -432,12 +441,6 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		userPath := vfs.getUserPath(user)
 		oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 
-		fileInfo.LastChanged = time.Now()
-		if newName != fileInfo.Name {
-			fileInfo.Name = newName
-			fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
-		}
-
 		folderPath, folderName := vfs.splitPath(newPath)
 		var folderInfo *models.FileInfo
 		folderInfo, err = vfs.db.GetFileInfo(user.ID, folderPath, folderName)
@@ -446,13 +449,29 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 			return
 		}
 
-		err = vfs.moveFileInDB(user, fileInfo, folderInfo)
+		if !copy {
+			fileInfo.LastChanged = time.Now()
+			if newName != fileInfo.Name {
+				fileInfo.Name = newName
+				fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
+			}
 
-		if fileInfo.OriginalFileID <= 0 {
-			newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
-			err = vfs.fs.MoveFile(oldPath, newPath)
+			err = vfs.moveFileInDB(user, fileInfo, folderInfo)
 			if err != nil {
-				log.Error(0, "Error moving file: %v", oldPath, newPath, err)
+				return
+			}
+
+			if fileInfo.OriginalFileID <= 0 {
+				newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+				err = vfs.fs.MoveFile(oldPath, newPath)
+				if err != nil {
+					log.Error(0, "Error moving file: %v", oldPath, newPath, err)
+					return
+				}
+			}
+		} else {
+			err = vfs.copyFile(user, fileInfo, folderInfo)
+			if err != nil {
 				return
 			}
 		}
@@ -486,6 +505,44 @@ func (vfs *VirtualFilesystem) moveFileInDB(user *models.User, fileInfo *models.F
 	return
 }
 
+func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileInfo, parentFileInfo *models.FileInfo) (err error) {
+	parentPath := filepath.Join(parentFileInfo.Path, parentFileInfo.Name)
+	newPath := filepath.Join(parentPath, fileInfo.Name)
+
+	if fileInfo.OriginalFileID <= 0 {
+		if fileInfo.IsDir {
+			err = vfs.CreateDirectoryForUser(user, newPath)
+			if err != nil {
+				return
+			}
+
+			//TODO: Proper copying of content
+			var folderContent []*models.FileInfo
+			folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
+			for _, contentInfo := range folderContent {
+				err = vfs.copyFile(user, contentInfo, newFileInfo)
+				if err != nil {
+					return
+				}
+			}
+		} else {
+			userPath := vfs.getUserPath(user)
+			err = vfs.fs.CopyFile(filepath.Join(userPath, parentPath), filepath.Join(userPath, newPath))
+			if err != nil {
+				return
+			}
+			err = vfs.FinishNewFile(user, newPath)
+			if err != nil {
+				return
+			}
+		}
+	} else {
+		//TODO: Add file to db as it is shared
+	}
+
+	return
+}
+
 func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err error) {
 	filePath, fileName := vfs.splitPath(path)
 	var fileInfo *models.FileInfo
@@ -499,10 +556,15 @@ func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err er
 		return
 	}
 
-	err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
-	if err != nil {
-		return
+	if fileInfo.OriginalFileID <= 0 {
+		err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
+		if err != nil {
+			return
+		}
 	}
+
+	//TODO: Make asynchronus scan call for dir sizes?!?
+
 	return
 }
 
