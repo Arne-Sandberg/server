@@ -6,7 +6,7 @@ type FileInfo struct {
 	Path        string    `json:"path,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	IsDir       bool      `json:"isDir,omitempty"`
-	Size        int64     `json:"size,omitempty"`
+	Size        int64     `json:"size"`
 	OwnerID     int       `json:"ownerID,omitempty"`
 	LastChanged time.Time `json:"lastChanged,omitempty"`
 	MimeType    string    `json:"mimetype,omitempty"`
