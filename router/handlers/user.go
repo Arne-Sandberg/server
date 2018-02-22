@@ -39,6 +39,21 @@ func (s Server) UserHandler(c *macaron.Context) {
 	}
 }
 
+func (s Server) UserListHandler(c *macaron.Context) {
+	users, err := auth.GetAllUsers()
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+	c.Data["response"] = struct {
+		Success bool           `json:"success"`
+		Users   []*models.User `json:"users"`
+	}{
+		true,
+		users,
+	}
+}
+
 func (s Server) UpdateUserHandler(c *macaron.Context) {
 	userID := c.Data["user"].(*models.User).ID
 	userUpdateJSON := c.Data["request"].(lzjson.Node)

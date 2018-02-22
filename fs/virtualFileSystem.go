@@ -42,7 +42,7 @@ func NewVirtualFilesystem(fs Filesystem, db vfsDatabase, tmpName string) (vfs *V
 
 func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 	log.Trace("Get existing users")
-	existingUsers, err := auth.GetExisingUsers()
+	existingUsers, err := auth.GetAllUsers()
 	if err != nil {
 		log.Error(0, "Could not get exising users: %v", err)
 		return
@@ -212,11 +212,12 @@ func (vfs *VirtualFilesystem) getUserPathWithID(userID int) string {
 
 // splitPath splits the given full path into the path and the name of the file/dir
 func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
-	if origPath == "/" || origPath == "\\" || origPath == "." || origPath == "" {
+	origPath = utils.ConvertToSlash(origPath, false)
+	if origPath == "/." || origPath == "/" || origPath == "." || origPath == "" {
 		return "/", ""
 	}
 
-	if strings.HasSuffix(origPath, "/") || strings.HasSuffix(origPath, "\\") {
+	if strings.HasSuffix(origPath, "/") {
 		origPath = origPath[:len(origPath)-1]
 	}
 

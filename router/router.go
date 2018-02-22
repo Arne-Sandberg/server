@@ -42,6 +42,7 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		})
 
 		// User: Includes getting and editing your user or as admin also for other users
+		m.Get("/users", OnlyAdmins, s.UserListHandler, JSONEncoder)
 		m.Get("/user/me", OnlyUsers, s.UserHandler, JSONEncoder)
 		m.Patch("/user/me", OnlyUsers, GeneralJSONDecoder, s.UpdateUserHandler, JSONEncoder)
 		m.Get("/user/byID/:id", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
@@ -55,6 +56,8 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		m.Get("/path/*", OnlyUsers, ResolvePath, s.FileInfoHandler, JSONEncoder)
 		m.Post("/path/*", OnlyUsers, ResolvePath, JSONDecoder(&models.FileInfo{}), s.CreateFileHandler, JSONEncoder)
 		m.Patch("/path/*", OnlyUsers, ResolvePath, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
+
+		m.Get("/stats", OnlyAdmins, s.StatsHandler, JSONEncoder)
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))

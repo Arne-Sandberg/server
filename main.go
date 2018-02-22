@@ -3,18 +3,24 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/freecloudio/freecloud/auth"
-	"github.com/freecloudio/freecloud/db"
+	"time"
 
 	"gopkg.in/clog.v1"
 
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/db"
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/fs"
 	"github.com/freecloudio/freecloud/router"
+	"github.com/freecloudio/freecloud/stats"
+)
+
+var (
+	VERSION = "0.1.0"
 )
 
 func main() {
+	stats.Init(VERSION, time.Now().UTC())
 	config.Init()
 	setupLogger()
 
