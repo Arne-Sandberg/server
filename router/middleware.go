@@ -11,6 +11,7 @@ import (
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
+	apiModels "github.com/freecloudio/freecloud/models/api"
 	"github.com/go-restit/lzjson"
 
 	log "gopkg.in/clog.v1"
@@ -155,7 +156,7 @@ func JSONEncoder(c *macaron.Context) {
 	}
 
 	switch res := resp.(type) {
-	case models.APIError:
+	case apiModels.APIError:
 		if res.Code != 0 {
 			c.JSON(res.Code, res)
 			return

@@ -37,7 +37,7 @@ func (s Server) UploadHandler(c *macaron.Context) {
 	files, ok := multiform.File["files"]
 	if !ok {
 		log.Error(0, "No 'files' form field, aborting file upload")
-		c.Data["response"] = models.APIError{Code: http.StatusBadRequest, Message: "No 'files' form field, aborting file upload"}
+		c.Data["response"] = apiModels.APIError{Code: http.StatusBadRequest, Message: "No 'files' form field, aborting file upload"}
 		return
 	}
 	for i := range files {
@@ -209,6 +209,7 @@ func (s Server) UpdateFileHandler(c *macaron.Context) {
 var allowedFileUpdates = []string{
 	"path",
 	"name",
+	"copy",
 }
 
 func fillFileUpdates(fileUpdateJSON lzjson.Node) (updates map[string]interface{}) {
@@ -226,4 +227,16 @@ func fillFileUpdates(fileUpdateJSON lzjson.Node) (updates map[string]interface{}
 	}
 
 	return
+}
+
+func (s *Server) FileDeleteHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	path := c.Data["path"].(string)
+	err := s.filesystem.DeleteFile(user, path)
+
+	if err != nil {
+		c.Data["response"] = err
+	} else {
+		c.Data["response"] = apiModels.SuccessResponse
+	}
 }

@@ -2,6 +2,7 @@ package fs
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime"
 	"os"
@@ -234,9 +235,58 @@ func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (err error) {
 
 	err = os.Rename(filepath.Join(dfs.base, oldPath), filepath.Join(dfs.base, newPath))
 	if err != nil {
-		err = fmt.Errorf("Moving %v to %v failed", oldPath, newPath)
+		log.Error(0, "Moving %v to %v failed", oldPath, newPath)
 		return
 	}
 
+	return
+}
+
+func (dfs *DiskFilesystem) DeleteFile(path string) (err error) {
+	if !utils.ValidatePath(path) {
+		err = ErrForbiddenPathName
+		return
+	}
+
+	err = os.RemoveAll(filepath.Join(dfs.base, path))
+	if err != nil {
+		log.Error(0, "Deleting %v failed", path)
+		return
+	}
+	return
+}
+
+func (dfs *DiskFilesystem) CopyFile(oldPath, newPath string) (err error) {
+	oldFullPath := filepath.Join(dfs.base, oldPath)
+	newFullPath := filepath.Join(dfs.base, newPath)
+
+	in, err := os.Open(oldFullPath)
+	if err != nil {
+		err = fmt.Errorf("Error opening file %v to copy", oldPath)
+		return
+	}
+	defer in.Close()
+
+	out, err := os.Create(newFullPath)
+	if err != nil {
+		err = fmt.Errorf("Error creating file %v to copy to", newPath)
+		log.Error(0, "%v", err)
+		return
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		err = fmt.Errorf("Error copying %v to %v", oldPath, newPath)
+		log.Error(0, "%v", err)
+		return
+	}
+
+	err = out.Sync()
+	if err != nil {
+		err = fmt.Errorf("Error syncing copied file%v", newPath)
+		log.Error(0, "%v", err)
+		return
+	}
 	return
 }
