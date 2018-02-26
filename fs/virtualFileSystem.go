@@ -421,9 +421,9 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		}
 	}
 
-	var copy bool
+	var copyFlag bool
 	if rawCopy, ok := updates["copy"]; ok == true {
-		copy, ok = rawCopy.(bool)
+		copyFlag, ok = rawCopy.(bool)
 		if ok != true {
 			err = fmt.Errorf("Given copy flag is not a bool")
 			return
@@ -449,7 +449,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 			return
 		}
 
-		if !copy {
+		if !copyFlag {
 			fileInfo.LastChanged = time.Now()
 			if newName != fileInfo.Name {
 				fileInfo.Name = newName
@@ -505,11 +505,11 @@ func (vfs *VirtualFilesystem) moveFileInDB(user *models.User, fileInfo *models.F
 	return
 }
 
-func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileInfo, newName string, parentFileInfo *models.FileInfo) (err error) {
+func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileInfo, newName string, newParentFileInfo *models.FileInfo) (err error) {
 	if newName == "" {
 		newName = fileInfo.Name
 	}
-	parentPath := utils.ConvertToSlash(filepath.Join(parentFileInfo.Path, parentFileInfo.Name), true)
+	parentPath := utils.ConvertToSlash(filepath.Join(newParentFileInfo.Path, newParentFileInfo.Name), true)
 	newPath := filepath.Join(parentPath, newName)
 
 	if fileInfo.OriginalFileID <= 0 {
@@ -535,7 +535,7 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 			}
 		} else {
 			userPath := vfs.getUserPath(user)
-			oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+			oldPath := filepath.Join(fileInfo.Path, fileInfo.Name)
 			err = vfs.fs.CopyFile(filepath.Join(userPath, oldPath), filepath.Join(userPath, newPath))
 			if err != nil {
 				return
@@ -548,7 +548,7 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 	} else {
 		newFileInfo := *fileInfo
 		newFileInfo.Path = parentPath
-		newFileInfo.ParentID = parentFileInfo.ID
+		newFileInfo.ParentID = newParentFileInfo.ID
 		newFileInfo.Name = newName
 
 		err = vfs.db.InsertFile(&newFileInfo)
