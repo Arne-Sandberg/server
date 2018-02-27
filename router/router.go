@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	s handlers.Server
+	s          handlers.Server
+	httpServer http.Server
 )
 
 // Start starts the router with the given settings
@@ -62,8 +63,30 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 	})
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
-
 	m.NotFound(s.NotFoundHandler)
 
-	log.Fatal(0, "%v", http.ListenAndServe(fmt.Sprintf("%s:%d", hostname, port), m))
+	httpServer = http.Server{Addr: fmt.Sprintf("%s:%d", hostname, port), Handler: m}
+
+	// Start server in a goroutine so the method exits and all interrupts can be handled correclty
+	go func() {
+		err := httpServer.ListenAndServe()
+		if err != nil {
+			log.Fatal(0, "Server error: %v", err)
+		}
+	}()
+}
+
+// Stop shutdowns the currently running server
+func Stop() {
+	if httpServer.Addr == "" {
+		return
+	}
+
+	if err := httpServer.Shutdown(nil); err != nil {
+		log.Fatal(0, "Error shutting down server: %v", err)
+		return
+	}
+
+	httpServer = http.Server{}
+	s = handlers.Server{}
 }

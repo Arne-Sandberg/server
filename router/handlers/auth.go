@@ -23,7 +23,7 @@ func (s Server) LoginHandler(c *macaron.Context) {
 	session, err := auth.NewSession(user.Email, user.Password)
 	if err == auth.ErrInvalidCredentials {
 		log.Info("Invalid credentials for user %s", user.Email)
-		c.Data["response"] = apiModels.APIError{Code: http.StatusUnauthorized, Message: "Wrong credentials or account does not exist"}
+		c.Data["response"] = apiModels.Error{Code: http.StatusUnauthorized, Message: "Wrong credentials or account does not exist"}
 		return
 	}
 	if err != nil {
@@ -47,7 +47,7 @@ func (s Server) LogoutHandler(c *macaron.Context) {
 	err := auth.RemoveSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
-		c.Data["response"] = apiModels.APIError{Code: http.StatusInternalServerError, Message: "Failed to delete session"}
+		c.Data["response"] = apiModels.Error{Code: http.StatusInternalServerError, Message: "Failed to delete session"}
 		return
 	}
 	c.Data["response"] = apiModels.SuccessResponse
@@ -68,7 +68,7 @@ func (s Server) SignupHandler(c *macaron.Context) {
 	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(user)
 	if err == auth.ErrInvalidUserData || err == auth.ErrUserAlreadyExists {
-		c.Data["response"] = apiModels.APIError{Code: http.StatusBadRequest, Message: err.Error()}
+		c.Data["response"] = apiModels.Error{Code: http.StatusBadRequest, Message: err.Error()}
 		return
 	} else if err != nil {
 		c.Data["response"] = err

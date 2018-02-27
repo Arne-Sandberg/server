@@ -156,7 +156,7 @@ func JSONEncoder(c *macaron.Context) {
 	}
 
 	switch res := resp.(type) {
-	case apiModels.APIError:
+	case apiModels.Error:
 		if res.Code != 0 {
 			c.JSON(res.Code, res)
 			return

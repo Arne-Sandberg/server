@@ -44,7 +44,12 @@ func (db *StormDB) CleanupExpiredSessions() {
 }
 
 func (db *StormDB) Close() {
-	db.c.Close()
+	if err := db.c.Close(); err != nil {
+		log.Fatal(0, "Error shutting down db: %v", err)
+		return
+	}
+
+	db.c = nil
 }
 
 func (db *StormDB) CreateUser(user *models.User) (err error) {

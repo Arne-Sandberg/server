@@ -1,11 +1,11 @@
 package api
 
-type APIError struct {
+type Error struct {
 	Message string `json:"message,omitempty"`
 	Code    int    `json:"-"`
 }
 
-func (err APIError) Error() string {
+func (err Error) Error() string {
 	return err.Message
 }
 
