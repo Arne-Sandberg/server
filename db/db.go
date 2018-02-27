@@ -43,7 +43,7 @@ func (db *StormDB) CleanupExpiredSessions() {
 	}
 }
 
-func (db *StormDB) Finish() {
+func (db *StormDB) Close() {
 	if err := db.c.Close(); err != nil {
 		log.Fatal(0, "Error shutting down db: %v", err)
 		return

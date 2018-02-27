@@ -41,7 +41,7 @@ func NewVirtualFilesystem(fs Filesystem, db vfsDatabase, tmpName string) (vfs *V
 	return
 }
 
-func (vfs *VirtualFilesystem) Finish() {}
+func (vfs *VirtualFilesystem) Close() {}
 
 func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 	log.Trace("Get existing users")

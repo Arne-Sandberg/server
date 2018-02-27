@@ -79,12 +79,12 @@ func main() {
 	code := <-exitChan
 
 	router.Stop()
-	virtualFS.Finish()
-	auth.Finish()
-	database.Finish()
-	filesystem.Finish()
+	virtualFS.Close()
+	auth.Close()
+	database.Close()
+	filesystem.Close()
 	clog.Info("freecloud stopped.")
-	finishLogger()
+	closeLogger()
 	os.Exit(code)
 }
 
@@ -98,6 +98,6 @@ func setupLogger() {
 	}
 }
 
-func finishLogger() {
+func closeLogger() {
 	clog.Shutdown()
 }

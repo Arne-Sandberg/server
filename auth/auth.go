@@ -33,7 +33,7 @@ func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvid
 	go cleanupExpiredSessionsRoutine(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))
 }
 
-func Finish() {
+func Close() {
 	done <- struct{}{}
 }
 
