@@ -16,7 +16,7 @@ var (
 // Filesystem is an interface for implementing various filesystem layers, such as a disk
 // filesystem and a memory filesystem.
 type Filesystem interface {
-	Close()
+	Finish()
 	NewFileHandle(path string) (*os.File, error)
 	CreateDirectory(path string) error
 	CreateDirIfNotExist(path string) (created bool, err error)

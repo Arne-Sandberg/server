@@ -37,7 +37,7 @@ func (s Server) UploadHandler(c *macaron.Context) {
 	files, ok := multiform.File["files"]
 	if !ok {
 		log.Error(0, "No 'files' form field, aborting file upload")
-		c.Data["response"] = apiModels.APIError{Code: http.StatusBadRequest, Message: "No 'files' form field, aborting file upload"}
+		c.Data["response"] = apiModels.Error{Code: http.StatusBadRequest, Message: "No 'files' form field, aborting file upload"}
 		return
 	}
 	for i := range files {

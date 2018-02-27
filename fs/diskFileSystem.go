@@ -57,7 +57,7 @@ func NewDiskFilesystem(baseDir, tmpName string) (dfs *DiskFilesystem, err error)
 	return
 }
 
-func (dfs *DiskFilesystem) Close() {
+func (dfs *DiskFilesystem) Finish() {
 	dfs.done <- struct{}{}
 }
 
