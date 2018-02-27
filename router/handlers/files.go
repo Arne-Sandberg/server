@@ -210,6 +210,7 @@ var allowedFileUpdates = []string{
 	"path",
 	"name",
 	"copy",
+	"starred",
 }
 
 func fillFileUpdates(fileUpdateJSON lzjson.Node) (updates map[string]interface{}) {

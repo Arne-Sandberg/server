@@ -13,4 +13,5 @@ type FileInfo struct {
 	MimeType       string    `json:"mimetype,omitempty"`
 	ParentID       int       `json:"parentID,omitempty"`
 	OriginalFileID int       `json:"originalFileID,omitempty"`
+	Starred        bool      `json:"starred,omitempty"`
 }

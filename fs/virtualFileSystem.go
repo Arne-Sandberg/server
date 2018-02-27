@@ -423,6 +423,15 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		}
 	}
 
+	var newStarred bool
+	if rawNewStarred, ok := updates["starred"]; ok == true {
+		newStarred, ok = rawNewStarred.(bool)
+		if ok != true {
+			err = fmt.Errorf("Givene starred is not a bool")
+			return
+		}
+	}
+
 	var copyFlag bool
 	if rawCopy, ok := updates["copy"]; ok == true {
 		copyFlag, ok = rawCopy.(bool)
@@ -467,7 +476,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 				newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 				err = vfs.fs.MoveFile(oldPath, newPath)
 				if err != nil {
-					log.Error(0, "Error moving file: %v", oldPath, newPath, err)
+					log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
 					return
 				}
 			}
@@ -476,6 +485,14 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 			if err != nil {
 				return
 			}
+		}
+	} else if newStarred != fileInfo.Starred && !copyFlag {
+		fileInfo.LastChanged = time.Now()
+		fileInfo.Starred = newStarred
+		err = vfs.db.UpdateFile(fileInfo)
+		if err != nil {
+			log.Error(0, "Error updating file in db: %v", err)
+			return
 		}
 	}
 
