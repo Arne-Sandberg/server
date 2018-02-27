@@ -83,8 +83,8 @@ func main() {
 	auth.Finish()
 	database.Finish()
 	filesystem.Finish()
-
 	clog.Info("freecloud stopped.")
+	finishLogger()
 	os.Exit(code)
 }
 
@@ -96,4 +96,8 @@ func setupLogger() {
 		fmt.Fprintf(os.Stderr, "Could not initialize logging: %v", err)
 		os.Exit(2)
 	}
+}
+
+func finishLogger() {
+	clog.Shutdown()
 }
