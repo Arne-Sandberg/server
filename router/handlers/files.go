@@ -116,6 +116,26 @@ func (s Server) ZipHandler(c *macaron.Context) {
 	}
 }
 
+func (s Server) StarredFileInfoHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+
+	log.Trace("Getting starred fileInfo for %s %s", user.FirstName, user.LastName)
+
+	starredFilesInfo, err := s.filesystem.ListStarredFilesForUser(user)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = struct {
+		Success          bool               `json:"success"`
+		StarredFilesInfo []*models.FileInfo `json:"starred_files_info"`
+	}{
+		Success:          true,
+		StarredFilesInfo: starredFilesInfo,
+	}
+}
+
 func (s Server) FileInfoHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 	path := c.Data["path"].(string)

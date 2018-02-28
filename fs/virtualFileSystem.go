@@ -22,6 +22,7 @@ type vfsDatabase interface {
 	UpdateFile(fileInfo *models.FileInfo) (err error)
 	DeleteFile(fileInfo *models.FileInfo) (err error)
 	// Must return an empty instead of an error if nothing could be found
+	GetStarredFilesForUser(userID int) (starredFilesForuser []*models.FileInfo, err error)
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
@@ -321,6 +322,14 @@ func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (
 	return
 }
 
+func (vfs *VirtualFilesystem) ListStarredFilesForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
+	starredFilesInfo, err = vfs.db.GetStarredFilesForUser(user.ID)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
 	filePath, fileName := vfs.splitPath(path)
 	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
@@ -427,7 +436,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 	if rawNewStarred, ok := updates["starred"]; ok == true {
 		newStarred, ok = rawNewStarred.(bool)
 		if ok != true {
-			err = fmt.Errorf("Givene starred is not a bool")
+			err = fmt.Errorf("Given starred is not a bool")
 			return
 		}
 	}
