@@ -1,6 +1,7 @@
 package db
 
 import (
+	"sort"
 	"time"
 
 	"github.com/asdine/storm/q"
@@ -186,9 +187,8 @@ func (db *StormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) GetStarredFilesForUser(userID int) (starredFilesForuser []*models.FileInfo, err error) {
-	starredFilesForuser = make([]*models.FileInfo, 0)
-	err = db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)).OrderBy("Name").Find(&starredFilesForuser)
+func (db *StormDB) GetStarredFilesForUser(userID int) (starredFilesForUser []*models.FileInfo, err error) {
+	starredFilesForUser, err = db.getSortedContentFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
 	} else if err != nil {
@@ -209,14 +209,22 @@ func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInf
 }
 
 func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error) {
-	content = make([]*models.FileInfo, 0)
-	err = db.c.Select(q.Eq("ParentID", directoryID)).OrderBy("Name").Find(&content)
+	content, err = db.getSortedContentFromQuery(db.c.Select(q.Eq("ParentID", directoryID)))
+
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
 		return
 	}
+
+	return
+}
+
+func (db *StormDB) getSortedContentFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
+	content = make([]*models.FileInfo, 0)
+	err = query.OrderBy("IsDir", "Name").Find(&content)
+	sort.SliceStable(content, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
 
 	return
 }
