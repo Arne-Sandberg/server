@@ -65,7 +65,7 @@ func (db *StormDB) CreateUser(user *models.User) (err error) {
 
 func (db *StormDB) UpdateUser(user *models.User) (err error) {
 	user.Updated = time.Now().UTC()
-	err = db.c.Update(user)
+	err = db.c.Save(user)
 	if err != nil {
 		log.Error(0, "Could not update user: %v", err)
 		return
@@ -169,7 +169,7 @@ func (db *StormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
-	err = db.c.Update(fileInfo)
+	err = db.c.Save(fileInfo)
 	if err != nil {
 		log.Error(0, "Could not update fileInfo: %v", err)
 		return
