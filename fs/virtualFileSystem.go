@@ -22,6 +22,7 @@ type vfsDatabase interface {
 	UpdateFile(fileInfo *models.FileInfo) (err error)
 	DeleteFile(fileInfo *models.FileInfo) (err error)
 	// Must return an empty instead of an error if nothing could be found
+	GetStarredFilesForUser(userID int) (starredFilesForuser []*models.FileInfo, err error)
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
@@ -321,6 +322,14 @@ func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (
 	return
 }
 
+func (vfs *VirtualFilesystem) ListStarredFilesForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
+	starredFilesInfo, err = vfs.db.GetStarredFilesForUser(user.ID)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
 	filePath, fileName := vfs.splitPath(path)
 	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
@@ -423,6 +432,15 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		}
 	}
 
+	var newStarred bool
+	if rawNewStarred, ok := updates["starred"]; ok == true {
+		newStarred, ok = rawNewStarred.(bool)
+		if ok != true {
+			err = fmt.Errorf("Given starred is not a bool")
+			return
+		}
+	}
+
 	var copyFlag bool
 	if rawCopy, ok := updates["copy"]; ok == true {
 		copyFlag, ok = rawCopy.(bool)
@@ -467,7 +485,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 				newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 				err = vfs.fs.MoveFile(oldPath, newPath)
 				if err != nil {
-					log.Error(0, "Error moving file: %v", oldPath, newPath, err)
+					log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
 					return
 				}
 			}
@@ -476,6 +494,14 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 			if err != nil {
 				return
 			}
+		}
+	} else if newStarred != fileInfo.Starred && !copyFlag {
+		fileInfo.LastChanged = time.Now()
+		fileInfo.Starred = newStarred
+		err = vfs.db.UpdateFile(fileInfo)
+		if err != nil {
+			log.Error(0, "Error updating file in db: %v", err)
+			return
 		}
 	}
 
