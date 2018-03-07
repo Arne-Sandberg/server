@@ -18,8 +18,13 @@ git worktree add -B gh-pages public origin/gh-pages
 echo "Removing existing files"
 rm -rf public/*
 
+# This is a fix for git bash not being able to execute "hugo" sometimes
 echo "Generating site"
-cd docs && hugo
+if [[ $(hugo version > /dev/null 2>&1) ]]; then
+  cd docs && hugo && cd ..
+else
+  cd docs && hugo.exe && cd ..
+fi
 
 echo "Updating gh-pages branch"
 cd public && git add --all && git commit -m "[docs] publishing to gh-pages (publish_docs.sh)"
