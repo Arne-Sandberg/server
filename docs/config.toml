@@ -1,0 +1,46 @@
+baseURL = "https://freecloudio.github.io/freecloud/"
+languageCode = "en-us"
+title = "freecloud API documentation"
+theme = "docuapi"
+publishDir = "../public"
+
+
+# Code higlighting settings
+pygmentsCodefences = true
+pygmentsCodeFencesGuesSsyntax = false
+pygmentsOptions = ""
+pygmentsStyle = "monokai"
+# The monokai stylesheet is included in the base template.
+pygmentsUseClasses = true
+
+defaultContentLanguage = "en"
+
+[params]
+search = true
+  
+# Configure the language example tabs.
+[[params.language_tabs]]
+key = "go"
+name = "Go" 
+[[params.language_tabs]]
+key = "shell"
+name = "cURL" 
+[[params.language_tabs]]
+key = "javascript"
+name = "Javascript"
+
+#Languages 
+[languages]
+
+[languages.en]
+languageName = "English"
+weight = 2
+title = "freecloud API documentation"
+
+# Left sidebar footer items. Use HTMl or Markdown.
+toc_footers = [
+"Powered by [DocuAPI](https://github.com/bep/docuapi) theme for [Hugo](https://gohugo.io)"
+]
+[languages.en.blackfriday]
+angledQuotes = false
+hrefTargetBlank = true
