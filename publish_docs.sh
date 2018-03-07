@@ -27,4 +27,4 @@ else
 fi
 
 echo "Updating gh-pages branch"
-cd public && git add --all && git commit -m "[docs] publishing to gh-pages (publish_docs.sh)"
+cd public && git add --all && git commit -m "[docs] publishing to gh-pages (publish_docs.sh)" && git push origin gh-pages && cd .. && rm -r public
