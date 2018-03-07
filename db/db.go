@@ -1,6 +1,7 @@
 package db
 
 import (
+	"regexp"
 	"sort"
 	"time"
 
@@ -188,7 +189,7 @@ func (db *StormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *StormDB) GetStarredFilesForUser(userID int) (starredFilesForUser []*models.FileInfo, err error) {
-	starredFilesForUser, err = db.getSortedContentFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
+	starredFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
 	} else if err != nil {
@@ -209,7 +210,7 @@ func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInf
 }
 
 func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error) {
-	content, err = db.getSortedContentFromQuery(db.c.Select(q.Eq("ParentID", directoryID)))
+	content, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("ParentID", directoryID)))
 
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
@@ -221,7 +222,7 @@ func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models
 	return
 }
 
-func (db *StormDB) getSortedContentFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
+func (db *StormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
 	content = make([]*models.FileInfo, 0)
 	err = query.OrderBy("IsDir", "Name").Find(&content)
 	sort.SliceStable(content, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
@@ -246,5 +247,22 @@ func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err
 		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
 		return
 	}
+	return
+}
+
+func (db *StormDB) SearchForFiles(userID int, path, fileName string) (results []*models.FileInfo, err error) {
+	results = make([]*models.FileInfo, 0)
+
+	pathRegex := "(?i)^" + regexp.QuoteMeta(path)
+	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
+	results, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))
+
+	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+		err = nil
+	} else if err != nil {
+		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", fileName, path, userID, err)
+		return
+	}
+
 	return
 }

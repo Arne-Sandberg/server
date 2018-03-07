@@ -261,3 +261,21 @@ func (s *Server) FileDeleteHandler(c *macaron.Context) {
 		c.Data["response"] = apiModels.SuccessResponse
 	}
 }
+
+func (s *Server) SearchHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	path := c.Data["path"].(string)
+	results, err := s.filesystem.SearchForFiles(user, path)
+
+	if err != nil {
+		c.Data["response"] = err
+	} else {
+		c.Data["response"] = struct {
+			Success bool               `json:"success"`
+			Results []*models.FileInfo `json:"results"`
+		}{
+			true,
+			results,
+		}
+	}
+}

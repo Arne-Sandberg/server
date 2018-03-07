@@ -27,6 +27,7 @@ type vfsDatabase interface {
 	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
 	GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error)
+	SearchForFiles(userID int, path, fileName string) (results []*models.FileInfo, err error)
 }
 
 type VirtualFilesystem struct {
@@ -627,4 +628,9 @@ func (vfs *VirtualFilesystem) deleteFileInDB(fileInfo *models.FileInfo) (err err
 		}
 	}
 	return
+}
+
+func (vfs *VirtualFilesystem) SearchForFiles(user *models.User, path string) (results []*models.FileInfo, err error) {
+	filePath, fileName := vfs.splitPath(path)
+	return vfs.db.SearchForFiles(user.ID, filePath, fileName)
 }
