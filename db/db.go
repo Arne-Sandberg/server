@@ -255,12 +255,7 @@ func (db *StormDB) SearchForFiles(userID int, path, fileName string) (results []
 
 	pathRegex := "(?i)^" + regexp.QuoteMeta(path)
 	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
-	log.Trace("pathRegex: %v", pathRegex)
-	log.Trace("fileNameRegex: %v", fileNameRegex)
-
 	results, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))
-	log.Trace("Results: %v", results)
-	log.Trace("Error: %v", err)
 
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
