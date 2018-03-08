@@ -33,6 +33,7 @@ yarn build
 
 The API reference is hosted on the github pages of this project: [https://freecloudio.github.io/freecloud/](https://freecloudio.github.io/freecloud/)
 
+___
 
 [![forthebadge](https://forthebadge.com/images/badges/made-with-go.svg)](https://forthebadge.com)
 [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
