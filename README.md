@@ -24,6 +24,7 @@ If you want to be sure to have the newest frontend-client then install yarn and 
 
 ```
 cd $GOPATH/src/github.com/freecloudio/freecloud/client/
+git checkout master && git pull
 yarn
 yarn build
 ```
