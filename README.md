@@ -8,7 +8,6 @@
 [![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/freecloudio/freecloud.svg)](https://github.com/freecloudio/freecloud/issues?q=is%3Aissue+is%3Aclosed)
 
 
-
 ## Installing
 
 We support Go version 1.9 upwards, 1.7 and 1.8 *should* work, but are untested (come on, they are over a year old!).
