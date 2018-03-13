@@ -89,7 +89,7 @@ func validateSessionAndFillUserData(token string, c *macaron.Context) {
 	}
 
 	// If the session is valid, fill the context's user data
-	user, err := auth.GetUserByID(session.UID)
+	user, err := auth.GetUserByID(session.UserID)
 	if err != nil {
 		log.Warn("Filling user data in middleware failed: %v", err)
 		c.WriteHeader(http.StatusInternalServerError)

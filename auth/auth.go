@@ -77,9 +77,9 @@ func NewSession(email string, password string) (models.Session, error) {
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(uid int) models.Session {
+func newUnverifiedSession(userID int) models.Session {
 	sess := models.Session{
-		UID:       uid,
+		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
 		ExpiresAt: time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry"))),
 	}
@@ -91,7 +91,7 @@ func newUnverifiedSession(uid int) models.Session {
 	updates := map[string]interface{}{
 		"lastSession": time.Now().UTC(),
 	}
-	_, err = UpdateUser(uid, updates)
+	_, err = UpdateUser(userID, updates)
 	if err != nil {
 		log.Error(0, "Could not update user with lastSession %v", err)
 	}
@@ -141,6 +141,17 @@ func NewUser(user *models.User) (session models.Session, err error) {
 	return newUnverifiedSession(user.ID), nil
 }
 
+func DeleteUser(userID int) (err error) {
+	if err = sProvider.RemoveUserSessions(userID); err != nil {
+		return
+	}
+
+	if err = cProvider.DeleteUser(userID); err != nil {
+		return
+	}
+	return
+}
+
 func GetAllUsers() ([]*models.User, error) {
 	users, err := cProvider.GetAllUsers()
 	if err != nil {
@@ -159,8 +170,8 @@ func ValidateSession(sess models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)
 }
 
-func GetUserByID(uid int) (*models.User, error) {
-	return cProvider.GetUserByID(uid)
+func GetUserByID(userID int) (*models.User, error) {
+	return cProvider.GetUserByID(userID)
 }
 
 //RemoveSession removes the session from the session provider
@@ -168,8 +179,8 @@ func RemoveSession(sess models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
-func UpdateUser(uid int, updates map[string]interface{}) (user *models.User, err error) {
-	user, err = GetUserByID(uid)
+func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, err error) {
+	user, err = GetUserByID(userID)
 	if err != nil {
 		return
 	}

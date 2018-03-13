@@ -8,4 +8,5 @@ type SessionProvider interface {
 	RemoveSession(models.Session) error
 	SessionIsValid(session models.Session) bool
 	TotalSessionCount() int
+	RemoveUserSessions(userID int) error
 }

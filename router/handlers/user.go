@@ -5,6 +5,7 @@ import (
 
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
+	apiModels "github.com/freecloudio/freecloud/models/api"
 	"github.com/go-restit/lzjson"
 	macaron "gopkg.in/macaron.v1"
 )
@@ -58,7 +59,7 @@ func (s Server) UpdateUserHandler(c *macaron.Context) {
 	userID := c.Data["user"].(*models.User).ID
 	userUpdateJSON := c.Data["request"].(lzjson.Node)
 
-	updatedUser, err := auth.UpdateUser(userID, fillUserUpdates(userUpdateJSON, false))
+	updatedUser, err := auth.UpdateUser(userID, s.fillUserUpdates(userUpdateJSON, false))
 
 	if err != nil {
 		c.Data["response"] = err
@@ -103,7 +104,7 @@ func (s Server) AdminUpdateUserHandler(c *macaron.Context) {
 	}
 	userUpdateJSON := c.Data["request"].(lzjson.Node)
 
-	updatedUser, err := auth.UpdateUser(userID, fillUserUpdates(userUpdateJSON, true))
+	updatedUser, err := auth.UpdateUser(userID, s.fillUserUpdates(userUpdateJSON, true))
 
 	if err != nil {
 		c.Data["response"] = err
@@ -118,7 +119,7 @@ func (s Server) AdminUpdateUserHandler(c *macaron.Context) {
 	}
 }
 
-func fillUserUpdates(userUpdateJSON lzjson.Node, admin bool) (updates map[string]interface{}) {
+func (s Server) fillUserUpdates(userUpdateJSON lzjson.Node, admin bool) (updates map[string]interface{}) {
 	updates = make(map[string]interface{})
 
 	var allowedUpdates *[]string
@@ -140,4 +141,45 @@ func fillUserUpdates(userUpdateJSON lzjson.Node, admin bool) (updates map[string
 	}
 
 	return
+}
+
+func (s Server) DeleteUserHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+
+	if err := auth.DeleteUser(user.ID); err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	if err := s.filesystem.DeleteUser(user); err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = apiModels.SuccessResponse
+}
+
+func (s Server) AdminDeleteUserHandler(c *macaron.Context) {
+	userID, err := strconv.Atoi(c.Params(":id"))
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+	user, err := auth.GetUserByID(userID)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	if err := auth.DeleteUser(user.ID); err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	if err := s.filesystem.DeleteUser(user); err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = apiModels.SuccessResponse
 }
