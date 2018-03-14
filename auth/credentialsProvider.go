@@ -10,4 +10,5 @@ type CredentialsProvider interface {
 	UpdateUser(user *models.User) error
 	GetAllUsers() ([]*models.User, error)
 	DeleteUser(userID int) error
+	GetAdminCount() (int, error)
 }

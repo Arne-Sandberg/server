@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/freecloudio/freecloud/auth"
@@ -146,17 +147,7 @@ func (s Server) fillUserUpdates(userUpdateJSON lzjson.Node, admin bool) (updates
 func (s Server) DeleteUserHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 
-	if err := auth.DeleteUser(user.ID); err != nil {
-		c.Data["response"] = err
-		return
-	}
-
-	if err := s.filesystem.DeleteUser(user); err != nil {
-		c.Data["response"] = err
-		return
-	}
-
-	c.Data["response"] = apiModels.SuccessResponse
+	s.deleteUser(user, c)
 }
 
 func (s Server) AdminDeleteUserHandler(c *macaron.Context) {
@@ -169,6 +160,18 @@ func (s Server) AdminDeleteUserHandler(c *macaron.Context) {
 	if err != nil {
 		c.Data["response"] = err
 		return
+	}
+
+	s.deleteUser(user, c)
+}
+
+func (s Server) deleteUser(user *models.User, c *macaron.Context) {
+	if user.IsAdmin {
+		count, err := auth.GetAdminCount()
+		if err != nil || count < 2 {
+			c.Data["response"] = fmt.Errorf("can't delete last remaining admin")
+			return
+		}
 	}
 
 	if err := auth.DeleteUser(user.ID); err != nil {

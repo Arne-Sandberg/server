@@ -53,32 +53,32 @@ func cleanupExpiredSessionsRoutine(interval time.Duration) {
 }
 
 // NewSession verifies the user's credentials and then returns a new Session
-func NewSession(email string, password string) (models.Session, error) {
+func NewSession(email string, password string) (*models.Session, error) {
 	// First, do some sanity checks before verification
 	if len(password) == 0 {
-		return models.Session{}, ErrMissingCredentials
+		return &models.Session{}, ErrMissingCredentials
 	}
 	// Get the user
 	user, err := cProvider.GetUserByEmail(email)
 	if err != nil {
 		log.Error(0, "Could not get user with email %s: %v", email, err)
-		return models.Session{}, err
+		return &models.Session{}, err
 	}
 	// Now, verify the password
 	valid, err := ValidatePassword(password, user.Password)
 	if err != nil {
 		log.Error(0, "Password verification failed: %v", err)
-		return models.Session{}, err
+		return &models.Session{}, err
 	}
 	if valid {
 		return newUnverifiedSession(user.ID), nil
 	}
-	return models.Session{}, ErrInvalidCredentials
+	return &models.Session{}, ErrInvalidCredentials
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(userID int) models.Session {
-	sess := models.Session{
+func newUnverifiedSession(userID int) *models.Session {
+	sess := &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
 		ExpiresAt: time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry"))),
@@ -104,7 +104,7 @@ func TotalSessionCount() int {
 }
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
-func NewUser(user *models.User) (session models.Session, err error) {
+func NewUser(user *models.User) (session *models.Session, err error) {
 	if !utils.ValidateEmail(user.Email) || !utils.ValidatePassword(user.Password) || !utils.ValidateFirstName(user.FirstName) || !utils.ValidateLastName(user.LastName) {
 		err = ErrInvalidUserData
 		return
@@ -166,7 +166,7 @@ func GetAllUsers() ([]*models.User, error) {
 }
 
 // ValidateSession checks if the session is valid.
-func ValidateSession(sess models.Session) (valid bool) {
+func ValidateSession(sess *models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)
 }
 
@@ -175,7 +175,7 @@ func GetUserByID(userID int) (*models.User, error) {
 }
 
 //RemoveSession removes the session from the session provider
-func RemoveSession(sess models.Session) (err error) {
+func RemoveSession(sess *models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
@@ -248,4 +248,8 @@ func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, 
 	user.Password = ""
 
 	return
+}
+
+func GetAdminCount() (int, error) {
+	return cProvider.GetAdminCount()
 }

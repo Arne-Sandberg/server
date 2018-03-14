@@ -66,7 +66,7 @@ func (db *StormDB) CreateUser(user *models.User) (err error) {
 }
 
 func (db *StormDB) DeleteUser(userID int) (err error) {
-	err = db.c.DeleteStruct(models.User{ID: userID})
+	err = db.c.DeleteStruct(&models.User{ID: userID})
 	if err != nil {
 		log.Error(0, "Could not delete user: %v", err)
 		return
@@ -104,8 +104,19 @@ func (db *StormDB) GetAllUsers() ([]*models.User, error) {
 	return users, err
 }
 
-func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
+func (db *StormDB) GetAdminCount() (count int, err error) {
+	var admins []*models.User
+	err = db.c.Find("IsAdmin", true, &admins)
+	if err != nil {
+		log.Error(0, "Could not get all admins: %v", err)
+		count = -1
+		return
+	}
+	count = len(admins)
+	return
+}
 
+func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
 	var user models.User
 	err = db.c.One("Email", email, &user)
 	if err != nil {
@@ -134,16 +145,16 @@ func (db *StormDB) TotalSessionCount() int {
 	return c
 }
 
-func (db *StormDB) StoreSession(session models.Session) error {
-	return db.c.Save(&session)
+func (db *StormDB) StoreSession(session *models.Session) error {
+	return db.c.Save(session)
 }
 
-func (db *StormDB) RemoveSession(session models.Session) error {
-	return db.c.DeleteStruct(&session)
+func (db *StormDB) RemoveSession(session *models.Session) error {
+	return db.c.DeleteStruct(session)
 }
 
 func (db *StormDB) RemoveUserSessions(userID int) (err error) {
-	sessions := make([]models.Session, 0)
+	var sessions []models.Session
 	err = db.c.Find("UserID", userID, &sessions)
 	if err != nil {
 		log.Error(0, "Could not get all sessions for %v: %v", userID, err)
@@ -151,17 +162,17 @@ func (db *StormDB) RemoveUserSessions(userID int) (err error) {
 	}
 
 	for _, session := range sessions {
-		err = db.c.DeleteStruct(session)
+		err = db.c.DeleteStruct(&session)
 		if err != nil {
 			log.Warn("Could not delete session: %v", err)
-			continue
+			return
 		}
 	}
 
 	return
 }
 
-func (db *StormDB) SessionIsValid(session models.Session) bool {
+func (db *StormDB) SessionIsValid(session *models.Session) bool {
 	var s models.Session
 	err := db.c.One("Token", session.Token, &s)
 	if err != nil {
@@ -251,7 +262,6 @@ func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models
 }
 
 func (db *StormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
-	content = make([]*models.FileInfo, 0)
 	err = query.OrderBy("IsDir", "Name").Find(&content)
 	sort.SliceStable(content, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
 
@@ -279,8 +289,6 @@ func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err
 }
 
 func (db *StormDB) SearchForFiles(userID int, path, fileName string) (results []*models.FileInfo, err error) {
-	results = make([]*models.FileInfo, 0)
-
 	pathRegex := "(?i)^" + regexp.QuoteMeta(path)
 	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
 	results, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))
@@ -296,7 +304,7 @@ func (db *StormDB) SearchForFiles(userID int, path, fileName string) (results []
 }
 
 func (db *StormDB) DeleteUserFiles(userID int) (err error) {
-	files := make([]models.FileInfo, 0)
+	var files []models.FileInfo
 	err = db.c.Find("OwnerID", userID, &files)
 	if err != nil {
 		log.Error(0, "Could not get all files for %v: %v", userID, err)
@@ -304,7 +312,7 @@ func (db *StormDB) DeleteUserFiles(userID int) (err error) {
 	}
 
 	for _, file := range files {
-		err = db.c.DeleteStruct(file)
+		err = db.c.DeleteStruct(&file)
 		if err != nil {
 			log.Warn("Could not delete file: %v", err)
 			continue
