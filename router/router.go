@@ -48,6 +48,8 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		m.Patch("/user/me", OnlyUsers, GeneralJSONDecoder, s.UpdateUserHandler, JSONEncoder)
 		m.Get("/user/byID/:id", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
 		m.Patch("/user/byID/:id", OnlyAdmins, GeneralJSONDecoder, s.AdminUpdateUserHandler, JSONEncoder)
+		m.Delete("/user/me", OnlyUsers, s.DeleteUserHandler, JSONEncoder)
+		m.Delete("/user/byID/:id", OnlyAdmins, s.AdminDeleteUserHandler, JSONEncoder)
 
 		// Data: Up- and Download of files, creation and modifying files and directories
 		m.Get("/download/*", OnlyUsers, ResolvePath, s.DownloadHandler, JSONEncoder)

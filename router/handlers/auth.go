@@ -44,7 +44,7 @@ func (s Server) LoginHandler(c *macaron.Context) {
 // LogoutHandler deletes the active user session and signs out the user.
 func (s Server) LogoutHandler(c *macaron.Context) {
 	session := c.Data["session"].(models.Session)
-	err := auth.RemoveSession(session)
+	err := auth.RemoveSession(&session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
 		c.Data["response"] = apiModels.Error{Code: http.StatusInternalServerError, Message: "Failed to delete session"}

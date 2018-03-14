@@ -4,8 +4,9 @@ import "github.com/freecloudio/freecloud/models"
 
 type SessionProvider interface {
 	CleanupExpiredSessions()
-	StoreSession(models.Session) error
-	RemoveSession(models.Session) error
-	SessionIsValid(session models.Session) bool
+	StoreSession(*models.Session) error
+	RemoveSession(*models.Session) error
+	SessionIsValid(session *models.Session) bool
 	TotalSessionCount() int
+	RemoveUserSessions(userID int) error
 }
