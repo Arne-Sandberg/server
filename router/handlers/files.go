@@ -5,8 +5,10 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"time"
 
+	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/utils"
 	"github.com/go-restit/lzjson"
 
@@ -278,4 +280,41 @@ func (s *Server) SearchHandler(c *macaron.Context) {
 			results,
 		}
 	}
+}
+
+func (s *Server) RescanHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+	if err := s.filesystem.ScanUserFolderForChanges(user); err != nil {
+		c.Data["response"] = err
+		return
+	}
+	c.Data["response"] = apiModels.SuccessResponse
+	return
+}
+
+func (s *Server) AdminRescanHandler(c *macaron.Context) {
+	userID, err := strconv.Atoi(c.Params(":id"))
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+	if userID > 0 {
+		user, err := auth.GetUserByID(userID)
+		if err != nil {
+			c.Data["response"] = err
+			return
+		}
+
+		if err = s.filesystem.ScanUserFolderForChanges(user); err != nil {
+			c.Data["response"] = err
+			return
+		}
+	} else {
+		if err = s.filesystem.ScanFSForChanges(); err != nil {
+			c.Data["response"] = err
+			return
+		}
+	}
+	c.Data["response"] = apiModels.SuccessResponse
+	return
 }

@@ -64,6 +64,9 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		m.Get("/search/*", OnlyUsers, ResolvePath, s.SearchHandler, JSONEncoder)
 		m.Get("/starred", OnlyUsers, s.StarredFileInfoHandler, JSONEncoder)
 
+		m.Get("/rescan/me", OnlyUsers, s.RescanHandler, JSONEncoder)
+		m.Get("/rescan/byID/:id", OnlyAdmins, s.AdminRescanHandler, JSONEncoder)
+
 		m.Get("/stats", OnlyAdmins, s.StatsHandler, JSONEncoder)
 	})
 
