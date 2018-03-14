@@ -170,6 +170,11 @@ func (s Server) CreateFileHandler(c *macaron.Context) {
 
 	log.Trace("Creating file '%s' for %s %s", filePath, user.FirstName, user.LastName)
 
+	if exisFileInfo, _ := s.filesystem.GetFileInfo(user, filePath); exisFileInfo.ID > 0 {
+		c.Data["response"] = fmt.Errorf("file already exists")
+		return
+	}
+
 	if fileInfo.IsDir {
 		err := s.filesystem.CreateDirectoryForUser(user, filePath)
 		// TODO: match agains path errors and return a http.StatusBadRequest on those
