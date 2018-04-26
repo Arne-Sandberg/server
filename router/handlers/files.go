@@ -323,3 +323,21 @@ func (s *Server) AdminRescanHandler(c *macaron.Context) {
 	c.Data["response"] = apiModels.SuccessResponse
 	return
 }
+
+func (s *Server) ShareHandler(c *macaron.Context) {
+	path := c.Data["path"].(string)
+	fromUser := c.Data["user"].(*models.User)
+	toUserID := c.Data["request"].(*apiModels.ShareRequest).UserID
+	toUser, err := auth.GetUserByID(toUserID)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	if err := s.filesystem.ShareFile(fromUser, toUser, path); err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = apiModels.SuccessResponse
+}

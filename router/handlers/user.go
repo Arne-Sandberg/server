@@ -42,7 +42,9 @@ func (s Server) UserHandler(c *macaron.Context) {
 }
 
 func (s Server) UserListHandler(c *macaron.Context) {
-	users, err := auth.GetAllUsers()
+	user := c.Data["user"].(*models.User)
+
+	users, err := auth.GetAllUsers(user.IsAdmin)
 	if err != nil {
 		c.Data["response"] = err
 		return
