@@ -21,8 +21,11 @@ type vfsDatabase interface {
 	RemoveFile(fileInfo *models.FileInfo) (err error)
 	UpdateFile(fileInfo *models.FileInfo) (err error)
 	DeleteFile(fileInfo *models.FileInfo) (err error)
+
 	// Must return an empty instead of an error if nothing could be found
 	GetStarredFilesForUser(userID int) (starredFilesForuser []*models.FileInfo, err error)
+	GetSharedFilesForUser(userID int) (sharedFilesForUser []*models.FileInfo, err error)
+
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
@@ -188,6 +191,10 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 
 	// Delete remaining files from dbList in db as they are deleted from the fs
 	for _, dbFile := range dbFiles {
+		if dbFile.OriginalFileID != 0 {
+			continue
+		}
+
 		err = vfs.db.RemoveFile(dbFile)
 		if err != nil {
 			log.Error(0, "Error removing file from db: %v", err)
@@ -326,6 +333,14 @@ func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (
 
 func (vfs *VirtualFilesystem) ListStarredFilesForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
 	starredFilesInfo, err = vfs.db.GetStarredFilesForUser(user.ID)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (vfs *VirtualFilesystem) ListSharedFilesForUser(user *models.User) (sharedFilesInfo []*models.FileInfo, err error) {
+	sharedFilesInfo, err = vfs.db.GetSharedFilesForUser(user.ID)
 	if err != nil {
 		return
 	}

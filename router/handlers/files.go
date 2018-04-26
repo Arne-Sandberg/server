@@ -118,7 +118,7 @@ func (s Server) ZipHandler(c *macaron.Context) {
 	}
 }
 
-func (s Server) StarredFileInfoHandler(c *macaron.Context) {
+func (s Server) StarredFilesInfoHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 
 	log.Trace("Getting starred fileInfo for %s %s", user.FirstName, user.LastName)
@@ -135,6 +135,26 @@ func (s Server) StarredFileInfoHandler(c *macaron.Context) {
 	}{
 		Success:          true,
 		StarredFilesInfo: starredFilesInfo,
+	}
+}
+
+func (s Server) SharedFilesInfoHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+
+	log.Trace("Getting shared fileInfo for %s %s", user.FirstName, user.LastName)
+
+	sharedFilesInfo, err := s.filesystem.ListSharedFilesForUser(user)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = struct {
+		Success         bool               `json:"success"`
+		SharedFilesInfo []*models.FileInfo `json:"shared_files_info"`
+	}{
+		Success:         true,
+		SharedFilesInfo: sharedFilesInfo,
 	}
 }
 

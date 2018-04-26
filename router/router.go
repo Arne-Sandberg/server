@@ -64,7 +64,8 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		m.Post("/share/*", OnlyUsers, ResolvePath, JSONDecoder(&apiModels.ShareRequest{}), s.ShareHandler, JSONEncoder)
 
 		m.Get("/search/*", OnlyUsers, ResolvePath, s.SearchHandler, JSONEncoder)
-		m.Get("/starred", OnlyUsers, s.StarredFileInfoHandler, JSONEncoder)
+		m.Get("/starred", OnlyUsers, s.StarredFilesInfoHandler, JSONEncoder)
+		m.Get("/shared", OnlyUsers, s.SharedFilesInfoHandler, JSONEncoder)
 
 		m.Get("/rescan/me", OnlyUsers, s.RescanHandler, JSONEncoder)
 		m.Get("/rescan/byID/:id", OnlyAdmins, s.AdminRescanHandler, JSONEncoder)
