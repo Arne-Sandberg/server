@@ -158,15 +158,15 @@ func GetAllUsers(isAdmin bool) ([]*models.User, error) {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, err
 	}
-	for i := 0; i < len(users); i++ {
+	for _, user := range users {
 		// Mask out the password
-		users[i].Password = ""
+		user.Password = ""
 
 		// For normal users also mask out created, updated and lastSession
 		if !isAdmin {
-			users[i].Created = time.Time{}
-			users[i].Updated = time.Time{}
-			users[i].LastSession = time.Time{}
+			user.Created = time.Time{}
+			user.Updated = time.Time{}
+			user.LastSession = time.Time{}
 		}
 	}
 	return users, nil

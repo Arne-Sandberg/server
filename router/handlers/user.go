@@ -49,6 +49,19 @@ func (s Server) UserListHandler(c *macaron.Context) {
 		c.Data["response"] = err
 		return
 	}
+
+	// Delete own user from the list
+	ownUserIt := -1
+	for it, itUser := range users {
+		if itUser.ID == user.ID {
+			ownUserIt = it
+			break
+		}
+	}
+	copy(users[ownUserIt:], users[ownUserIt+1:])
+	users[len(users)-1] = nil
+	users = users[:len(users)-1]
+
 	c.Data["response"] = struct {
 		Success bool           `json:"success"`
 		Users   []*models.User `json:"users"`
