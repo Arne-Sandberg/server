@@ -130,11 +130,11 @@ func (s Server) StarredFilesInfoHandler(c *macaron.Context) {
 	}
 
 	c.Data["response"] = struct {
-		Success          bool               `json:"success"`
-		StarredFilesInfo []*models.FileInfo `json:"starred_files_info"`
+		Success bool               `json:"success"`
+		Content []*models.FileInfo `json:"content"`
 	}{
-		Success:          true,
-		StarredFilesInfo: starredFilesInfo,
+		Success: true,
+		Content: starredFilesInfo,
 	}
 }
 
@@ -150,11 +150,11 @@ func (s Server) SharedFilesInfoHandler(c *macaron.Context) {
 	}
 
 	c.Data["response"] = struct {
-		Success         bool               `json:"success"`
-		SharedFilesInfo []*models.FileInfo `json:"shared_files_info"`
+		Success bool               `json:"success"`
+		Content []*models.FileInfo `json:"content"`
 	}{
-		Success:         true,
-		SharedFilesInfo: sharedFilesInfo,
+		Success: true,
+		Content: sharedFilesInfo,
 	}
 }
 
