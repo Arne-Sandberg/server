@@ -1,18 +1,14 @@
-package router
+package httpRouter
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"time"
 
-	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
 	apiModels "github.com/freecloudio/freecloud/models/api"
-	"github.com/go-restit/lzjson"
 
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
@@ -73,32 +69,6 @@ func OnlyUsers(c *macaron.Context) {
 	return
 }
 
-func validateSessionAndFillUserData(token string, c *macaron.Context) {
-	session, err := models.ParseSessionTokenString(token)
-	// This probably also means the session is invalid, so redirect time it is!
-	if err != nil {
-		log.Error(0, "Could not parse session token: %v", err)
-		c.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	valid := auth.ValidateSession(session)
-	if !valid {
-		log.Warn("Invalid session")
-		c.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// If the session is valid, fill the context's user data
-	user, err := auth.GetUserByID(session.UserID)
-	if err != nil {
-		log.Warn("Filling user data in middleware failed: %v", err)
-		c.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	c.Data["user"] = user
-	c.Data["session"] = session
-}
-
 // OnlyAnonymous only allows non-users to pass through, otherwise we'll write a http.StatusForbidden
 func OnlyAnonymous(c *macaron.Context) {
 	if c.GetCookie(config.GetString("auth.session_cookie")) == "" && c.Header().Get("Authorization") == "" {
@@ -106,39 +76,6 @@ func OnlyAnonymous(c *macaron.Context) {
 		return
 	}
 	c.WriteHeader(http.StatusForbidden)
-}
-
-// GeneralJSONDecoder unmarshals the context's body into a json object of the lzjson package
-// This object can hold up any json structure and the further handlers need to unpack it themself
-func GeneralJSONDecoder(c *macaron.Context) {
-	json := lzjson.Decode(c.Req.Request.Body)
-	defer c.Req.Request.Body.Close()
-
-	c.Data["request"] = json
-}
-
-// JSONDecoder unmarshals the context's body into a variable of type "to" into the context's "request" data field.
-// If this fails, we exit by sending an internal server error code.
-// Note that the "to" variable will be overwritten.
-func JSONDecoder(to interface{}) macaron.Handler {
-	return func(c *macaron.Context) {
-		if c.Req.Request.Body == nil {
-			log.Warn("Got no JSON request payload, expected a %T", to)
-			c.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		defer c.Req.Request.Body.Close()
-
-		decoded := reflect.New(reflect.Indirect(reflect.ValueOf(to)).Type()).Interface()
-		err := json.NewDecoder(c.Req.Request.Body).Decode(decoded)
-		if err != nil {
-			log.Error(0, "Could not unmarshal payload into a %T: %v", to, err)
-			c.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		c.Data["request"] = decoded
-	}
 }
 
 // JSONEncoder marshals the payload inside of c.Data["resposne"] as JSON and sends it to the client.
