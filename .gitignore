@@ -3,7 +3,7 @@ freecloud.exe
 freecloud
 
 # Uploaded data
-data/*
+data/
 
 # Database files
 *.db
@@ -14,13 +14,13 @@ data/*
 #
 
 # IntelliJ / GoLand
-.idea/*
+.idea/
 
 # VS Code
-.vscode/*
+.vscode/
 
 # Vim
 *.vim
 *.swp
 
-grpc-services/*
+grpc-services/

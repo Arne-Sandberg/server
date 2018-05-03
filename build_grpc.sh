@@ -1,7 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 
-git clone https://github.com/freecloudio/grpc-services.git
+# cd into the directory of the script
+cd "$(dirname "$0")"
 
-mkdir models
+GIT_DIR=grpc-services
 
-protoc -I grpc-services/ grpc-services/auth.proto --go_out=plugins=grpc:models
+if [ -d "$GIT_DIR" ]; then
+  cd $GIT_DIR
+	git checkout master
+	git pull
+	cd ..
+else
+	git clone https://github.com/freecloudio/grpc-services.git $GIT_DIR
+fi
+
+rm models/*.pb.go
+
+for F in $GIT_DIR/*.proto; do
+    protoc -I $GIT_DIR/ $F --go_out=plugins=grpc:models
+		FILENAME=$(basename "$F" | cut -f 1 -d '.')
+		protoc-go-inject-tag -input=models/$FILENAME.pb.go
+done
