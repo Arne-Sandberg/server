@@ -11,7 +11,7 @@ type User struct {
 	Password    string    `json:"password,omitempty"`
 	AvatarURL   string    `json:"avatarURL"`
 	IsAdmin     bool      `json:"isAdmin"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
-	LastSession time.Time `json:"lastSession"`
+	Created     time.Time `json:"created,omitempty"`
+	Updated     time.Time `json:"updated,omitempty"`
+	LastSession time.Time `json:"lastSession,omitempty"`
 }

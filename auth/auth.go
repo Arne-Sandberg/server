@@ -152,15 +152,22 @@ func DeleteUser(userID int) (err error) {
 	return
 }
 
-func GetAllUsers() ([]*models.User, error) {
+func GetAllUsers(isAdmin bool) ([]*models.User, error) {
 	users, err := cProvider.GetAllUsers()
 	if err != nil {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, err
 	}
-	for i := 0; i < len(users); i++ {
+	for _, user := range users {
 		// Mask out the password
-		users[i].Password = ""
+		user.Password = ""
+
+		// For normal users also mask out created, updated and lastSession
+		if !isAdmin {
+			user.Created = time.Time{}
+			user.Updated = time.Time{}
+			user.LastSession = time.Time{}
+		}
 	}
 	return users, nil
 }

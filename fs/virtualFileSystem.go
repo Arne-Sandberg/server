@@ -21,8 +21,11 @@ type vfsDatabase interface {
 	RemoveFile(fileInfo *models.FileInfo) (err error)
 	UpdateFile(fileInfo *models.FileInfo) (err error)
 	DeleteFile(fileInfo *models.FileInfo) (err error)
+
 	// Must return an empty instead of an error if nothing could be found
 	GetStarredFilesForUser(userID int) (starredFilesForuser []*models.FileInfo, err error)
+	GetSharedFilesForUser(userID int) (sharedFilesForUser []*models.FileInfo, err error)
+
 	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
 	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
 	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
@@ -48,7 +51,7 @@ func (vfs *VirtualFilesystem) Close() {}
 
 func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 	log.Trace("Get existing users")
-	existingUsers, err := auth.GetAllUsers()
+	existingUsers, err := auth.GetAllUsers(true)
 	if err != nil {
 		log.Error(0, "Could not get exising users: %v", err)
 		return
@@ -77,7 +80,7 @@ func (vfs *VirtualFilesystem) ScanUserFolderForChanges(user *models.User) (err e
 			Name:        "",
 			IsDir:       true,
 			OwnerID:     user.ID,
-			LastChanged: time.Now(),
+			LastChanged: time.Now().UTC(),
 		})
 		if err != nil {
 			log.Error(0, "Error inserting created root folder for user id %v", user.ID)
@@ -98,7 +101,7 @@ func (vfs *VirtualFilesystem) ScanUserFolderForChanges(user *models.User) (err e
 			Name:        vfs.tmpName,
 			IsDir:       true,
 			OwnerID:     user.ID,
-			LastChanged: time.Now(),
+			LastChanged: time.Now().UTC(),
 		})
 		if err != nil {
 			log.Error(0, "Error inserting created tmp folder for user id %v", user.ID)
@@ -188,6 +191,10 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 
 	// Delete remaining files from dbList in db as they are deleted from the fs
 	for _, dbFile := range dbFiles {
+		if dbFile.OriginalFileID != 0 {
+			continue
+		}
+
 		err = vfs.db.RemoveFile(dbFile)
 		if err != nil {
 			log.Error(0, "Error removing file from db: %v", err)
@@ -304,7 +311,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 		Name:        folderName,
 		IsDir:       true,
 		OwnerID:     user.ID,
-		LastChanged: time.Now(),
+		LastChanged: time.Now().UTC(),
 		ParentID:    parFolderInfo.ID,
 	}
 	err = vfs.db.InsertFile(dirInfo)
@@ -326,6 +333,14 @@ func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (
 
 func (vfs *VirtualFilesystem) ListStarredFilesForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
 	starredFilesInfo, err = vfs.db.GetStarredFilesForUser(user.ID)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (vfs *VirtualFilesystem) ListSharedFilesForUser(user *models.User) (sharedFilesInfo []*models.FileInfo, err error) {
+	sharedFilesInfo, err = vfs.db.GetSharedFilesForUser(user.ID)
 	if err != nil {
 		return
 	}
@@ -472,7 +487,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		}
 
 		if !copyFlag {
-			fileInfo.LastChanged = time.Now()
+			fileInfo.LastChanged = time.Now().UTC()
 			if newName != fileInfo.Name {
 				fileInfo.Name = newName
 				fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
@@ -498,7 +513,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 			}
 		}
 	} else if newStarred != fileInfo.Starred && !copyFlag {
-		fileInfo.LastChanged = time.Now()
+		fileInfo.LastChanged = time.Now().UTC()
 		fileInfo.Starred = newStarred
 		err = vfs.db.UpdateFile(fileInfo)
 		if err != nil {
@@ -646,5 +661,35 @@ func (vfs *VirtualFilesystem) DeleteUser(user *models.User) (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path string) (err error) {
+	filePath, fileName := vfs.splitPath(path)
+	fileInfo, err := vfs.db.GetFileInfo(fromUser.ID, filePath, fileName)
+	if err != nil {
+		return
+	}
+
+	sharedParentInfo, err := vfs.db.GetFileInfo(toUser.ID, "/", "")
+	if err != nil {
+		return
+	}
+
+	sharedFileInfo := &models.FileInfo{
+		Path:           "/",
+		Name:           fileInfo.Name,
+		IsDir:          fileInfo.IsDir,
+		Size:           fileInfo.Size,
+		OwnerID:        toUser.ID,
+		LastChanged:    time.Now().UTC(),
+		MimeType:       fileInfo.MimeType,
+		ParentID:       sharedParentInfo.ID,
+		OriginalFileID: fileInfo.ID,
+		Starred:        false,
+	}
+
+	vfs.db.InsertFile(sharedFileInfo)
+
 	return
 }

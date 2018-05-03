@@ -118,7 +118,7 @@ func (s Server) ZipHandler(c *macaron.Context) {
 	}
 }
 
-func (s Server) StarredFileInfoHandler(c *macaron.Context) {
+func (s Server) StarredFilesInfoHandler(c *macaron.Context) {
 	user := c.Data["user"].(*models.User)
 
 	log.Trace("Getting starred fileInfo for %s %s", user.FirstName, user.LastName)
@@ -130,11 +130,31 @@ func (s Server) StarredFileInfoHandler(c *macaron.Context) {
 	}
 
 	c.Data["response"] = struct {
-		Success          bool               `json:"success"`
-		StarredFilesInfo []*models.FileInfo `json:"starred_files_info"`
+		Success bool               `json:"success"`
+		Content []*models.FileInfo `json:"content"`
 	}{
-		Success:          true,
-		StarredFilesInfo: starredFilesInfo,
+		Success: true,
+		Content: starredFilesInfo,
+	}
+}
+
+func (s Server) SharedFilesInfoHandler(c *macaron.Context) {
+	user := c.Data["user"].(*models.User)
+
+	log.Trace("Getting shared fileInfo for %s %s", user.FirstName, user.LastName)
+
+	sharedFilesInfo, err := s.filesystem.ListSharedFilesForUser(user)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = struct {
+		Success bool               `json:"success"`
+		Content []*models.FileInfo `json:"content"`
+	}{
+		Success: true,
+		Content: sharedFilesInfo,
 	}
 }
 
@@ -322,4 +342,22 @@ func (s *Server) AdminRescanHandler(c *macaron.Context) {
 	}
 	c.Data["response"] = apiModels.SuccessResponse
 	return
+}
+
+func (s *Server) ShareHandler(c *macaron.Context) {
+	path := c.Data["path"].(string)
+	fromUser := c.Data["user"].(*models.User)
+	toUserID := c.Data["request"].(*apiModels.ShareRequest).UserID
+	toUser, err := auth.GetUserByID(toUserID)
+	if err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	if err := s.filesystem.ShareFile(fromUser, toUser, path); err != nil {
+		c.Data["response"] = err
+		return
+	}
+
+	c.Data["response"] = apiModels.SuccessResponse
 }

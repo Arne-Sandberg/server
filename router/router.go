@@ -43,7 +43,7 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		})
 
 		// User: Includes getting and editing your user or as admin also for other users
-		m.Get("/users", OnlyAdmins, s.UserListHandler, JSONEncoder)
+		m.Get("/users", OnlyUsers, s.UserListHandler, JSONEncoder)
 		m.Get("/user/me", OnlyUsers, s.UserHandler, JSONEncoder)
 		m.Patch("/user/me", OnlyUsers, GeneralJSONDecoder, s.UpdateUserHandler, JSONEncoder)
 		m.Get("/user/byID/:id", OnlyAdmins, s.AdminUserHandler, JSONEncoder)
@@ -61,8 +61,11 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 		m.Patch("/path/*", OnlyUsers, ResolvePath, GeneralJSONDecoder, s.UpdateFileHandler, JSONEncoder)
 		m.Delete("/path/*", OnlyUsers, ResolvePath, s.FileDeleteHandler, JSONEncoder)
 
+		m.Post("/share/*", OnlyUsers, ResolvePath, JSONDecoder(&apiModels.ShareRequest{}), s.ShareHandler, JSONEncoder)
+
 		m.Get("/search/*", OnlyUsers, ResolvePath, s.SearchHandler, JSONEncoder)
-		m.Get("/starred", OnlyUsers, s.StarredFileInfoHandler, JSONEncoder)
+		m.Get("/starred", OnlyUsers, s.StarredFilesInfoHandler, JSONEncoder)
+		m.Get("/shared", OnlyUsers, s.SharedFilesInfoHandler, JSONEncoder)
 
 		m.Get("/rescan/me", OnlyUsers, s.RescanHandler, JSONEncoder)
 		m.Get("/rescan/byID/:id", OnlyAdmins, s.AdminRescanHandler, JSONEncoder)

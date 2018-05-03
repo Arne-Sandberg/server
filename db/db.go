@@ -231,8 +231,21 @@ func (db *StormDB) GetStarredFilesForUser(userID int) (starredFilesForUser []*mo
 	starredFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
+		starredFilesForUser = make([]*models.FileInfo, 0)
 	} else if err != nil {
 		log.Error(0, "Could not get starred files for userID %v: %v", userID, err)
+		return
+	}
+	return
+}
+
+func (db *StormDB) GetSharedFilesForUser(userID int) (sharedFilesForUser []*models.FileInfo, err error) {
+	sharedFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Not(q.Eq("OriginalFileID", 0))))
+	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+		err = nil
+		sharedFilesForUser = make([]*models.FileInfo, 0)
+	} else if err != nil {
+		log.Error(0, "Could not get shared files for userID %v: %v", userID, err)
 		return
 	}
 	return
