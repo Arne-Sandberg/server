@@ -12,18 +12,19 @@ import (
 	"github.com/freecloudio/freecloud/db"
 	"github.com/freecloudio/freecloud/auth"
 	"time"
+	"os"
 )
 
 func TestAuthService(t *testing.T) {
 	dfs, err := fs.NewDiskFilesystem("testData", "testTmp", 100)
 	if err != nil {
-		t.Errorf("failed to initialize diskfilesystem: %v", err)
+		t.Errorf("Failed to initialize diskfilesystem: %v", err)
 		return
 	}
 
 	database, err := db.NewStormDB("test.db")
 	if err != nil {
-		t.Errorf("failed to initialize database: %v", err)
+		t.Errorf("Failed to initialize database: %v", err)
 		return
 	}
 
@@ -31,7 +32,7 @@ func TestAuthService(t *testing.T) {
 
 	vfs, err := fs.NewVirtualFilesystem(dfs, database, "testTmp")
 	if err != nil {
-		t.Errorf("failed to initialize virtualfilesystem: %v", err)
+		t.Errorf("Failed to initialize virtualfilesystem: %v", err)
 		return
 	}
 
@@ -39,7 +40,7 @@ func TestAuthService(t *testing.T) {
 
 	conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
 	if err != nil {
-		t.Errorf("failed to dial grpc server: %v", err)
+		t.Errorf("Failed to dial grpc server: %v", err)
 		return
 	}
 	defer conn.Close()
@@ -51,38 +52,45 @@ func TestAuthService(t *testing.T) {
 
 	authResp, err := authClient.Signup(context.Background(), &models.User{ FirstName: "Jon", LastName: "Doe", Email: email, Password: "secretPassw0rd" })
 	if err != nil {
-		t.Errorf("failed signup call: %v", err)
+		t.Errorf("Failed signup call: %v", err)
 		return
 	}
 
 	if authResp.Meta.ResponseCode != http.StatusCreated || authResp.Token == "" {
-		t.Errorf("signup response not correct: Got %d instead of %d: %s", authResp.Meta.ResponseCode, http.StatusCreated, authResp.Meta.ErrorMessage)
+		t.Errorf("Signup response not correct: Got %d instead of %d: %s", authResp.Meta.ResponseCode, http.StatusCreated, authResp.Meta.ErrorMessage)
 		return
 	}
 
 	authResp, err = authClient.Login(context.Background(), &models.User{ Email: email, Password: "secretPassw0rd" })
 	if err != nil {
-		t.Errorf("failed login call: %v", err)
+		t.Errorf("Failed login call: %v", err)
 		return
 	}
 
 	if authResp.Meta.ResponseCode != http.StatusOK || authResp.Token == "" {
-		t.Errorf("login response not correct: Got %d instead of %d: %s", authResp.Meta.ResponseCode, http.StatusOK, authResp.Meta.ErrorMessage)
+		t.Errorf("Login response not correct: Got %d instead of %d: %s", authResp.Meta.ResponseCode, http.StatusOK, authResp.Meta.ErrorMessage)
 		return
 	}
 
 	resp, err := authClient.Logout(context.Background(), &models.Authentication{ Token: authResp.Token })
 	if err != nil {
-		t.Errorf("failed logout call: %v", err)
+		t.Errorf("Failed logout call: %v", err)
 		return
 	}
 
 	if resp.ResponseCode != http.StatusOK {
-		t.Errorf("logout response not correct: Got %d instead of %d: %s", resp.ResponseCode, http.StatusOK, resp.ErrorMessage)
+		t.Errorf("Logout response not correct: Got %d instead of %d: %s", resp.ResponseCode, http.StatusOK, resp.ErrorMessage)
 		return
 	}
 
 	//Stop()
+	vfs.Close()
+	auth.Close()
+	database.Close()
+	dfs.Close()
 
-	// TODO: Add removal of generated filed/folders: testData, testTmp, test.db, test.db.lock
+	os.RemoveAll("testData")
+	os.RemoveAll("testTmp")
+	os.Remove("test.db")
+	os.Remove("test.db.lock")
 }
