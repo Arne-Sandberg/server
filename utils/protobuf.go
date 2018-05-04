@@ -18,8 +18,8 @@ func PbBadRequest(msg string, a ...interface{}) *models.DefaultResponse {
 	return &models.DefaultResponse{ ResponseCode: http.StatusBadRequest, ErrorMessage: fmt.Sprintf(msg, a) }
 }
 
-func PbForbidden(msg string, a ...interface{}) *models.DefaultResponse {
-	return &models.DefaultResponse{ ResponseCode: http.StatusForbidden, ErrorMessage: fmt.Sprintf(msg, a) }
+func PbForbidden() *models.DefaultResponse {
+	return &models.DefaultResponse{ ResponseCode: http.StatusForbidden, ErrorMessage: "admin rights required" }
 }
 
 func PbUnauthorized(msg string, a ...interface{}) *models.DefaultResponse {

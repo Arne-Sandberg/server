@@ -100,7 +100,7 @@ func newUnverifiedSession(userID uint32) *models.Session {
 	return sess
 }
 
-func TotalSessionCount() int {
+func TotalSessionCount() uint32 {
 	return sProvider.TotalSessionCount()
 }
 

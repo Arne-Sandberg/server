@@ -18,6 +18,8 @@ func NewAuthService(vfs *fs.VirtualFilesystem) *AuthService {
 }
 
 func (srv *AuthService) Signup(ctx context.Context, user *models.User) (resp *models.AuthResponse, err error) {
+	user.GetPassword()
+
 	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(user)
 	if err == auth.ErrInvalidUserData {
@@ -57,16 +59,40 @@ func (srv *AuthService) Login(ctx context.Context, user *models.User) (resp *mod
 }
 
 func (srv *AuthService) Logout(ctx context.Context, authReq *models.Authentication) (*models.DefaultResponse, error) {
-	session, err := models.ParseSessionTokenString(authReq.Token)
-	if err != nil {
-		return utils.PbBadRequest("Failed to parse token"), nil
+	_, session, resp := validateTokenAndFillUserData(authReq.Token)
+	if resp != nil {
+		return resp, nil
 	}
 
-	err = auth.RemoveSession(session)
+	err := auth.RemoveSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
 		return utils.PbInternalServerError("Failed to delete session"), nil
 	}
 
 	return utils.PbOK(), nil
+}
+
+func validateTokenAndFillUserData(token string) (user *models.User, session *models.Session, resp *models.DefaultResponse) {
+	session, err := models.ParseSessionTokenString(token)
+	// This probably also means the session is invalid, so redirect time it is!
+	if err != nil {
+		resp = utils.PbBadRequest("Could not parse session token")
+		return
+	}
+
+	valid := auth.ValidateSession(session)
+	if !valid {
+		resp = utils.PbUnauthorized("Session not valid!")
+		return
+	}
+
+	user, err = auth.GetUserByID(session.UserID)
+	if err != nil {
+		log.Error(0,"Filling user data in middleware failed: %v", err)
+		resp = utils.PbInternalServerError("Filling user data in middleware failed")
+		return
+	}
+
+	return
 }
