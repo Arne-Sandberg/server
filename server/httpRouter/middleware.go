@@ -118,17 +118,14 @@ func JSONEncoder(c *macaron.Context) {
 		return
 	}
 
-	switch res := resp.(type) {
-		case error:
-			c.JSON(http.StatusInternalServerError, struct {
-				Message string `json:"message"`
-			}{
-				res.Error(),
-			})
-			return
-		default:
-			c.JSON(http.StatusOK, res)
-			return
+	if res, ok := resp.(error); ok == true {
+		c.JSON(http.StatusInternalServerError, struct {
+			Message string `json:"message"`
+		}{
+			res.Error(),
+		})
+	} else {
+		c.JSON(http.StatusOK, res)
 	}
 
 	if code, ok := c.Data["responseCode"]; ok == true {
