@@ -9,7 +9,7 @@ import (
 const SessionTokenLength = 32
 
 type Session struct {
-	UserID    int    `storm:"index"`
+	UserID    uint32 `storm:"index"`
 	Token     string `storm:"id,unique"`
 	ExpiresAt time.Time
 }
@@ -25,5 +25,5 @@ func ParseSessionTokenString(cookie string) (*Session, error) {
 	if err != nil {
 		return &Session{}, err
 	}
-	return &Session{UserID: userID, Token: tok}, nil
+	return &Session{UserID: uint32(userID), Token: tok}, nil
 }

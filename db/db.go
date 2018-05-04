@@ -13,6 +13,7 @@ import (
 	"github.com/freecloudio/freecloud/models"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
+	"github.com/freecloudio/freecloud/utils"
 )
 
 type StormDB struct {
@@ -55,8 +56,8 @@ func (db *StormDB) Close() {
 }
 
 func (db *StormDB) CreateUser(user *models.User) (err error) {
-	user.Created = time.Now().UTC()
-	user.Updated = time.Now().UTC()
+	user.CreatedAt = utils.GetTimestampNow()
+	user.UpdatedAt = utils.GetTimestampNow()
 	err = db.c.Save(user)
 	if err != nil {
 		log.Error(0, "Could not save user: %v", err)
@@ -65,7 +66,7 @@ func (db *StormDB) CreateUser(user *models.User) (err error) {
 	return
 }
 
-func (db *StormDB) DeleteUser(userID int) (err error) {
+func (db *StormDB) DeleteUser(userID uint32) (err error) {
 	err = db.c.DeleteStruct(&models.User{ID: userID})
 	if err != nil {
 		log.Error(0, "Could not delete user: %v", err)
@@ -75,7 +76,7 @@ func (db *StormDB) DeleteUser(userID int) (err error) {
 }
 
 func (db *StormDB) UpdateUser(user *models.User) (err error) {
-	user.Updated = time.Now().UTC()
+	user.UpdatedAt = utils.GetTimestampNow()
 	err = db.c.Save(user)
 	if err != nil {
 		log.Error(0, "Could not update user: %v", err)
@@ -84,7 +85,7 @@ func (db *StormDB) UpdateUser(user *models.User) (err error) {
 	return
 }
 
-func (db *StormDB) GetUserByID(userID int) (user *models.User, err error) {
+func (db *StormDB) GetUserByID(userID uint32) (user *models.User, err error) {
 	var u models.User
 	err = db.c.One("ID", userID, &u)
 	user = &u
@@ -153,7 +154,7 @@ func (db *StormDB) RemoveSession(session *models.Session) error {
 	return db.c.DeleteStruct(session)
 }
 
-func (db *StormDB) RemoveUserSessions(userID int) (err error) {
+func (db *StormDB) RemoveUserSessions(userID uint32) (err error) {
 	var sessions []models.Session
 	err = db.c.Find("UserID", userID, &sessions)
 	if err != nil {
@@ -227,7 +228,7 @@ func (db *StormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) GetStarredFilesForUser(userID int) (starredFilesForUser []*models.FileInfo, err error) {
+func (db *StormDB) GetStarredFilesForUser(userID uint32) (starredFilesForUser []*models.FileInfo, err error) {
 	starredFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
@@ -239,7 +240,7 @@ func (db *StormDB) GetStarredFilesForUser(userID int) (starredFilesForUser []*mo
 	return
 }
 
-func (db *StormDB) GetSharedFilesForUser(userID int) (sharedFilesForUser []*models.FileInfo, err error) {
+func (db *StormDB) GetSharedFilesForUser(userID uint32) (sharedFilesForUser []*models.FileInfo, err error) {
 	sharedFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Not(q.Eq("OriginalFileID", 0))))
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
 		err = nil
@@ -251,7 +252,7 @@ func (db *StormDB) GetSharedFilesForUser(userID int) (sharedFilesForUser []*mode
 	return
 }
 
-func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
+func (db *StormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
 	dirInfo, err = db.GetFileInfo(userID, path, dirName)
 	if err != nil || !dirInfo.IsDir {
 		return
@@ -261,7 +262,7 @@ func (db *StormDB) GetDirectoryContent(userID int, path, dirName string) (dirInf
 	return
 }
 
-func (db *StormDB) GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error) {
+func (db *StormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
 	content, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("ParentID", directoryID)))
 
 	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
@@ -281,7 +282,7 @@ func (db *StormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content 
 	return
 }
 
-func (db *StormDB) GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error) {
+func (db *StormDB) GetFileInfo(userID uint32, path, fileName string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
 	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
 	if err != nil {
@@ -301,7 +302,7 @@ func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err
 	return
 }
 
-func (db *StormDB) SearchForFiles(userID int, path, fileName string) (results []*models.FileInfo, err error) {
+func (db *StormDB) SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error) {
 	pathRegex := "(?i)^" + regexp.QuoteMeta(path)
 	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
 	results, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))
@@ -316,7 +317,7 @@ func (db *StormDB) SearchForFiles(userID int, path, fileName string) (results []
 	return
 }
 
-func (db *StormDB) DeleteUserFiles(userID int) (err error) {
+func (db *StormDB) DeleteUserFiles(userID uint32) (err error) {
 	var files []models.FileInfo
 	err = db.c.Find("OwnerID", userID, &files)
 	if err != nil {

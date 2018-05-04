@@ -9,6 +9,7 @@ import (
 	"github.com/freecloudio/freecloud/utils"
 
 	log "gopkg.in/clog.v1"
+	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 const SessionTokenLength = 32
@@ -77,7 +78,7 @@ func NewSession(email string, password string) (*models.Session, error) {
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(userID int) *models.Session {
+func newUnverifiedSession(userID uint32) *models.Session {
 	sess := &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
@@ -111,13 +112,13 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	}
 
 	existingUser, err := cProvider.GetUserByEmail(user.Email)
-	if (*existingUser != models.User{}) {
+	if existingUser.Email == user.Email {
 		err = ErrUserAlreadyExists
 		return
 	}
 
-	user.Created = time.Now().UTC()
-	user.Updated = time.Now().UTC()
+	user.CreatedAt = utils.GetTimestampNow()
+	user.UpdatedAt = utils.GetTimestampNow()
 	user.Password, err = HashPassword(user.Password)
 	if err != nil {
 		log.Error(0, "Password hashing failed: %v", err)
@@ -141,7 +142,7 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	return newUnverifiedSession(user.ID), nil
 }
 
-func DeleteUser(userID int) (err error) {
+func DeleteUser(userID uint32) (err error) {
 	if err = sProvider.RemoveUserSessions(userID); err != nil {
 		return
 	}
@@ -164,9 +165,9 @@ func GetAllUsers(isAdmin bool) ([]*models.User, error) {
 
 		// For normal users also mask out created, updated and lastSession
 		if !isAdmin {
-			user.Created = time.Time{}
-			user.Updated = time.Time{}
-			user.LastSession = time.Time{}
+			user.CreatedAt = &timestamp.Timestamp{}
+			user.UpdatedAt = &timestamp.Timestamp{}
+			user.LastSessionAt = &timestamp.Timestamp{}
 		}
 	}
 	return users, nil
@@ -177,7 +178,7 @@ func ValidateSession(sess *models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)
 }
 
-func GetUserByID(userID int) (*models.User, error) {
+func GetUserByID(userID uint32) (*models.User, error) {
 	return cProvider.GetUserByID(userID)
 }
 
@@ -186,7 +187,7 @@ func RemoveSession(sess *models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
-func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, err error) {
+func UpdateUser(userID uint32, updates map[string]interface{}) (user *models.User, err error) {
 	user, err = GetUserByID(userID)
 	if err != nil {
 		return
@@ -213,13 +214,6 @@ func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, 
 			return
 		}
 	}
-	if avatarURL, ok := updates["avatarURL"]; ok == true {
-		user.AvatarURL, ok = avatarURL.(string)
-		if ok != true || !utils.ValidateAvatarURL(user.AvatarURL) {
-			err = ErrInvalidUserData
-			return
-		}
-	}
 	if isAdmin, ok := updates["isAdmin"]; ok == true {
 		user.IsAdmin, ok = isAdmin.(bool)
 		if ok != true {
@@ -240,7 +234,7 @@ func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, 
 		}
 	}
 	if lastSession, ok := updates["lastSession"]; ok == true {
-		user.LastSession, ok = lastSession.(time.Time)
+		user.LastSessionAt, ok = lastSession.(*timestamp.Timestamp)
 		if ok != true {
 			err = ErrInvalidUserData
 			return
@@ -248,7 +242,7 @@ func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, 
 	} else {
 		// I expect that the lastSession will only be updated if nothing else of the data is updated.
 		// That way the "Updated" only represents changes to the core user data
-		user.Updated = time.Now().UTC()
+		user.UpdatedAt = utils.GetTimestampNow()
 	}
 
 	err = cProvider.UpdateUser(user)

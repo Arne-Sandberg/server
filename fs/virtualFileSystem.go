@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/freecloudio/freecloud/utils"
 
@@ -23,15 +22,15 @@ type vfsDatabase interface {
 	DeleteFile(fileInfo *models.FileInfo) (err error)
 
 	// Must return an empty instead of an error if nothing could be found
-	GetStarredFilesForUser(userID int) (starredFilesForuser []*models.FileInfo, err error)
-	GetSharedFilesForUser(userID int) (sharedFilesForUser []*models.FileInfo, err error)
+	GetStarredFilesForUser(userID uint32) (starredFilesForuser []*models.FileInfo, err error)
+	GetSharedFilesForUser(userID uint32) (sharedFilesForUser []*models.FileInfo, err error)
 
-	GetDirectoryContent(userID int, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
-	GetDirectoryContentWithID(directoryID int) (content []*models.FileInfo, err error)
-	GetFileInfo(userID int, path, fileName string) (fileInfo *models.FileInfo, err error)
-	GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error)
-	SearchForFiles(userID int, path, fileName string) (results []*models.FileInfo, err error)
-	DeleteUserFiles(userID int) (err error)
+	GetDirectoryContent(userID uint32, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error)
+	GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error)
+	GetFileInfo(userID uint32, path, fileName string) (fileInfo *models.FileInfo, err error)
+	GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, err error)
+	SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error)
+	DeleteUserFiles(userID uint32) (err error)
 }
 
 type VirtualFilesystem struct {
@@ -80,7 +79,7 @@ func (vfs *VirtualFilesystem) ScanUserFolderForChanges(user *models.User) (err e
 			Name:        "",
 			IsDir:       true,
 			OwnerID:     user.ID,
-			LastChanged: time.Now().UTC(),
+			LastChanged: utils.GetTimestampNow(),
 		})
 		if err != nil {
 			log.Error(0, "Error inserting created root folder for user id %v", user.ID)
@@ -101,7 +100,7 @@ func (vfs *VirtualFilesystem) ScanUserFolderForChanges(user *models.User) (err e
 			Name:        vfs.tmpName,
 			IsDir:       true,
 			OwnerID:     user.ID,
-			LastChanged: time.Now().UTC(),
+			LastChanged: utils.GetTimestampNow(),
 		})
 		if err != nil {
 			log.Error(0, "Error inserting created tmp folder for user id %v", user.ID)
@@ -191,9 +190,9 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 
 	// Delete remaining files from dbList in db as they are deleted from the fs
 	for _, dbFile := range dbFiles {
-		if dbFile.OriginalFileID != 0 {
+		/*if dbFile.OriginalFileID != 0 {
 			continue
-		}
+		}*/
 
 		err = vfs.db.RemoveFile(dbFile)
 		if err != nil {
@@ -219,8 +218,8 @@ func (vfs *VirtualFilesystem) getUserPath(user *models.User) string {
 	return vfs.getUserPathWithID(user.ID)
 }
 
-func (vfs *VirtualFilesystem) getUserPathWithID(userID int) string {
-	return "/" + filepath.Join(strconv.Itoa(userID))
+func (vfs *VirtualFilesystem) getUserPathWithID(userID uint32) string {
+	return "/" + filepath.Join(strconv.Itoa(int(userID)))
 }
 
 // splitPath splits the given full path into the path and the name of the file/dir
@@ -311,7 +310,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 		Name:        folderName,
 		IsDir:       true,
 		OwnerID:     user.ID,
-		LastChanged: time.Now().UTC(),
+		LastChanged: utils.GetTimestampNow(),
 		ParentID:    parFolderInfo.ID,
 	}
 	err = vfs.db.InsertFile(dirInfo)
@@ -357,13 +356,13 @@ func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileI
 }
 
 func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (downloadURL, filename string, err error) {
-	filePath, fileName := vfs.splitPath(path)
-	fileInfo, err := vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	_, fileName := vfs.splitPath(path)
+	/*fileInfo, err := vfs.db.GetFileInfo(user.ID, filePath, fileName)
 	if err != nil {
 		return
-	}
+	}*/
 
-	if fileInfo.OriginalFileID > 0 {
+	/*if fileInfo.OriginalFileID > 0 {
 		var origFileInfo *models.FileInfo
 		origFileInfo, err = vfs.db.GetFileInfoWithID(fileInfo.OriginalFileID)
 		if err != nil {
@@ -371,10 +370,10 @@ func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (d
 		}
 		userPath := vfs.getUserPathWithID(origFileInfo.OwnerID)
 		downloadURL = vfs.fs.GetDownloadPath(filepath.Join(userPath, fileInfo.Path, fileInfo.Name))
-	} else {
+	} else {*/
 		userPath := vfs.getUserPath(user)
 		downloadURL = vfs.fs.GetDownloadPath(filepath.Join(userPath, path))
-	}
+	//}
 
 	filename = fileName
 	return
@@ -389,14 +388,14 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 
 	userPath := vfs.getUserPath(user)
 	for it := 0; it < len(paths); it++ {
-		filePath, fileName := vfs.splitPath(paths[it])
+		/*filePath, fileName := vfs.splitPath(paths[it])
 		var fileInfo *models.FileInfo
 		fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
 		if err != nil {
 			return
-		}
+		}*/
 
-		if fileInfo.OriginalFileID > 0 {
+		/*if fileInfo.OriginalFileID > 0 {
 			var origFileInfo *models.FileInfo
 			origFileInfo, err = vfs.db.GetFileInfoWithID(fileInfo.OriginalFileID)
 			if err != nil {
@@ -404,9 +403,9 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 			}
 			origUserPath := vfs.getUserPathWithID(origFileInfo.OwnerID)
 			paths[it] = filepath.Join(origUserPath, paths[it])
-		} else {
+		} else {*/
 			paths[it] = filepath.Join(userPath, paths[it])
-		}
+		//}
 	}
 
 	zipPath = filepath.Join(vfs.tmpName, outputName)
@@ -475,8 +474,8 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 	}
 
 	if newPath != fileInfo.Path || newName != fileInfo.Name {
-		userPath := vfs.getUserPath(user)
-		oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+		//userPath := vfs.getUserPath(user)
+		//oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 
 		folderPath, folderName := vfs.splitPath(newPath)
 		var folderInfo *models.FileInfo
@@ -487,7 +486,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 		}
 
 		if !copyFlag {
-			fileInfo.LastChanged = time.Now().UTC()
+			fileInfo.LastChanged = utils.GetTimestampNow()
 			if newName != fileInfo.Name {
 				fileInfo.Name = newName
 				fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
@@ -498,14 +497,14 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 				return
 			}
 
-			if fileInfo.OriginalFileID <= 0 {
+			/*if fileInfo.OriginalFileID <= 0 {
 				newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 				err = vfs.fs.MoveFile(oldPath, newPath)
 				if err != nil {
 					log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
 					return
 				}
-			}
+			}*/
 		} else {
 			err = vfs.copyFile(user, fileInfo, newName, folderInfo)
 			if err != nil {
@@ -513,7 +512,7 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 			}
 		}
 	} else if newStarred != fileInfo.Starred && !copyFlag {
-		fileInfo.LastChanged = time.Now().UTC()
+		fileInfo.LastChanged = utils.GetTimestampNow()
 		fileInfo.Starred = newStarred
 		err = vfs.db.UpdateFile(fileInfo)
 		if err != nil {
@@ -555,9 +554,9 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 		newName = fileInfo.Name
 	}
 	parentPath := utils.ConvertToSlash(filepath.Join(newParentFileInfo.Path, newParentFileInfo.Name), true)
-	newPath := filepath.Join(parentPath, newName)
+	//newPath := filepath.Join(parentPath, newName)
 
-	if fileInfo.OriginalFileID <= 0 {
+	/*if fileInfo.OriginalFileID <= 0 {
 		if fileInfo.IsDir {
 			err = vfs.CreateDirectoryForUser(user, newPath)
 			if err != nil {
@@ -590,7 +589,7 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 				return
 			}
 		}
-	} else {
+	} else {*/
 		newFileInfo := *fileInfo
 		newFileInfo.Path = parentPath
 		newFileInfo.ParentID = newParentFileInfo.ID
@@ -600,7 +599,7 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 		if err != nil {
 			return
 		}
-	}
+	//}
 
 	return
 }
@@ -618,12 +617,12 @@ func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err er
 		return
 	}
 
-	if fileInfo.OriginalFileID <= 0 {
+	/*if fileInfo.OriginalFileID <= 0 {
 		err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
 		if err != nil {
 			return
 		}
-	}
+	}*/
 
 	//TODO: Make asynchronus scan call for dir sizes?!?
 
@@ -665,31 +664,5 @@ func (vfs *VirtualFilesystem) DeleteUser(user *models.User) (err error) {
 }
 
 func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path string) (err error) {
-	filePath, fileName := vfs.splitPath(path)
-	fileInfo, err := vfs.db.GetFileInfo(fromUser.ID, filePath, fileName)
-	if err != nil {
-		return
-	}
-
-	sharedParentInfo, err := vfs.db.GetFileInfo(toUser.ID, "/", "")
-	if err != nil {
-		return
-	}
-
-	sharedFileInfo := &models.FileInfo{
-		Path:           "/",
-		Name:           fileInfo.Name,
-		IsDir:          fileInfo.IsDir,
-		Size:           fileInfo.Size,
-		OwnerID:        toUser.ID,
-		LastChanged:    time.Now().UTC(),
-		MimeType:       fileInfo.MimeType,
-		ParentID:       sharedParentInfo.ID,
-		OriginalFileID: fileInfo.ID,
-		Starred:        false,
-	}
-
-	vfs.db.InsertFile(sharedFileInfo)
-
 	return
 }

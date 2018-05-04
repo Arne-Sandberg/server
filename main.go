@@ -13,8 +13,8 @@ import (
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/db"
 	"github.com/freecloudio/freecloud/fs"
-	"github.com/freecloudio/freecloud/router"
 	"github.com/freecloudio/freecloud/stats"
+	"github.com/freecloudio/freecloud/server"
 )
 
 var (
@@ -74,11 +74,11 @@ func main() {
 
 	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
 
-	router.Start(config.GetInt("http.port"), config.GetString("http.host"), virtualFS, database)
+	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.port"), config.GetString("net.host"), virtualFS, database)
 
 	code := <-exitChan
 
-	router.Stop()
+	server.StopAll()
 	virtualFS.Close()
 	auth.Close()
 	database.Close()
