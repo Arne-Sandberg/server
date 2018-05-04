@@ -8,7 +8,7 @@ import (
 
 func StartAll(httpPort int, grpcPort int, hostname string, virtualFS *fs.VirtualFilesystem) {
 	httpRouter.Start(httpPort, hostname, virtualFS)
-	grpcRouter.Start(grpcPort, hostname)
+	grpcRouter.Start(grpcPort, hostname, virtualFS)
 }
 
 func StopAll() {

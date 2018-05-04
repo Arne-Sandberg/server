@@ -25,7 +25,7 @@ type DiskFilesystem struct {
 }
 
 // NewDiskFilesystem sets up a disk filesystem and returns it
-func NewDiskFilesystem(baseDir, tmpName string) (dfs *DiskFilesystem, err error) {
+func NewDiskFilesystem(baseDir, tmpName string, tmpDataExpiry int) (dfs *DiskFilesystem, err error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -52,7 +52,7 @@ func NewDiskFilesystem(baseDir, tmpName string) (dfs *DiskFilesystem, err error)
 	log.Info("Initialized filesystem at base directory %s", base)
 	dfs = &DiskFilesystem{base: base, tmpName: tmpName, done: make(chan struct{})}
 
-	go dfs.cleanupTempFolderRoutine(time.Hour * time.Duration(config.GetInt("fs.tmp_data_expiry")))
+	go dfs.cleanupTempFolderRoutine(time.Hour * time.Duration(tmpDataExpiry))
 
 	return
 }

@@ -59,7 +59,7 @@ func main() {
 		}
 	}()
 
-	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"), config.GetString("fs.tmp_folder_name")) // TODO: Remove temp folder name from dfs and move completely to vfs
+	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"), config.GetString("fs.tmp_folder_name"), config.GetInt("fs.tmp_data_expiry"))
 	if err != nil {
 		os.Exit(3)
 	}
@@ -70,8 +70,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	auth.Init(database, database)
+	auth.Init(database, database, config.GetInt("auth.session_expiry"))
 
+	// TODO: Remove temp folder name from vfs and move completely to dfs
 	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
 
 	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.port"), config.GetString("net.host"), virtualFS)

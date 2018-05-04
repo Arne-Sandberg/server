@@ -24,3 +24,7 @@ data/
 *.swp
 
 grpc-services/
+
+testData/
+testTmp/
+test.db

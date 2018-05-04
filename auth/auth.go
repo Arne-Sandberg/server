@@ -26,12 +26,12 @@ var (
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
-func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider) {
+func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider, sessionExpiry int) {
 	cProvider = credentialsProvider
 	sProvider = sessionProvider
 
 	done = make(chan struct{})
-	go cleanupExpiredSessionsRoutine(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))
+	go cleanupExpiredSessionsRoutine(time.Hour * time.Duration(sessionExpiry))
 }
 
 func Close() {
