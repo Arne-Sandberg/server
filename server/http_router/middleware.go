@@ -1,4 +1,4 @@
-package httpRouter
+package http_router
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
-	apiModels "github.com/freecloudio/freecloud/models/api"
 
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
@@ -92,26 +91,21 @@ func JSONEncoder(c *macaron.Context) {
 		return
 	}
 
-	switch res := resp.(type) {
-	case apiModels.Error:
-		if res.Code != 0 {
-			c.JSON(res.Code, res)
-			return
-		}
-		c.JSON(http.StatusInternalServerError, res)
-		return
-	case error:
+	if resp.(type) == error {
 		c.JSON(http.StatusInternalServerError, struct {
 			Message string `json:"message"`
 		}{
 			res.Error(),
 		})
 		return
-	default:
+	} else {}
 		c.JSON(http.StatusOK, res)
 		return
 	}
 
+	if code, ok := c.Data["responseCode"]; ok && code.(type) == int {
+		c.WriteHeader(code)
+	}
 }
 
 // ResolvePath resolves the * parameter of a url and creates a user independent path of it

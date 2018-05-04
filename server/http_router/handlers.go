@@ -1,4 +1,4 @@
-package httpRouter
+package http_router
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
-	apiModels "github.com/freecloudio/freecloud/models/api"
 	log "gopkg.in/clog.v1"
 	macaron "gopkg.in/macaron.v1"
 )
@@ -33,7 +32,8 @@ func (s ServerHandler) UploadHandler(c *macaron.Context) {
 	files, ok := multiform.File["files"]
 	if !ok {
 		log.Error(0, "No 'files' form field, aborting file upload")
-		c.Data["response"] = apiModels.Error{Code: http.StatusBadRequest, Message: "No 'files' form field, aborting file upload"}
+		c.Data["response"] = fmt.Errorf("No 'files' form field, aborting file upload")
+		c.Data["responseCode"] = http.StatusBadRequest
 		return
 	}
 	for i := range files {
@@ -59,19 +59,19 @@ func (s ServerHandler) UploadHandler(c *macaron.Context) {
 		// Copy the uploaded file to the destination file
 		if _, err := io.Copy(dst, file); err != nil {
 			log.Error(0, "Could not copy the file: %v", err)
-			c.WriteHeader(http.StatusInternalServerError)
+			c.Data["response"] = fmt.Errorf("Could not copy the file: %v", err)
 			return
 		}
 
 		err = s.filesystem.FinishNewFile(user, filePath)
 		if err != nil {
 			log.Error(0, "Could not finish new file: %v", err)
-			c.WriteHeader(http.StatusInternalServerError)
+			c.Data["response"] = fmt.Errorf("Could not finish new file: %v", err)
 			return
 		}
 	}
 
-	c.WriteHeader(http.StatusCreated)
+	c.Data["responseCode"] = http.StatusCreated
 }
 
 func (s ServerHandler) DownloadHandler(c *macaron.Context) {
