@@ -74,7 +74,7 @@ func main() {
 
 	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
 
-	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.port"), config.GetString("net.host"), virtualFS, database)
+	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.port"), config.GetString("net.host"), virtualFS)
 
 	code := <-exitChan
 

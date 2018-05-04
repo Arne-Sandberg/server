@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/fs"
+	"gopkg.in/macaron.v1"
 	log "gopkg.in/clog.v1"
-	macaron "gopkg.in/macaron.v1"
 )
 
 type ServerHandler struct {
@@ -21,12 +20,12 @@ var (
 )
 
 // Start starts the router with the given settings
-func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvider auth.CredentialsProvider) {
+func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem) {
 	if config.GetBool("http.ssl") {
 		log.Warn("SSL is not implemented yet, falling back to HTTP")
 	}
 	log.Info("Starting router at http://%s:%d", hostname, port)
-	s = ServerHandler{filesystem: filesystem}
+	s = ServerHandler{filesystem: virtualFS}
 
 	m := macaron.New()
 	m.Use(Logging())
@@ -41,7 +40,7 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem, credProvi
 
 	httpServer = http.Server{Addr: fmt.Sprintf("%s:%d", hostname, port), Handler: m}
 
-	// Start server in a goroutine so the method exits and all interrupts can be handled correclty
+	// Start server in a goroutine so the method exits and all interrupts can be handled correctly
 	go func() {
 		err := httpServer.ListenAndServe()
 		if err != nil {

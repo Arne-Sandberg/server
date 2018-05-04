@@ -11,6 +11,7 @@ import (
 
 	log "gopkg.in/clog.v1"
 	"gopkg.in/macaron.v1"
+	"github.com/freecloudio/freecloud/auth"
 )
 
 // Logging is a middleware logging ever request with URL, IP, duration and status
@@ -75,6 +76,32 @@ func OnlyAnonymous(c *macaron.Context) {
 		return
 	}
 	c.WriteHeader(http.StatusForbidden)
+}
+
+func validateSessionAndFillUserData(token string, c *macaron.Context) {
+	session, err := models.ParseSessionTokenString(token)
+	// This probably also means the session is invalid, so redirect time it is!
+	if err != nil {
+		log.Error(0, "Could not parse session token: %v", err)
+		c.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	valid := auth.ValidateSession(session)
+	if !valid {
+		log.Warn("Invalid session")
+		c.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// If the session is valid, fill the context's user data
+	user, err := auth.GetUserByID(session.UserID)
+	if err != nil {
+		log.Warn("Filling user data in middleware failed: %v", err)
+		c.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	c.Data["user"] = user
+	c.Data["session"] = session
 }
 
 // JSONEncoder marshals the payload inside of c.Data["resposne"] as JSON and sends it to the client.

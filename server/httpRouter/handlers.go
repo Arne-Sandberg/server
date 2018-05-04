@@ -10,6 +10,7 @@ import (
 	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
 	macaron "gopkg.in/macaron.v1"
+	"strings"
 )
 
 const oneGigabyte = 1024 * 1024 * 1024 * 1024
@@ -83,4 +84,17 @@ func (s ServerHandler) DownloadHandler(c *macaron.Context) {
 		log.Error(0, "Could not resolve filepath for download: %v", err)
 	}
 	c.ServeFile(fullPath, filename)
+}
+
+func (s ServerHandler) NotFoundHandler(c *macaron.Context) {
+	if strings.Contains(c.Req.RequestURI, "api/v") {
+		c.JSON(http.StatusNotFound, struct {
+			Message string `json:"message"`
+		}{
+			"404: not found",
+		})
+		return
+	}
+
+	c.Redirect("/#/404")
 }

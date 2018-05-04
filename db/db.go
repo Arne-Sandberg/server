@@ -292,7 +292,7 @@ func (db *StormDB) GetFileInfo(userID uint32, path, fileName string) (fileInfo *
 	return
 }
 
-func (db *StormDB) GetFileInfoWithID(fileID int) (fileInfo *models.FileInfo, err error) {
+func (db *StormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
 	err = db.c.One("ID", fileID, fileInfo)
 	if err != nil {
