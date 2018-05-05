@@ -22,7 +22,7 @@ func Start(port int, hostname string, vfs *fs.VirtualFilesystem) {
 	grpcServer := grpc.NewServer()
 	models.RegisterAuthServiceServer(grpcServer, NewAuthService(vfs))
 	models.RegisterUserServiceServer(grpcServer, NewUserService())
-	models.RegisterFilesServiceServer(grpcServer, NewFilesService())
+	models.RegisterFilesServiceServer(grpcServer, NewFilesService(vfs))
 	models.RegisterSystemServiceServer(grpcServer, NewSystemService())
 
 	// Start server in a goroutine so the method exits and all interrupts can be handled correctly

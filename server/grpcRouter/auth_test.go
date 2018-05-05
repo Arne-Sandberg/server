@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"os"
 	"strconv"
 	"testing"
@@ -15,7 +14,7 @@ import (
 	"github.com/freecloudio/freecloud/fs"
 	"github.com/freecloudio/freecloud/models"
 	"google.golang.org/grpc"
-	clog "gopkg.in/clog.v1"
+	"gopkg.in/clog.v1"
 )
 
 func TestAuthService(t *testing.T) {
@@ -67,30 +66,15 @@ func TestAuthService(t *testing.T) {
 		return
 	}
 
-	if authResp.Meta.ResponseCode != http.StatusCreated || authResp.Token == "" {
-		t.Errorf("Signup response not correct: Got %d instead of %d: %s", authResp.Meta.ResponseCode, http.StatusCreated, authResp.Meta.ErrorMessage)
-		return
-	}
-
 	authResp, err = authClient.Login(context.Background(), &models.User{Email: email, Password: "secretPassw0rd"})
 	if err != nil {
 		t.Errorf("Failed login call: %v", err)
 		return
 	}
 
-	if authResp.Meta.ResponseCode != http.StatusOK || authResp.Token == "" {
-		t.Errorf("Login response not correct: Got %d instead of %d: %s", authResp.Meta.ResponseCode, http.StatusOK, authResp.Meta.ErrorMessage)
-		return
-	}
-
-	resp, err := authClient.Logout(context.Background(), &models.Authentication{Token: authResp.Token})
+	_, err = authClient.Logout(context.Background(), &models.Authentication{Token: authResp.Token})
 	if err != nil {
 		t.Errorf("Failed logout call: %v", err)
-		return
-	}
-
-	if resp.ResponseCode != http.StatusOK {
-		t.Errorf("Logout response not correct: Got %d instead of %d: %s", resp.ResponseCode, http.StatusOK, resp.ErrorMessage)
 		return
 	}
 

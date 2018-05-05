@@ -3,12 +3,13 @@ package grpcRouter
 import (
 	"context"
 
-	"github.com/freecloudio/freecloud/models"
-	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/codes"
-	"time"
 	"path/filepath"
+	"time"
+
 	"github.com/freecloudio/freecloud/fs"
+	"github.com/freecloudio/freecloud/models"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type FilesService struct {
@@ -34,13 +35,13 @@ func (srv *FilesService) ZipFiles(ctx context.Context, req *models.ZipRequest) (
 
 	fullZipPath, err := srv.filesystem.ZipFiles(user, req.FullPaths, outputFileName)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument,"Creating zip failed")
+		return nil, status.Error(codes.InvalidArgument, "Creating zip failed")
 	}
 
 	return &models.Path{Path: fullZipPath}, nil
 }
 
-func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathRequest) (*models.DirectoryContent, error) {
+func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathRequest) (*models.FileInfoResponse, error) {
 	user, _, err := authCheck(req.Auth.Token, false)
 	if err != nil {
 		return nil, err
@@ -48,9 +49,10 @@ func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathReques
 
 	fileInfo, content, err := srv.filesystem.ListFilesForUser(user, req.FullPath)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument,"Getting fileInfo for %v failed", req.FullPath)
+		return nil, status.Errorf(codes.InvalidArgument, "Getting fileInfo for %v failed", req.FullPath)
 	}
 
+	return &models.FileInfoResponse{FileInfo: fileInfo, Content: content}, nil
 }
 
 func (srv *FilesService) UpdateFileInfo(context.Context, *models.FileInfo) (*models.FileInfo, error) {
@@ -73,11 +75,11 @@ func (srv *FilesService) SearchForFile(context.Context, *models.SearchRequest) (
 	return nil, nil
 }
 
-func (srv *FilesService) GetStarredFiles(context.Context, *models.Authentication) (*models.DirectoryContent, error) {
+func (srv *FilesService) GetStarredFiles(context.Context, *models.Authentication) (*models.FileList, error) {
 	return nil, nil
 }
 
-func (srv *FilesService) GetSharedFiles(context.Context, *models.Authentication) (*models.DirectoryContent, error) {
+func (srv *FilesService) GetSharedFiles(context.Context, *models.Authentication) (*models.FileList, error) {
 	return nil, nil
 }
 
