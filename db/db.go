@@ -3,7 +3,6 @@ package db
 import (
 	"regexp"
 	"sort"
-	"time"
 
 	"github.com/asdine/storm/q"
 
@@ -11,9 +10,9 @@ import (
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/utils"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
-	"github.com/freecloudio/freecloud/utils"
 )
 
 type StormDB struct {
@@ -37,7 +36,7 @@ func (db *StormDB) CleanupExpiredSessions() {
 	var sessions []models.Session
 	db.c.All(&sessions)
 	for _, sess := range sessions {
-		if time.Now().UTC().After(sess.ExpiresAt) {
+		if sess.ExpiresAt.Seconds < utils.GetTimestampNow().Seconds {
 			err := db.c.DeleteStruct(&sess)
 			if err != nil {
 				log.Error(0, "Deleting expired session failed: %v", err)
@@ -180,12 +179,15 @@ func (db *StormDB) SessionIsValid(session *models.Session) bool {
 		log.Info("Could not get session for verification, assuming it is invalid: %v", err)
 		return false
 	}
+
 	if s.UserID != session.UserID {
 		log.Warn("Session token existed, but has different UserID: %d vs %d", s.UserID, session.UserID)
 		return false
 	}
-	log.Trace("Session expires at %v, now is %v", s.ExpiresAt, time.Now().UTC())
-	if time.Now().UTC().After(s.ExpiresAt) {
+
+	now := utils.GetTimestampNow()
+	log.Trace("Session expires at %v, now is %v", s.ExpiresAt.Seconds, now.Seconds)
+	if s.ExpiresAt.Seconds < now.Seconds {
 		log.Info("Session has expired")
 		return false
 	}

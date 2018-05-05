@@ -34,6 +34,6 @@ func GetSystemStats() *models.SystemStats {
 		GoVersion:     runtime.Version(),
 		NumGoroutines: uint32(runtime.NumGoroutine()),
 		NumSessions:   auth.TotalSessionCount(),
-		Uptime:        &duration.Duration{Seconds: int64(math.RoundToEven(uptime.Seconds()))},
+		Uptime:        &duration.Duration{Seconds: int64(math.Round(uptime.Seconds()))},
 	}
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 
-	log "gopkg.in/clog.v1"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	log "gopkg.in/clog.v1"
 )
 
 const SessionTokenLength = 32
@@ -82,7 +82,7 @@ func newUnverifiedSession(userID uint32) *models.Session {
 	sess := &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
-		ExpiresAt: time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry"))),
+		ExpiresAt: utils.GetTimestampFromTime(time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))),
 	}
 	err := sProvider.StoreSession(sess)
 	if err != nil {
@@ -90,7 +90,7 @@ func newUnverifiedSession(userID uint32) *models.Session {
 	}
 
 	updates := map[string]interface{}{
-		"lastSession": time.Now().UTC(),
+		"lastSession": utils.GetTimestampNow(),
 	}
 	_, err = UpdateUser(userID, updates)
 	if err != nil {

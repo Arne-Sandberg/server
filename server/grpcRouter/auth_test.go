@@ -1,21 +1,32 @@
 package grpcRouter
 
 import (
-	"testing"
 	"context"
-	"google.golang.org/grpc"
-	"github.com/freecloudio/freecloud/models"
+	"fmt"
 	"math/rand"
-	"strconv"
 	"net/http"
-	"github.com/freecloudio/freecloud/fs"
-	"github.com/freecloudio/freecloud/db"
-	"github.com/freecloudio/freecloud/auth"
-	"time"
 	"os"
+	"strconv"
+	"testing"
+	"time"
+
+	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/db"
+	"github.com/freecloudio/freecloud/fs"
+	"github.com/freecloudio/freecloud/models"
+	"google.golang.org/grpc"
+	clog "gopkg.in/clog.v1"
 )
 
 func TestAuthService(t *testing.T) {
+	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
+		Level: clog.TRACE,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not initialize logging: %v", err)
+		os.Exit(2)
+	}
+
 	dfs, err := fs.NewDiskFilesystem("testData", "testTmp", 100)
 	if err != nil {
 		t.Errorf("Failed to initialize diskfilesystem: %v", err)
@@ -50,7 +61,7 @@ func TestAuthService(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	email := "john.doe" + strconv.Itoa(rand.Int()) + "@testing.com"
 
-	authResp, err := authClient.Signup(context.Background(), &models.User{ FirstName: "Jon", LastName: "Doe", Email: email, Password: "secretPassw0rd" })
+	authResp, err := authClient.Signup(context.Background(), &models.User{FirstName: "Jon", LastName: "Doe", Email: email, Password: "secretPassw0rd"})
 	if err != nil {
 		t.Errorf("Failed signup call: %v", err)
 		return
@@ -61,7 +72,7 @@ func TestAuthService(t *testing.T) {
 		return
 	}
 
-	authResp, err = authClient.Login(context.Background(), &models.User{ Email: email, Password: "secretPassw0rd" })
+	authResp, err = authClient.Login(context.Background(), &models.User{Email: email, Password: "secretPassw0rd"})
 	if err != nil {
 		t.Errorf("Failed login call: %v", err)
 		return
@@ -72,7 +83,7 @@ func TestAuthService(t *testing.T) {
 		return
 	}
 
-	resp, err := authClient.Logout(context.Background(), &models.Authentication{ Token: authResp.Token })
+	resp, err := authClient.Logout(context.Background(), &models.Authentication{Token: authResp.Token})
 	if err != nil {
 		t.Errorf("Failed logout call: %v", err)
 		return

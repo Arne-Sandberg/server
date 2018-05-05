@@ -3,7 +3,8 @@ package models
 import (
 	"fmt"
 	"strconv"
-	"time"
+
+	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 const SessionTokenLength = 32
@@ -11,7 +12,7 @@ const SessionTokenLength = 32
 type Session struct {
 	UserID    uint32 `storm:"index"`
 	Token     string `storm:"id,unique"`
-	ExpiresAt time.Time
+	ExpiresAt *timestamp.Timestamp
 }
 
 func (s Session) GetTokenString() string {

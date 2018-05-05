@@ -2,10 +2,11 @@ package grpcRouter
 
 import (
 	"context"
-	"github.com/freecloudio/freecloud/models"
+
 	"github.com/freecloudio/freecloud/auth"
-	"github.com/freecloudio/freecloud/utils"
 	"github.com/freecloudio/freecloud/fs"
+	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/utils"
 	log "gopkg.in/clog.v1"
 )
 
@@ -14,7 +15,7 @@ type AuthService struct {
 }
 
 func NewAuthService(vfs *fs.VirtualFilesystem) *AuthService {
-	return &AuthService{ vfs }
+	return &AuthService{vfs}
 }
 
 func (srv *AuthService) Signup(ctx context.Context, user *models.User) (resp *models.AuthResponse, err error) {
@@ -23,9 +24,9 @@ func (srv *AuthService) Signup(ctx context.Context, user *models.User) (resp *mo
 	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(user)
 	if err == auth.ErrInvalidUserData {
-		return &models.AuthResponse{ Meta: utils.PbBadRequest("Invalid user data") }, nil
+		return &models.AuthResponse{Meta: utils.PbBadRequest("Invalid user data")}, nil
 	} else if err == auth.ErrUserAlreadyExists {
-		return &models.AuthResponse{ Meta: utils.PbBadRequest("User already exists") }, nil
+		return &models.AuthResponse{Meta: utils.PbBadRequest("User already exists")}, nil
 	} else if err != nil {
 		return
 	}
@@ -36,7 +37,7 @@ func (srv *AuthService) Signup(ctx context.Context, user *models.User) (resp *mo
 	}
 
 	resp = &models.AuthResponse{
-		Meta: utils.PbCreated(),
+		Meta:  utils.PbCreated(),
 		Token: session.GetTokenString(),
 	}
 	return
@@ -45,14 +46,14 @@ func (srv *AuthService) Signup(ctx context.Context, user *models.User) (resp *mo
 func (srv *AuthService) Login(ctx context.Context, user *models.User) (resp *models.AuthResponse, err error) {
 	session, err := auth.NewSession(user.Email, user.Password)
 	if err == auth.ErrInvalidCredentials {
-		return &models.AuthResponse{ Meta: utils.PbUnauthorized("Wrong credentials or account does not exist") }, nil
+		return &models.AuthResponse{Meta: utils.PbUnauthorized("Wrong credentials or account does not exist")}, nil
 	} else if err != nil {
 		// TODO: Catch the "not found" error and also return StatusUnauthorized here
-		return &models.AuthResponse{ Meta: utils.PbUnauthorized("Failed to get user %s: %v", user.Email, err) }, nil
+		return &models.AuthResponse{Meta: utils.PbUnauthorizedF("Failed to get user %s: %v", user.Email, err)}, nil
 	}
 
 	resp = &models.AuthResponse{
-		Meta: utils.PbOK(),
+		Meta:  utils.PbOK(),
 		Token: session.GetTokenString(),
 	}
 	return
@@ -89,7 +90,7 @@ func validateTokenAndFillUserData(token string) (user *models.User, session *mod
 
 	user, err = auth.GetUserByID(session.UserID)
 	if err != nil {
-		log.Error(0,"Filling user data in middleware failed: %v", err)
+		log.Error(0, "Filling user data in middleware failed: %v", err)
 		resp = utils.PbInternalServerError("Filling user data in middleware failed")
 		return
 	}
