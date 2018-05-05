@@ -28,7 +28,7 @@ func (m *EmptyMessage) Reset()         { *m = EmptyMessage{} }
 func (m *EmptyMessage) String() string { return proto.CompactTextString(m) }
 func (*EmptyMessage) ProtoMessage()    {}
 func (*EmptyMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_32c191c854d94100, []int{0}
+	return fileDescriptor_general_878096680ff276fa, []int{0}
 }
 func (m *EmptyMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EmptyMessage.Unmarshal(m, b)
@@ -59,7 +59,7 @@ func (m *Authentication) Reset()         { *m = Authentication{} }
 func (m *Authentication) String() string { return proto.CompactTextString(m) }
 func (*Authentication) ProtoMessage()    {}
 func (*Authentication) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_32c191c854d94100, []int{1}
+	return fileDescriptor_general_878096680ff276fa, []int{1}
 }
 func (m *Authentication) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Authentication.Unmarshal(m, b)
@@ -86,71 +86,20 @@ func (m *Authentication) GetToken() string {
 	return ""
 }
 
-type DefaultResponse struct {
-	ResponseCode         uint32   `protobuf:"varint,1,opt,name=responseCode" json:"responseCode,omitempty"`
-	ErrorMessage         string   `protobuf:"bytes,2,opt,name=errorMessage" json:"errorMessage,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *DefaultResponse) Reset()         { *m = DefaultResponse{} }
-func (m *DefaultResponse) String() string { return proto.CompactTextString(m) }
-func (*DefaultResponse) ProtoMessage()    {}
-func (*DefaultResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_32c191c854d94100, []int{2}
-}
-func (m *DefaultResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DefaultResponse.Unmarshal(m, b)
-}
-func (m *DefaultResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DefaultResponse.Marshal(b, m, deterministic)
-}
-func (dst *DefaultResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DefaultResponse.Merge(dst, src)
-}
-func (m *DefaultResponse) XXX_Size() int {
-	return xxx_messageInfo_DefaultResponse.Size(m)
-}
-func (m *DefaultResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_DefaultResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DefaultResponse proto.InternalMessageInfo
-
-func (m *DefaultResponse) GetResponseCode() uint32 {
-	if m != nil {
-		return m.ResponseCode
-	}
-	return 0
-}
-
-func (m *DefaultResponse) GetErrorMessage() string {
-	if m != nil {
-		return m.ErrorMessage
-	}
-	return ""
-}
-
 func init() {
 	proto.RegisterType((*EmptyMessage)(nil), "general.EmptyMessage")
 	proto.RegisterType((*Authentication)(nil), "general.Authentication")
-	proto.RegisterType((*DefaultResponse)(nil), "general.DefaultResponse")
 }
 
-func init() { proto.RegisterFile("general.proto", fileDescriptor_general_32c191c854d94100) }
+func init() { proto.RegisterFile("general.proto", fileDescriptor_general_878096680ff276fa) }
 
-var fileDescriptor_general_32c191c854d94100 = []byte{
-	// 161 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_general_878096680ff276fa = []byte{
+	// 110 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0x4f, 0xcd, 0x4b,
 	0x2d, 0x4a, 0xcc, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0x95, 0xf8, 0xb8,
 	0x78, 0x5c, 0x73, 0x0b, 0x4a, 0x2a, 0x7d, 0x53, 0x8b, 0x8b, 0x13, 0xd3, 0x53, 0x95, 0xd4, 0xb8,
 	0xf8, 0x1c, 0x4b, 0x4b, 0x32, 0x52, 0xf3, 0x4a, 0x32, 0x93, 0x13, 0x4b, 0x32, 0xf3, 0xf3, 0x84,
 	0x44, 0xb8, 0x58, 0x4b, 0xf2, 0xb3, 0x53, 0xf3, 0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x20,
-	0x1c, 0xa5, 0x48, 0x2e, 0x7e, 0x97, 0xd4, 0xb4, 0xc4, 0xd2, 0x9c, 0x92, 0xa0, 0xd4, 0xe2, 0x82,
-	0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x25, 0x2e, 0x9e, 0x22, 0x28, 0xdb, 0x39, 0x3f, 0x25, 0x15, 0xac,
-	0x9e, 0x37, 0x08, 0x45, 0x0c, 0xa4, 0x26, 0xb5, 0xa8, 0x28, 0xbf, 0x08, 0x6a, 0x9d, 0x04, 0x13,
-	0xd8, 0x4c, 0x14, 0x31, 0x27, 0x8e, 0x28, 0xb6, 0xdc, 0xfc, 0x94, 0xd4, 0x9c, 0xe2, 0x24, 0x36,
-	0xb0, 0x63, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x9f, 0x5a, 0x04, 0xbe, 0xbd, 0x00, 0x00,
-	0x00,
+	0x1c, 0x27, 0x8e, 0x28, 0xb6, 0xdc, 0xfc, 0x94, 0xd4, 0x9c, 0xe2, 0x24, 0x36, 0xb0, 0x89, 0xc6,
+	0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x41, 0x25, 0x2d, 0xf2, 0x62, 0x00, 0x00, 0x00,
 }

@@ -36,7 +36,7 @@ func (m *ZipRequest) Reset()         { *m = ZipRequest{} }
 func (m *ZipRequest) String() string { return proto.CompactTextString(m) }
 func (*ZipRequest) ProtoMessage()    {}
 func (*ZipRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{0}
+	return fileDescriptor_files_80c31985d8441d2c, []int{0}
 }
 func (m *ZipRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ZipRequest.Unmarshal(m, b)
@@ -82,7 +82,7 @@ func (m *PathRequest) Reset()         { *m = PathRequest{} }
 func (m *PathRequest) String() string { return proto.CompactTextString(m) }
 func (*PathRequest) ProtoMessage()    {}
 func (*PathRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{1}
+	return fileDescriptor_files_80c31985d8441d2c, []int{1}
 }
 func (m *PathRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathRequest.Unmarshal(m, b)
@@ -128,7 +128,7 @@ func (m *SearchRequest) Reset()         { *m = SearchRequest{} }
 func (m *SearchRequest) String() string { return proto.CompactTextString(m) }
 func (*SearchRequest) ProtoMessage()    {}
 func (*SearchRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{2}
+	return fileDescriptor_files_80c31985d8441d2c, []int{2}
 }
 func (m *SearchRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchRequest.Unmarshal(m, b)
@@ -175,7 +175,7 @@ func (m *ShareRequest) Reset()         { *m = ShareRequest{} }
 func (m *ShareRequest) String() string { return proto.CompactTextString(m) }
 func (*ShareRequest) ProtoMessage()    {}
 func (*ShareRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{3}
+	return fileDescriptor_files_80c31985d8441d2c, []int{3}
 }
 func (m *ShareRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ShareRequest.Unmarshal(m, b)
@@ -216,52 +216,6 @@ func (m *ShareRequest) GetUserIDs() []uint32 {
 	return nil
 }
 
-type DirectoryContentResponse struct {
-	Meta                 *DefaultResponse  `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	Content              *DirectoryContent `protobuf:"bytes,2,opt,name=content" json:"content,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
-}
-
-func (m *DirectoryContentResponse) Reset()         { *m = DirectoryContentResponse{} }
-func (m *DirectoryContentResponse) String() string { return proto.CompactTextString(m) }
-func (*DirectoryContentResponse) ProtoMessage()    {}
-func (*DirectoryContentResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{4}
-}
-func (m *DirectoryContentResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DirectoryContentResponse.Unmarshal(m, b)
-}
-func (m *DirectoryContentResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DirectoryContentResponse.Marshal(b, m, deterministic)
-}
-func (dst *DirectoryContentResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DirectoryContentResponse.Merge(dst, src)
-}
-func (m *DirectoryContentResponse) XXX_Size() int {
-	return xxx_messageInfo_DirectoryContentResponse.Size(m)
-}
-func (m *DirectoryContentResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_DirectoryContentResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_DirectoryContentResponse proto.InternalMessageInfo
-
-func (m *DirectoryContentResponse) GetMeta() *DefaultResponse {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *DirectoryContentResponse) GetContent() *DirectoryContent {
-	if m != nil {
-		return m.Content
-	}
-	return nil
-}
-
 type DirectoryContent struct {
 	FileInfos            []*FileInfo `protobuf:"bytes,1,rep,name=fileInfos" json:"fileInfos,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
@@ -273,7 +227,7 @@ func (m *DirectoryContent) Reset()         { *m = DirectoryContent{} }
 func (m *DirectoryContent) String() string { return proto.CompactTextString(m) }
 func (*DirectoryContent) ProtoMessage()    {}
 func (*DirectoryContent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{5}
+	return fileDescriptor_files_80c31985d8441d2c, []int{4}
 }
 func (m *DirectoryContent) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DirectoryContent.Unmarshal(m, b)
@@ -300,52 +254,6 @@ func (m *DirectoryContent) GetFileInfos() []*FileInfo {
 	return nil
 }
 
-type FileInfoResponse struct {
-	Meta                 *DefaultResponse `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	FileInfo             *FileInfo        `protobuf:"bytes,2,opt,name=fileInfo" json:"fileInfo,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
-}
-
-func (m *FileInfoResponse) Reset()         { *m = FileInfoResponse{} }
-func (m *FileInfoResponse) String() string { return proto.CompactTextString(m) }
-func (*FileInfoResponse) ProtoMessage()    {}
-func (*FileInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{6}
-}
-func (m *FileInfoResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_FileInfoResponse.Unmarshal(m, b)
-}
-func (m *FileInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_FileInfoResponse.Marshal(b, m, deterministic)
-}
-func (dst *FileInfoResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileInfoResponse.Merge(dst, src)
-}
-func (m *FileInfoResponse) XXX_Size() int {
-	return xxx_messageInfo_FileInfoResponse.Size(m)
-}
-func (m *FileInfoResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_FileInfoResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_FileInfoResponse proto.InternalMessageInfo
-
-func (m *FileInfoResponse) GetMeta() *DefaultResponse {
-	if m != nil {
-		return m.Meta
-	}
-	return nil
-}
-
-func (m *FileInfoResponse) GetFileInfo() *FileInfo {
-	if m != nil {
-		return m.FileInfo
-	}
-	return nil
-}
-
 type FileInfo struct {
 	// @inject_tag: storm:"id,increment"
 	ID                   uint32               `protobuf:"varint,1,opt,name=ID" json:"ID,omitempty" storm:"id,increment"`
@@ -367,7 +275,7 @@ func (m *FileInfo) Reset()         { *m = FileInfo{} }
 func (m *FileInfo) String() string { return proto.CompactTextString(m) }
 func (*FileInfo) ProtoMessage()    {}
 func (*FileInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_6671c545f833f0b6, []int{7}
+	return fileDescriptor_files_80c31985d8441d2c, []int{5}
 }
 func (m *FileInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfo.Unmarshal(m, b)
@@ -462,9 +370,7 @@ func init() {
 	proto.RegisterType((*PathRequest)(nil), "files.PathRequest")
 	proto.RegisterType((*SearchRequest)(nil), "files.SearchRequest")
 	proto.RegisterType((*ShareRequest)(nil), "files.ShareRequest")
-	proto.RegisterType((*DirectoryContentResponse)(nil), "files.DirectoryContentResponse")
 	proto.RegisterType((*DirectoryContent)(nil), "files.DirectoryContent")
-	proto.RegisterType((*FileInfoResponse)(nil), "files.FileInfoResponse")
 	proto.RegisterType((*FileInfo)(nil), "files.FileInfo")
 }
 
@@ -479,17 +385,17 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for FilesService service
 
 type FilesServiceClient interface {
-	ZipFiles(ctx context.Context, in *ZipRequest, opts ...grpc.CallOption) (*DefaultResponse, error)
-	GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*DirectoryContentResponse, error)
-	UpdateFileInfo(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfoResponse, error)
-	CreateFile(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfoResponse, error)
-	DeleteFile(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*DefaultResponse, error)
-	ShareFile(ctx context.Context, in *ShareRequest, opts ...grpc.CallOption) (*DefaultResponse, error)
-	SearchForFile(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*FileInfoResponse, error)
-	GetStarredFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContentResponse, error)
-	GetSharedFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContentResponse, error)
-	RescanOwnFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DefaultResponse, error)
-	RescanUserFilesByID(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DefaultResponse, error)
+	ZipFiles(ctx context.Context, in *ZipRequest, opts ...grpc.CallOption) (*EmptyMessage, error)
+	GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*DirectoryContent, error)
+	UpdateFileInfo(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfo, error)
+	CreateFile(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfo, error)
+	DeleteFile(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*EmptyMessage, error)
+	ShareFile(ctx context.Context, in *ShareRequest, opts ...grpc.CallOption) (*EmptyMessage, error)
+	SearchForFile(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*FileInfo, error)
+	GetStarredFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContent, error)
+	GetSharedFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContent, error)
+	RescanOwnFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error)
+	RescanUserFilesByID(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error)
 	GetUpdateNotifications(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (FilesService_GetUpdateNotificationsClient, error)
 }
 
@@ -501,8 +407,8 @@ func NewFilesServiceClient(cc *grpc.ClientConn) FilesServiceClient {
 	return &filesServiceClient{cc}
 }
 
-func (c *filesServiceClient) ZipFiles(ctx context.Context, in *ZipRequest, opts ...grpc.CallOption) (*DefaultResponse, error) {
-	out := new(DefaultResponse)
+func (c *filesServiceClient) ZipFiles(ctx context.Context, in *ZipRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
+	out := new(EmptyMessage)
 	err := grpc.Invoke(ctx, "/files.FilesService/ZipFiles", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -510,8 +416,8 @@ func (c *filesServiceClient) ZipFiles(ctx context.Context, in *ZipRequest, opts 
 	return out, nil
 }
 
-func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*DirectoryContentResponse, error) {
-	out := new(DirectoryContentResponse)
+func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*DirectoryContent, error) {
+	out := new(DirectoryContent)
 	err := grpc.Invoke(ctx, "/files.FilesService/GetFileInfo", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -519,8 +425,8 @@ func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, o
 	return out, nil
 }
 
-func (c *filesServiceClient) UpdateFileInfo(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfoResponse, error) {
-	out := new(FileInfoResponse)
+func (c *filesServiceClient) UpdateFileInfo(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfo, error) {
+	out := new(FileInfo)
 	err := grpc.Invoke(ctx, "/files.FilesService/UpdateFileInfo", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -528,8 +434,8 @@ func (c *filesServiceClient) UpdateFileInfo(ctx context.Context, in *FileInfo, o
 	return out, nil
 }
 
-func (c *filesServiceClient) CreateFile(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfoResponse, error) {
-	out := new(FileInfoResponse)
+func (c *filesServiceClient) CreateFile(ctx context.Context, in *FileInfo, opts ...grpc.CallOption) (*FileInfo, error) {
+	out := new(FileInfo)
 	err := grpc.Invoke(ctx, "/files.FilesService/CreateFile", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -537,8 +443,8 @@ func (c *filesServiceClient) CreateFile(ctx context.Context, in *FileInfo, opts 
 	return out, nil
 }
 
-func (c *filesServiceClient) DeleteFile(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*DefaultResponse, error) {
-	out := new(DefaultResponse)
+func (c *filesServiceClient) DeleteFile(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
+	out := new(EmptyMessage)
 	err := grpc.Invoke(ctx, "/files.FilesService/DeleteFile", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -546,8 +452,8 @@ func (c *filesServiceClient) DeleteFile(ctx context.Context, in *PathRequest, op
 	return out, nil
 }
 
-func (c *filesServiceClient) ShareFile(ctx context.Context, in *ShareRequest, opts ...grpc.CallOption) (*DefaultResponse, error) {
-	out := new(DefaultResponse)
+func (c *filesServiceClient) ShareFile(ctx context.Context, in *ShareRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
+	out := new(EmptyMessage)
 	err := grpc.Invoke(ctx, "/files.FilesService/ShareFile", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -555,8 +461,8 @@ func (c *filesServiceClient) ShareFile(ctx context.Context, in *ShareRequest, op
 	return out, nil
 }
 
-func (c *filesServiceClient) SearchForFile(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*FileInfoResponse, error) {
-	out := new(FileInfoResponse)
+func (c *filesServiceClient) SearchForFile(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*FileInfo, error) {
+	out := new(FileInfo)
 	err := grpc.Invoke(ctx, "/files.FilesService/SearchForFile", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -564,8 +470,8 @@ func (c *filesServiceClient) SearchForFile(ctx context.Context, in *SearchReques
 	return out, nil
 }
 
-func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContentResponse, error) {
-	out := new(DirectoryContentResponse)
+func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContent, error) {
+	out := new(DirectoryContent)
 	err := grpc.Invoke(ctx, "/files.FilesService/GetStarredFiles", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -573,8 +479,8 @@ func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentica
 	return out, nil
 }
 
-func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContentResponse, error) {
-	out := new(DirectoryContentResponse)
+func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DirectoryContent, error) {
+	out := new(DirectoryContent)
 	err := grpc.Invoke(ctx, "/files.FilesService/GetSharedFiles", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -582,8 +488,8 @@ func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authenticat
 	return out, nil
 }
 
-func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DefaultResponse, error) {
-	out := new(DefaultResponse)
+func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error) {
+	out := new(EmptyMessage)
 	err := grpc.Invoke(ctx, "/files.FilesService/RescanOwnFiles", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -591,8 +497,8 @@ func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authenticat
 	return out, nil
 }
 
-func (c *filesServiceClient) RescanUserFilesByID(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*DefaultResponse, error) {
-	out := new(DefaultResponse)
+func (c *filesServiceClient) RescanUserFilesByID(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error) {
+	out := new(EmptyMessage)
 	err := grpc.Invoke(ctx, "/files.FilesService/RescanUserFilesByID", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -635,17 +541,17 @@ func (x *filesServiceGetUpdateNotificationsClient) Recv() (*EmptyMessage, error)
 // Server API for FilesService service
 
 type FilesServiceServer interface {
-	ZipFiles(context.Context, *ZipRequest) (*DefaultResponse, error)
-	GetFileInfo(context.Context, *PathRequest) (*DirectoryContentResponse, error)
-	UpdateFileInfo(context.Context, *FileInfo) (*FileInfoResponse, error)
-	CreateFile(context.Context, *FileInfo) (*FileInfoResponse, error)
-	DeleteFile(context.Context, *PathRequest) (*DefaultResponse, error)
-	ShareFile(context.Context, *ShareRequest) (*DefaultResponse, error)
-	SearchForFile(context.Context, *SearchRequest) (*FileInfoResponse, error)
-	GetStarredFiles(context.Context, *Authentication) (*DirectoryContentResponse, error)
-	GetSharedFiles(context.Context, *Authentication) (*DirectoryContentResponse, error)
-	RescanOwnFiles(context.Context, *Authentication) (*DefaultResponse, error)
-	RescanUserFilesByID(context.Context, *Authentication) (*DefaultResponse, error)
+	ZipFiles(context.Context, *ZipRequest) (*EmptyMessage, error)
+	GetFileInfo(context.Context, *PathRequest) (*DirectoryContent, error)
+	UpdateFileInfo(context.Context, *FileInfo) (*FileInfo, error)
+	CreateFile(context.Context, *FileInfo) (*FileInfo, error)
+	DeleteFile(context.Context, *PathRequest) (*EmptyMessage, error)
+	ShareFile(context.Context, *ShareRequest) (*EmptyMessage, error)
+	SearchForFile(context.Context, *SearchRequest) (*FileInfo, error)
+	GetStarredFiles(context.Context, *Authentication) (*DirectoryContent, error)
+	GetSharedFiles(context.Context, *Authentication) (*DirectoryContent, error)
+	RescanOwnFiles(context.Context, *Authentication) (*EmptyMessage, error)
+	RescanUserFilesByID(context.Context, *Authentication) (*EmptyMessage, error)
 	GetUpdateNotifications(*Authentication, FilesService_GetUpdateNotificationsServer) error
 }
 
@@ -931,52 +837,47 @@ var _FilesService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "files.proto",
 }
 
-func init() { proto.RegisterFile("files.proto", fileDescriptor_files_6671c545f833f0b6) }
+func init() { proto.RegisterFile("files.proto", fileDescriptor_files_80c31985d8441d2c) }
 
-var fileDescriptor_files_6671c545f833f0b6 = []byte{
-	// 690 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xdd, 0x4e, 0xdb, 0x4a,
-	0x10, 0x26, 0x3f, 0x84, 0x64, 0x42, 0x02, 0x67, 0xe1, 0x1c, 0x56, 0xd6, 0x91, 0xb0, 0x7c, 0x65,
-	0x89, 0x73, 0x42, 0x4b, 0x6f, 0x5a, 0x29, 0x17, 0x05, 0x0c, 0x28, 0x15, 0xb4, 0xc8, 0x81, 0x56,
-	0xe2, 0x6e, 0x49, 0x26, 0x89, 0x25, 0xff, 0xb1, 0xbb, 0x2e, 0x4a, 0xfb, 0x1e, 0x7d, 0xa1, 0xbe,
-	0x58, 0xb5, 0xeb, 0x9f, 0x44, 0x50, 0xd2, 0x36, 0xe2, 0x6e, 0x66, 0x3c, 0xdf, 0x37, 0xe3, 0xf9,
-	0x76, 0x06, 0x9a, 0x23, 0xcf, 0x47, 0xd1, 0x89, 0x79, 0x24, 0x23, 0xb2, 0xaa, 0x1d, 0xa3, 0x35,
-	0xc6, 0x10, 0x39, 0xf3, 0xd3, 0xa8, 0xb1, 0x3b, 0x8e, 0xa2, 0xb1, 0x8f, 0xfb, 0xda, 0xbb, 0x4d,
-	0x46, 0xfb, 0xd2, 0x0b, 0x50, 0x48, 0x16, 0xc4, 0x69, 0x82, 0xf5, 0x09, 0xe0, 0xc6, 0x8b, 0x5d,
-	0xbc, 0x4b, 0x50, 0x48, 0xb2, 0x07, 0x55, 0x96, 0xc8, 0x09, 0x2d, 0x99, 0x25, 0xbb, 0x79, 0xb0,
-	0xd3, 0xc9, 0xc9, 0x0e, 0x13, 0x39, 0xc1, 0x50, 0x7a, 0x03, 0x26, 0xbd, 0x28, 0x74, 0x75, 0x12,
-	0xf9, 0x17, 0x1a, 0xa3, 0xc4, 0xf7, 0x2f, 0x99, 0x9c, 0x08, 0x5a, 0x36, 0x2b, 0x76, 0xc3, 0x9d,
-	0x05, 0xac, 0x8f, 0xd0, 0x54, 0xc6, 0x52, 0xcc, 0x06, 0xd4, 0x73, 0x22, 0x5a, 0x36, 0x4b, 0x76,
-	0xc3, 0x2d, 0x7c, 0xeb, 0x12, 0x5a, 0x7d, 0x64, 0x7c, 0xb0, 0x1c, 0x33, 0x81, 0xaa, 0x44, 0x1e,
-	0x64, 0xac, 0xda, 0xb6, 0xee, 0x60, 0xbd, 0x3f, 0x61, 0x1c, 0x9f, 0xbb, 0x55, 0x42, 0x61, 0x2d,
-	0x11, 0xc8, 0x7b, 0x8e, 0xa0, 0x15, 0xb3, 0x62, 0xb7, 0xdc, 0xdc, 0xb5, 0xbe, 0x02, 0x75, 0x3c,
-	0x8e, 0x03, 0x19, 0xf1, 0xe9, 0x71, 0x14, 0x4a, 0x0c, 0xa5, 0x8b, 0x22, 0x8e, 0x42, 0x81, 0xe4,
-	0x3f, 0xa8, 0x06, 0x28, 0x59, 0x56, 0x9e, 0x16, 0xe5, 0x1d, 0x1c, 0xb1, 0xc4, 0x2f, 0xf2, 0x5c,
-	0x9d, 0x45, 0x5e, 0xc2, 0xda, 0x20, 0x25, 0xd0, 0xe5, 0x55, 0xbf, 0xe9, 0xab, 0x78, 0xc4, 0x9f,
-	0xe7, 0x59, 0x87, 0xb0, 0xf9, 0xf0, 0x23, 0xf9, 0x1f, 0x1a, 0x0a, 0xd6, 0x0b, 0x47, 0x91, 0xa0,
-	0x25, 0xb3, 0x62, 0x37, 0x0f, 0x36, 0x32, 0xa2, 0xd3, 0x2c, 0xee, 0xce, 0x32, 0xac, 0x00, 0x36,
-	0x8b, 0xf0, 0x72, 0x7d, 0xef, 0x41, 0x3d, 0xa7, 0xcb, 0x1a, 0x7f, 0x54, 0xaf, 0x48, 0xb0, 0xbe,
-	0x95, 0xa1, 0x9e, 0x87, 0x49, 0x1b, 0xca, 0x3d, 0x47, 0x57, 0x69, 0xb9, 0xe5, 0x9e, 0xa3, 0x24,
-	0x8d, 0x67, 0xd3, 0xd7, 0xb6, 0x8a, 0x85, 0x2c, 0x40, 0x5a, 0x49, 0x63, 0xca, 0x26, 0xdb, 0xb0,
-	0xea, 0x09, 0xc7, 0xe3, 0xb4, 0x6a, 0x96, 0xec, 0xba, 0x9b, 0x3a, 0x2a, 0x53, 0x78, 0x5f, 0x90,
-	0xae, 0x9a, 0x25, 0xbb, 0xe2, 0x6a, 0x5b, 0xe9, 0x16, 0xdd, 0x87, 0x4a, 0x29, 0x5a, 0xd3, 0x65,
-	0x72, 0x57, 0xa9, 0x1d, 0x78, 0x01, 0x5e, 0x4d, 0x63, 0xa4, 0x6b, 0xa9, 0xda, 0xb9, 0xaf, 0x50,
-	0x42, 0x32, 0xce, 0x71, 0x48, 0xeb, 0xba, 0x42, 0xee, 0x2a, 0x54, 0xcc, 0x38, 0x86, 0xb2, 0xe7,
-	0xd0, 0x86, 0x26, 0x2c, 0x7c, 0xd2, 0x85, 0xa6, 0xcf, 0x84, 0x3c, 0x9e, 0xb0, 0x70, 0x8c, 0x43,
-	0x0a, 0x7a, 0x14, 0x46, 0x27, 0x5d, 0xdb, 0x4e, 0xbe, 0xb6, 0x9d, 0xab, 0x7c, 0x6d, 0xdd, 0xf9,
-	0xf4, 0x83, 0xef, 0x35, 0x58, 0x57, 0x83, 0x11, 0x7d, 0xe4, 0x9f, 0xbd, 0x01, 0x92, 0x37, 0x50,
-	0xbf, 0xf1, 0x62, 0x1d, 0x22, 0x7f, 0x65, 0x03, 0x9d, 0xed, 0xb7, 0xf1, 0xa4, 0x2a, 0xd6, 0x0a,
-	0x71, 0xa0, 0x79, 0x86, 0xb2, 0x18, 0x33, 0xc9, 0xd0, 0x73, 0x4b, 0x6c, 0xec, 0x3e, 0xf5, 0xb6,
-	0x66, 0x2c, 0x5d, 0x68, 0x5f, 0xc7, 0x43, 0x26, 0xb1, 0x20, 0x7a, 0xa8, 0xab, 0xb1, 0xf3, 0x50,
-	0xe8, 0x19, 0xfa, 0x35, 0xc0, 0x31, 0xc7, 0x0c, 0xfd, 0x47, 0xc8, 0x2e, 0x80, 0x83, 0x3e, 0x66,
-	0xc8, 0x9f, 0x35, 0xbf, 0xe8, 0xdf, 0xbb, 0xd0, 0xd0, 0x27, 0x40, 0x83, 0xb7, 0x32, 0xf0, 0xfc,
-	0x51, 0x58, 0x88, 0x7e, 0x9b, 0x9f, 0xa4, 0xd3, 0x88, 0x6b, 0x86, 0xed, 0x9c, 0x61, 0xfe, 0x50,
-	0x2d, 0xea, 0xfe, 0x02, 0x36, 0xce, 0x50, 0xf6, 0xd3, 0xf7, 0x92, 0xaa, 0xf7, 0xd4, 0xdd, 0xf9,
-	0x1d, 0x11, 0xce, 0xa1, 0xad, 0xe8, 0x54, 0xff, 0xcf, 0xc0, 0x76, 0x02, 0x6d, 0x17, 0xc5, 0x80,
-	0x85, 0x1f, 0xee, 0xc3, 0x5f, 0xb0, 0x2d, 0x9a, 0xd2, 0x3b, 0xd8, 0x4a, 0x69, 0xae, 0x05, 0xea,
-	0x31, 0x89, 0xa3, 0x69, 0xcf, 0x59, 0x8e, 0xeb, 0x1c, 0xfe, 0x39, 0x43, 0x99, 0x3e, 0xb4, 0xf7,
-	0x91, 0xf4, 0x46, 0x19, 0x68, 0x41, 0x6b, 0x7f, 0x17, 0x1f, 0x4e, 0x82, 0x58, 0x4e, 0x2f, 0x50,
-	0x08, 0x36, 0x46, 0x6b, 0xe5, 0x45, 0xe9, 0xa8, 0x7e, 0x53, 0x0b, 0xa2, 0x21, 0xfa, 0xe2, 0xb6,
-	0xa6, 0x17, 0xee, 0xd5, 0x8f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x28, 0x7e, 0x71, 0x4d, 0x5a, 0x07,
-	0x00, 0x00,
+var fileDescriptor_files_80c31985d8441d2c = []byte{
+	// 619 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x53, 0xdd, 0x4b, 0x1b, 0x4f,
+	0x14, 0x75, 0x13, 0x8d, 0xc9, 0x8d, 0x89, 0xbf, 0xdf, 0x68, 0xeb, 0xb0, 0x14, 0xba, 0xec, 0xd3,
+	0x42, 0x69, 0x14, 0x5b, 0x4a, 0x85, 0xbe, 0xa8, 0xab, 0x21, 0xd0, 0x0f, 0xd9, 0x68, 0x0b, 0xbe,
+	0x8d, 0xc9, 0x4d, 0x32, 0xb0, 0x5f, 0xce, 0xcc, 0x56, 0xd2, 0xe7, 0xfe, 0x0d, 0xfd, 0x7b, 0xcb,
+	0xcc, 0xee, 0x26, 0x21, 0x98, 0xb6, 0xa4, 0x7d, 0xbb, 0xf7, 0x70, 0xcf, 0x99, 0x33, 0xf7, 0x03,
+	0x9a, 0x23, 0x1e, 0xa2, 0xec, 0xa4, 0x22, 0x51, 0x09, 0xd9, 0x32, 0x89, 0xdd, 0x1a, 0x63, 0x8c,
+	0x82, 0x85, 0x39, 0x6a, 0x3f, 0x1f, 0x27, 0xc9, 0x38, 0xc4, 0x43, 0x93, 0xdd, 0x65, 0xa3, 0x43,
+	0xc5, 0x23, 0x94, 0x8a, 0x45, 0x69, 0x5e, 0xe0, 0x7e, 0x01, 0xb8, 0xe5, 0x69, 0x80, 0xf7, 0x19,
+	0x4a, 0x45, 0x5e, 0xc0, 0x26, 0xcb, 0xd4, 0x84, 0x5a, 0x8e, 0xe5, 0x35, 0x8f, 0x0f, 0x3a, 0xa5,
+	0xd8, 0x69, 0xa6, 0x26, 0x18, 0x2b, 0x3e, 0x60, 0x8a, 0x27, 0x71, 0x60, 0x8a, 0xc8, 0x33, 0x68,
+	0x8c, 0xb2, 0x30, 0xbc, 0x62, 0x6a, 0x22, 0x69, 0xc5, 0xa9, 0x7a, 0x8d, 0x60, 0x0e, 0xb8, 0x9f,
+	0xa1, 0xa9, 0x83, 0xb5, 0x94, 0x6d, 0xa8, 0x97, 0x42, 0xb4, 0xe2, 0x58, 0x5e, 0x23, 0x98, 0xe5,
+	0xee, 0x15, 0xb4, 0xfa, 0xc8, 0xc4, 0x60, 0x3d, 0x65, 0x02, 0x9b, 0x0a, 0x45, 0x54, 0xa8, 0x9a,
+	0xd8, 0xbd, 0x87, 0x9d, 0xfe, 0x84, 0x09, 0xfc, 0xd7, 0x56, 0x09, 0x85, 0xed, 0x4c, 0xa2, 0xe8,
+	0xf9, 0x92, 0x56, 0x9d, 0xaa, 0xd7, 0x0a, 0xca, 0xd4, 0x3d, 0x85, 0xff, 0x7c, 0x2e, 0x70, 0xa0,
+	0x12, 0x31, 0x3d, 0x4f, 0x62, 0x85, 0xb1, 0x22, 0x2f, 0xa1, 0xa1, 0x47, 0xd8, 0x8b, 0x47, 0x89,
+	0xa4, 0x96, 0x53, 0xf5, 0x9a, 0xc7, 0xbb, 0x9d, 0x7c, 0xc2, 0x97, 0x05, 0x1e, 0xcc, 0x2b, 0xdc,
+	0x1f, 0x15, 0xa8, 0x97, 0x38, 0x69, 0x43, 0xa5, 0xe7, 0x1b, 0xc3, 0xad, 0xa0, 0xd2, 0xf3, 0xf5,
+	0x37, 0xd3, 0xb9, 0x23, 0x13, 0x6b, 0x2c, 0x66, 0x11, 0xd2, 0x6a, 0x8e, 0xe9, 0x98, 0xec, 0xc3,
+	0x16, 0x97, 0x3e, 0x17, 0x74, 0xd3, 0xb1, 0xbc, 0x7a, 0x90, 0x27, 0xba, 0x52, 0xf2, 0x6f, 0x48,
+	0xb7, 0x1c, 0xcb, 0xab, 0x06, 0x26, 0xd6, 0x7f, 0x49, 0x1e, 0x62, 0xed, 0x9e, 0xd6, 0xcc, 0x33,
+	0x65, 0xaa, 0x3b, 0x10, 0xf1, 0x08, 0xaf, 0xa7, 0x29, 0xd2, 0xed, 0xbc, 0x03, 0x65, 0xae, 0x59,
+	0x52, 0x31, 0x21, 0x70, 0x48, 0xeb, 0xe6, 0x85, 0x32, 0xd5, 0xac, 0x94, 0x09, 0x8c, 0x55, 0xcf,
+	0xa7, 0x0d, 0x23, 0x38, 0xcb, 0xc9, 0x3b, 0x68, 0x86, 0x4c, 0xaa, 0xf3, 0x09, 0x8b, 0xc7, 0x38,
+	0xa4, 0x60, 0xe6, 0x60, 0x77, 0xf2, 0x55, 0xee, 0x94, 0xab, 0xdc, 0xb9, 0x2e, 0x57, 0x39, 0x58,
+	0x2c, 0x3f, 0xfe, 0x5e, 0x83, 0x1d, 0xdd, 0x18, 0xd9, 0x47, 0xf1, 0x95, 0x0f, 0x90, 0xbc, 0x81,
+	0xfa, 0x2d, 0x4f, 0x0d, 0x44, 0xfe, 0x2f, 0x3a, 0x3a, 0xdf, 0x79, 0xfb, 0xc9, 0x6c, 0xc0, 0x17,
+	0x51, 0xaa, 0xa6, 0x1f, 0x50, 0x4a, 0x36, 0x46, 0x77, 0x43, 0xdb, 0xe8, 0xa2, 0x9a, 0xf5, 0x98,
+	0x14, 0xd4, 0x85, 0xad, 0xb6, 0x0f, 0x0a, 0x6c, 0x79, 0x98, 0xee, 0x06, 0x79, 0x0d, 0xed, 0x9b,
+	0x74, 0xc8, 0x14, 0xce, 0x04, 0x96, 0xa7, 0x69, 0x2f, 0x03, 0xee, 0x06, 0x39, 0x02, 0x38, 0x17,
+	0x58, 0xb0, 0xfe, 0x88, 0x71, 0x02, 0xe0, 0x63, 0x88, 0x05, 0xe3, 0x31, 0x93, 0x2b, 0x3f, 0x78,
+	0x02, 0x0d, 0xb3, 0xf8, 0x86, 0xb9, 0x57, 0x30, 0x17, 0x4f, 0x61, 0x35, 0xf5, 0x6d, 0x79, 0x85,
+	0x97, 0x89, 0x30, 0xf4, 0xfd, 0x92, 0xbe, 0x78, 0x9b, 0x8f, 0xf9, 0xbd, 0x80, 0xdd, 0x2e, 0xaa,
+	0x7e, 0xbe, 0x06, 0xf9, 0x50, 0x56, 0x9d, 0xd8, 0xaf, 0xda, 0xeb, 0x43, 0x5b, 0xcb, 0x68, 0xb3,
+	0x7f, 0xa1, 0x72, 0x06, 0xed, 0x00, 0xe5, 0x80, 0xc5, 0x9f, 0x1e, 0xe2, 0xdf, 0xa8, 0xac, 0x6c,
+	0x45, 0x17, 0xf6, 0x72, 0x8d, 0x1b, 0x89, 0xa6, 0x17, 0xf2, 0x6c, 0xda, 0xf3, 0xd7, 0x10, 0x7a,
+	0x0f, 0x4f, 0xbb, 0xa8, 0xf2, 0xa5, 0xf9, 0x98, 0x28, 0x3e, 0x2a, 0x18, 0x6b, 0x98, 0x3a, 0xb2,
+	0xce, 0xea, 0xb7, 0xb5, 0x28, 0x19, 0x62, 0x28, 0xef, 0x6a, 0xe6, 0x62, 0x5e, 0xfd, 0x0c, 0x00,
+	0x00, 0xff, 0xff, 0x2c, 0x83, 0x70, 0x0e, 0x2f, 0x06, 0x00, 0x00,
 }
