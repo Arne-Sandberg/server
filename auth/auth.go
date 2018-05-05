@@ -89,10 +89,7 @@ func newUnverifiedSession(userID uint32) *models.Session {
 		log.Error(0, "Could not store session: %v", err)
 	}
 
-	updates := map[string]interface{}{
-		"lastSession": utils.GetTimestampNow(),
-	}
-	_, err = UpdateUser(userID, updates)
+	err = UpdateLastSession(userID)
 	if err != nil {
 		log.Error(0, "Could not update user with lastSession %v", err)
 	}
@@ -182,68 +179,74 @@ func GetUserByID(userID uint32) (*models.User, error) {
 	return cProvider.GetUserByID(userID)
 }
 
+func GetUserByEmail(email string) (*models.User, error) {
+	return cProvider.GetUserByEmail(email)
+}
+
 //RemoveSession removes the session from the session provider
 func RemoveSession(sess *models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
-func UpdateUser(userID uint32, updates map[string]interface{}) (user *models.User, err error) {
+func UpdateLastSession(userID uint32) (err error) {
+	user, err := GetUserByID(userID)
+	if err != nil {
+		return
+	}
+
+	user.LastSessionAt = utils.GetTimestampNow()
+	err = cProvider.UpdateUser(user)
+
+	return
+}
+
+func UpdateUser(userID uint32, updatedUser *models.UserUpdate) (user *models.User, err error) {
 	user, err = GetUserByID(userID)
 	if err != nil {
 		return
 	}
 
-	if email, ok := updates["email"]; ok == true {
-		user.Email, ok = email.(string)
-		if ok != true || !utils.ValidateEmail(user.Email) {
+	if email, ok := updatedUser.EmailOO.(*models.UserUpdate_Email); ok == true {
+		user.Email = email.Email
+		if !utils.ValidateEmail(user.Email) {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if firstName, ok := updates["firstName"]; ok == true {
-		user.FirstName, ok = firstName.(string)
-		if ok != true || !utils.ValidateFirstName(user.FirstName) {
+
+	if firstName, ok := updatedUser.FirstNameOO.(*models.UserUpdate_FirstName); ok == true {
+		user.FirstName = firstName.FirstName
+		if !utils.ValidateFirstName(user.FirstName) {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if lastName, ok := updates["lastName"]; ok == true {
-		user.LastName, ok = lastName.(string)
-		if ok != true || !utils.ValidateLastName(user.LastName) {
+
+	if lastName, ok := updatedUser.LastNameOO.(*models.UserUpdate_LastName); ok == true {
+		user.LastName = lastName.LastName
+		if !utils.ValidateLastName(user.LastName) {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if isAdmin, ok := updates["isAdmin"]; ok == true {
-		user.IsAdmin, ok = isAdmin.(bool)
-		if ok != true {
-			err = ErrInvalidUserData
-			return
-		}
+
+	if isAdmin, ok := updatedUser.IsAdminOO.(*models.UserUpdate_IsAdmin); ok == true {
+		user.IsAdmin = isAdmin.IsAdmin
 	}
-	if password, ok := updates["password"]; ok == true {
-		newPassword, ok := password.(string)
-		if ok != true || !utils.ValidatePassword(user.Password) {
+
+	if password, ok := updatedUser.PasswordOO.(*models.UserUpdate_Password); ok == true {
+		if ok != true || !utils.ValidatePassword(password.Password) {
 			err = ErrInvalidUserData
 			return
 		}
-		user.Password, err = HashPassword(newPassword)
+		user.Password, err = HashPassword(password.Password)
 		if err != nil {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if lastSession, ok := updates["lastSession"]; ok == true {
-		user.LastSessionAt, ok = lastSession.(*timestamp.Timestamp)
-		if ok != true {
-			err = ErrInvalidUserData
-			return
-		}
-	} else {
-		// I expect that the lastSession will only be updated if nothing else of the data is updated.
-		// That way the "Updated" only represents changes to the core user data
-		user.UpdatedAt = utils.GetTimestampNow()
-	}
+
+	user.UpdatedAt = utils.GetTimestampNow()
 
 	err = cProvider.UpdateUser(user)
 	user.Password = ""

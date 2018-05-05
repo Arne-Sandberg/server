@@ -6,8 +6,9 @@ import (
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/fs"
 	"github.com/freecloudio/freecloud/models"
-	"github.com/freecloudio/freecloud/utils"
 	log "gopkg.in/clog.v1"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
 )
 
 type AuthService struct {
@@ -18,80 +19,75 @@ func NewAuthService(vfs *fs.VirtualFilesystem) *AuthService {
 	return &AuthService{vfs}
 }
 
-func (srv *AuthService) Signup(ctx context.Context, user *models.User) (resp *models.AuthResponse, err error) {
-	user.GetPassword()
-
+func (srv *AuthService) Signup(ctx context.Context, user *models.User) (*models.Authentication, error) {
 	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(user)
 	if err == auth.ErrInvalidUserData {
-		return &models.AuthResponse{Meta: utils.PbBadRequest("Invalid user data")}, nil
+		return nil, status.Error(codes.InvalidArgument,"Invalid user data")
 	} else if err == auth.ErrUserAlreadyExists {
-		return &models.AuthResponse{Meta: utils.PbBadRequest("User already exists")}, nil
+		return nil, status.Error(codes.InvalidArgument,"User already exists")
 	} else if err != nil {
-		return
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	err = srv.filesystem.ScanUserFolderForChanges(user)
 	if err != nil {
-		return
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	resp = &models.AuthResponse{
-		Meta:  utils.PbCreated(),
-		Token: session.GetTokenString(),
-	}
-	return
+	return &models.Authentication{Token: session.GetTokenString()}, nil
 }
 
-func (srv *AuthService) Login(ctx context.Context, user *models.User) (resp *models.AuthResponse, err error) {
+func (srv *AuthService) Login(ctx context.Context, user *models.User) (resp *models.Authentication, err error) {
 	session, err := auth.NewSession(user.Email, user.Password)
 	if err == auth.ErrInvalidCredentials {
-		return &models.AuthResponse{Meta: utils.PbUnauthorized("Wrong credentials or account does not exist")}, nil
+		return nil, status.Error(codes.Unauthenticated,"Wrong credentials or account does not exist")
 	} else if err != nil {
 		// TODO: Catch the "not found" error and also return StatusUnauthorized here
-		return &models.AuthResponse{Meta: utils.PbUnauthorizedF("Failed to get user %s: %v", user.Email, err)}, nil
+		return nil, status.Errorf(codes.Unauthenticated, "Failed to get user %s: %v", user.Email, err)
 	}
 
-	resp = &models.AuthResponse{
-		Meta:  utils.PbOK(),
-		Token: session.GetTokenString(),
-	}
-	return
+	return &models.Authentication{Token: session.GetTokenString()}, nil
 }
 
-func (srv *AuthService) Logout(ctx context.Context, authReq *models.Authentication) (*models.DefaultResponse, error) {
-	_, session, resp := validateTokenAndFillUserData(authReq.Token)
-	if resp != nil {
-		return resp, nil
+func (srv *AuthService) Logout(ctx context.Context, authReq *models.Authentication) (*models.EmptyMessage, error) {
+	_, session, err := authCheck(authReq.Token, false)
+	if err != nil {
+		return nil, err
 	}
 
-	err := auth.RemoveSession(session)
+	err = auth.RemoveSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
-		return utils.PbInternalServerError("Failed to delete session"), nil
+		return nil, status.Error(codes.Internal, "Failed to delete session")
 	}
 
-	return utils.PbOK(), nil
+	return &models.EmptyMessage{}, nil
 }
 
-func validateTokenAndFillUserData(token string) (user *models.User, session *models.Session, resp *models.DefaultResponse) {
-	session, err := models.ParseSessionTokenString(token)
-	// This probably also means the session is invalid, so redirect time it is!
+func authCheck(token string, adminReq bool) (user *models.User, session *models.Session, err error) {
+	session, err = models.ParseSessionTokenString(token)
+
 	if err != nil {
-		resp = utils.PbBadRequest("Could not parse session token")
+		err = status.Error(codes.InvalidArgument, "Could not parse session token")
 		return
 	}
 
 	valid := auth.ValidateSession(session)
 	if !valid {
-		resp = utils.PbUnauthorized("Session not valid!")
+		err = status.Error(codes.Unauthenticated, "Session not valid!")
 		return
 	}
 
 	user, err = auth.GetUserByID(session.UserID)
 	if err != nil {
 		log.Error(0, "Filling user data in middleware failed: %v", err)
-		resp = utils.PbInternalServerError("Filling user data in middleware failed")
+		err = status.Error(codes.Internal, "Filling user data in middleware failed")
+		return
+	}
+
+	if adminReq && !user.IsAdmin {
+		err = status.Error(codes.PermissionDenied, "Permission denied")
 		return
 	}
 

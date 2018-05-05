@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"math"
 	"runtime"
 	"time"
 
@@ -34,6 +33,6 @@ func GetSystemStats() *models.SystemStats {
 		GoVersion:     runtime.Version(),
 		NumGoroutines: uint32(runtime.NumGoroutine()),
 		NumSessions:   auth.TotalSessionCount(),
-		Uptime:        &duration.Duration{Seconds: int64(math.Round(uptime.Seconds()))},
+		Uptime:        &duration.Duration{Seconds: int64(uptime.Seconds())},
 	}
 }

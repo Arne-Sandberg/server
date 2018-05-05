@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/freecloudio/freecloud/models"
-	"github.com/freecloudio/freecloud/utils"
 	"github.com/freecloudio/freecloud/stats"
 )
 
@@ -15,15 +14,11 @@ func NewSystemService() *SystemService {
 	return &SystemService{}
 }
 
-func (srv *SystemService) GetSystemStats(ctx context.Context, authReq *models.Authentication) (*models.SystemStatsResponse, error) {
-	user, _, resp := validateTokenAndFillUserData(authReq.Token)
-	if resp != nil {
-		return &models.SystemStatsResponse{ Meta: resp }, nil
+func (srv *SystemService) GetSystemStats(ctx context.Context, authReq *models.Authentication) (*models.SystemStats, error) {
+	_, _, err := authCheck(authReq.Token, true)
+	if err != nil {
+		return nil, err
 	}
 
-	if !user.IsAdmin {
-		return &models.SystemStatsResponse{ Meta: utils.PbForbidden() }, nil
-	}
-
-	return &models.SystemStatsResponse{ Meta: utils.PbOK(), Stats: stats.GetSystemStats() }, nil
+	return stats.GetSystemStats(), nil
 }
