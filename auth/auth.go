@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 
@@ -18,6 +17,7 @@ var (
 	cProvider CredentialsProvider
 	sProvider SessionProvider
 	done      chan struct{}
+	sessionExpiry time.Duration
 
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
@@ -26,12 +26,13 @@ var (
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
-func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider, sessionExpiry int) {
+func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider, sessionExp int) {
 	cProvider = credentialsProvider
 	sProvider = sessionProvider
+	sessionExpiry = time.Hour * time.Duration(sessionExp)
 
 	done = make(chan struct{})
-	go cleanupExpiredSessionsRoutine(time.Hour * time.Duration(sessionExpiry))
+	go cleanupExpiredSessionsRoutine(sessionExpiry)
 }
 
 func Close() {
@@ -82,7 +83,7 @@ func newUnverifiedSession(userID uint32) *models.Session {
 	sess := &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
-		ExpiresAt: utils.GetTimestampFromTime(time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))),
+		ExpiresAt: utils.GetTimestampFromTime(time.Now().UTC().Add(sessionExpiry)),
 	}
 	err := sProvider.StoreSession(sess)
 	if err != nil {
