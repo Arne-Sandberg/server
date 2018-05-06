@@ -121,8 +121,24 @@ func (srv *FilesService) DeleteFile(ctx context.Context, req *models.PathRequest
 	return &models.EmptyMessage{}, nil
 }
 
-func (srv *FilesService) ShareFile(context.Context, *models.ShareRequest) (*models.EmptyMessage, error) {
-	return nil, nil
+func (srv *FilesService) ShareFile(ctx context.Context, req *models.ShareRequest) (*models.EmptyMessage, error) {
+	fromUser, _, err := authCheck(req.Auth.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, shareWithID := range req.UserIDs {
+		toUser, err := auth.GetUserByID(shareWithID)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to get user %v", shareWithID)
+		}
+
+		if err := srv.filesystem.ShareFile(fromUser, toUser, req.FullPath); err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to share %v with %v", req.FullPath, shareWithID)
+		}
+	}
+
+	return &models.EmptyMessage{}, nil
 }
 
 func (srv *FilesService) SearchFiles(ctx context.Context, req *models.SearchRequest) (*models.FileList, error) {

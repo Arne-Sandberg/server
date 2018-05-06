@@ -329,3 +329,12 @@ func (db *StormDB) DeleteUserFiles(userID uint32) (err error) {
 
 	return
 }
+
+func (db *StormDB) InsertShareEntry(shareEntry *models.ShareEntry) (err error) {
+	err = db.c.Save(shareEntry)
+	if err != nil {
+		log.Error(0, "Could not insert share entry: %v", err)
+		return
+	}
+	return
+}

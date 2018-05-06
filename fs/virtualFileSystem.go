@@ -31,6 +31,8 @@ type vfsDatabase interface {
 	GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, err error)
 	SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error)
 	DeleteUserFiles(userID uint32) (err error)
+
+	InsertShareEntry(shareEntry *models.ShareEntry) (err error)
 }
 
 type VirtualFilesystem struct {
@@ -190,9 +192,9 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 
 	// Delete remaining files from dbList in db as they are deleted from the fs
 	for _, dbFile := range dbFiles {
-		/*if dbFile.OriginalFileID != 0 {
+		if dbFile.ShareID > 0 {
 			continue
-		}*/
+		}
 
 		err = vfs.db.RemoveFile(dbFile)
 		if err != nil {
@@ -647,5 +649,40 @@ func (vfs *VirtualFilesystem) DeleteUser(user *models.User) (err error) {
 }
 
 func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path string) (err error) {
+	filePath, fileName := vfs.splitPath(path)
+	fileInfo, err := vfs.db.GetFileInfo(fromUser.ID, filePath, fileName)
+	if err != nil {
+		return
+	}
+
+	shareEntry := &models.ShareEntry{
+		OwnerID:			fromUser.ID,
+		SharedWithID:	toUser.ID,
+		FileID:				fileInfo.ID,
+	}
+	err = vfs.db.InsertShareEntry(shareEntry)
+	if err != nil {
+		return
+	}
+
+	sharedParentInfo, err := vfs.db.GetFileInfo(toUser.ID, "/", "")
+	if err != nil {
+		return
+	}
+
+	sharedFileInfo := &models.FileInfo{
+		Path:           "/",
+		Name:           fileInfo.Name,
+		IsDir:          fileInfo.IsDir,
+		Size:           fileInfo.Size,
+		OwnerID:        toUser.ID,
+		LastChanged:    utils.GetTimestampNow(),
+		MimeType:       fileInfo.MimeType,
+		ParentID:       sharedParentInfo.ID,
+		ShareID:				shareEntry.ID,
+		Starred:        false,
+	}
+
+	err = vfs.db.InsertFile(sharedFileInfo)
 	return
 }
