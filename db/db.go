@@ -338,3 +338,13 @@ func (db *StormDB) InsertShareEntry(shareEntry *models.ShareEntry) (err error) {
 	}
 	return
 }
+
+func (db *StormDB) GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEntry, err error) {
+	shareEntry = &models.ShareEntry{}
+	err = db.c.One("ID", shareID, shareEntry)
+	if err != nil {
+		log.Error(0, "Could not get shareEntry for ID %v: %v", shareID, err)
+		return
+	}
+	return
+}
