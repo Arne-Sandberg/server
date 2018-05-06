@@ -17,7 +17,7 @@ import (
 	"gopkg.in/clog.v1"
 )
 
-func TestAuthService(t *testing.T) {
+func TestGrpcRouter(t *testing.T) {
 	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
 		Level: clog.TRACE,
 	})

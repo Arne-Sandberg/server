@@ -10,6 +10,7 @@ import (
 	"github.com/freecloudio/freecloud/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/freecloudio/freecloud/auth"
 )
 
 type FilesService struct {
@@ -55,40 +56,125 @@ func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathReques
 	return &models.FileInfoResponse{FileInfo: fileInfo, Content: content}, nil
 }
 
-func (srv *FilesService) UpdateFileInfo(context.Context, *models.FileInfo) (*models.FileInfo, error) {
+func (srv *FilesService) UpdateFileInfo(ctx context.Context, req *models.FileInfoUpdateRequest) (*models.FileInfo, error) {
 	return nil, nil
 }
 
-func (srv *FilesService) CreateFile(context.Context, *models.FileInfo) (*models.FileInfo, error) {
-	return nil, nil
+func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileRequest) (*models.FileInfo, error) {
+	user, _, err := authCheck(req.Auth.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if exisFileInfo, _ := srv.filesystem.GetFileInfo(user, req.FullPath); exisFileInfo.ID > 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "File %v already exists", req.FullPath)
+	}
+
+	if req.IsDir {
+		err := srv.filesystem.CreateDirectoryForUser(user, req.FullPath)
+		// TODO: match agains path errors and return a http.StatusBadRequest on those
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to create directory %v", req.FullPath)
+		}
+	} else {
+		file, err := srv.filesystem.NewFileHandleForUser(user, req.FullPath)
+		defer file.Close()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to create file %v", req.FullPath)
+		}
+		err = srv.filesystem.FinishNewFile(user, req.FullPath)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to finish creating file %v", req.FullPath)
+		}
+	}
+
+	fileInfo, err := srv.filesystem.GetFileInfo(user, req.FullPath)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get fileInfo of created file %v", req.FullPath)
+	}
+
+	return fileInfo, nil
 }
 
-func (srv *FilesService) DeleteFile(context.Context, *models.PathRequest) (*models.EmptyMessage, error) {
-	return nil, nil
+func (srv *FilesService) DeleteFile(ctx context.Context, req *models.PathRequest) (*models.EmptyMessage, error) {
+	user, _, err := authCheck(req.Auth.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = srv.filesystem.DeleteFile(user, req.FullPath)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to delete file %v", req.FullPath)
+	}
+
+	return &models.EmptyMessage{}, nil
 }
 
 func (srv *FilesService) ShareFile(context.Context, *models.ShareRequest) (*models.EmptyMessage, error) {
 	return nil, nil
 }
 
-func (srv *FilesService) SearchForFile(context.Context, *models.SearchRequest) (*models.FileInfo, error) {
-	return nil, nil
+func (srv *FilesService) SearchFiles(ctx context.Context, req *models.SearchRequest) (*models.FileList, error) {
+	user, _, err := authCheck(req.Auth.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := srv.filesystem.SearchForFiles(user, req.Term)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to search for %v", req.Term)
+	}
+
+	return &models.FileList{FileInfos: results}, nil
 }
 
-func (srv *FilesService) GetStarredFiles(context.Context, *models.Authentication) (*models.FileList, error) {
-	return nil, nil
+func (srv *FilesService) GetStarredFiles(ctx context.Context, req *models.Authentication) (*models.FileList, error) {
+	user, _, err := authCheck(req.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	starredFilesInfo, err := srv.filesystem.ListStarredFilesForUser(user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to get starred files")
+	}
+
+	return &models.FileList{FileInfos: starredFilesInfo}, nil
 }
 
 func (srv *FilesService) GetSharedFiles(context.Context, *models.Authentication) (*models.FileList, error) {
 	return nil, nil
 }
 
-func (srv *FilesService) RescanOwnFiles(context.Context, *models.Authentication) (*models.EmptyMessage, error) {
-	return nil, nil
+func (srv *FilesService) RescanOwnFiles(ctx context.Context, req *models.Authentication) (*models.EmptyMessage, error) {
+	user, _, err := authCheck(req.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := srv.filesystem.ScanUserFolderForChanges(user); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to scan folder")
+	}
+
+	return &models.EmptyMessage{}, nil
 }
 
-func (srv *FilesService) RescanUserFilesByID(context.Context, *models.Authentication) (*models.EmptyMessage, error) {
-	return nil, nil
+func (srv *FilesService) RescanUserFilesByID(ctx context.Context, req *models.UserIDRequest) (*models.EmptyMessage, error) {
+	_, _, err := authCheck(req.Auth.Token, true)
+	if err != nil {
+		return nil, err
+	}
+
+	scanUser, err := auth.GetUserByID(req.UserID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to get user %v", req.UserID)
+	}
+
+	if err := srv.filesystem.ScanUserFolderForChanges(scanUser); err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to scan folder for &v", req.UserID)
+	}
+
+	return &models.EmptyMessage{}, nil
 }
 
 func (srv *FilesService) GetUpdateNotifications(*models.Authentication, models.FilesService_GetUpdateNotificationsServer) error {

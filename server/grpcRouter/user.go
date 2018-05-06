@@ -31,9 +31,9 @@ func (srv *UserService) GetUserByID(ctx context.Context, req *models.UserIDReque
 		return nil, err
 	}
 
-	user, err := auth.GetUserByID(req.ID)
+	user, err := auth.GetUserByID(req.UserID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Error getting user with ID %v", req.ID)
+		return nil, status.Errorf(codes.Internal, "Error getting user with ID %v", req.UserID)
 	}
 
 	return user, nil
@@ -45,9 +45,9 @@ func (srv *UserService) GetUserByEmail(ctx context.Context, req *models.UserEmai
 		return nil, err
 	}
 
-	user, err := auth.GetUserByEmail(req.Email)
+	user, err := auth.GetUserByEmail(req.UserEmail)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Error getting user with email %v", req.Email)
+		return nil, status.Errorf(codes.Internal, "Error getting user with email %v", req.UserEmail)
 	}
 
 	return user, nil
@@ -86,7 +86,7 @@ func (srv *UserService) DeleteUserByID(ctx context.Context, req *models.UserIDRe
 		return nil, err
 	}
 
-	err = auth.DeleteUser(req.ID)
+	err = auth.DeleteUser(req.UserID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Deleting user failed: %v", err)
 	}
