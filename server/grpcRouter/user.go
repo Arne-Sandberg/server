@@ -63,7 +63,12 @@ func (srv *UserService) UpdateOwnUser(ctx context.Context, req *models.UserUpdat
 		req.UserUpdate.IsAdminOO = nil
 	}
 
-	return auth.UpdateUser(user.ID, req.UserUpdate)
+	updatedUser, err := auth.UpdateUser(user.ID, req.UserUpdate)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to update user")
+	}
+
+	return updatedUser, nil
 }
 
 func (srv *UserService) DeleteOwnUser(ctx context.Context, authReq *models.Authentication) (*models.EmptyMessage, error) {

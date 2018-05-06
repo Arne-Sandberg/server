@@ -423,7 +423,7 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 	return
 }
 
-func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates map[string]interface{}) (fileInfo *models.FileInfo, err error) {
+func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updatedFileInfo *models.FileInfoUpdate) (fileInfo *models.FileInfo, err error) {
 	filePath, fileName := vfs.splitPath(path)
 	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
 	if err != nil {
@@ -431,59 +431,44 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 	}
 
 	var newPath string
-	if rawNewPath, ok := updates["path"]; ok == true {
-		newPath, ok = rawNewPath.(string)
-		if ok != true {
-			err = fmt.Errorf("Given path is not a string")
-			return
-		}
+	if path, ok := updatedFileInfo.PathOO.(*models.FileInfoUpdate_Path); ok == true && utils.ValidatePath(path.Path) {
+		newPath = path.Path
+	} else {
+		newPath = fileInfo.Path
 	}
 
 	var newName string
-	if rawNewName, ok := updates["name"]; ok == true {
-		newName, ok = rawNewName.(string)
-		if ok != true {
-			err = fmt.Errorf("Given name is not a string")
-			return
-		}
-	}
-
-	var newStarred bool
-	if rawNewStarred, ok := updates["starred"]; ok == true {
-		newStarred, ok = rawNewStarred.(bool)
-		if ok != true {
-			err = fmt.Errorf("Given starred is not a bool")
-			return
-		}
-	}
-
-	var copyFlag bool
-	if rawCopy, ok := updates["copy"]; ok == true {
-		copyFlag, ok = rawCopy.(bool)
-		if ok != true {
-			err = fmt.Errorf("Given copy flag is not a bool")
-			return
-		}
-	}
-
-	if newPath == "" || !utils.ValidatePath(newPath) {
-		newPath = fileInfo.Path
-	}
-	if newName == "" || !utils.ValidatePath(newName) {
+	if name, ok := updatedFileInfo.NameOO.(*models.FileInfoUpdate_Name); ok == true && utils.ValidatePath(name.Name) {
+		newName = name.Name
+	} else {
 		newName = fileInfo.Name
 	}
 
-	if newPath != fileInfo.Path || newName != fileInfo.Name {
-		//userPath := vfs.getUserPath(user)
-		//oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+	var newStarred bool
+	if starred, ok := updatedFileInfo.StarredOO.(*models.FileInfoUpdate_Starred); ok == true {
+		newStarred = starred.Starred
+	} else {
+		newStarred = fileInfo.Starred
+	}
 
-		folderPath, folderName := vfs.splitPath(newPath)
-		var folderInfo *models.FileInfo
-		folderInfo, err = vfs.db.GetFileInfo(user.ID, folderPath, folderName)
+	var copyFlag bool
+	if cpy, ok := updatedFileInfo.CopyOO.(*models.FileInfoUpdate_Copy); ok == true {
+		copyFlag = cpy.Copy
+	}
+
+	if newPath != fileInfo.Path || newName != fileInfo.Name {
+		userPath := vfs.getUserPath(user)
+		oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+
+		newFolderPath, newFolderName := vfs.splitPath(newPath)
+		var newFolderInfo *models.FileInfo
+		newFolderInfo, err = vfs.db.GetFileInfo(user.ID, newFolderPath, newFolderName)
 		if err != nil {
 			log.Error(0, "Error getting parent for changed file %v%v: %v", fileInfo.Path, fileInfo.Name, err)
 			return
 		}
+
+		fileInfo.Starred = newStarred
 
 		if !copyFlag {
 			fileInfo.LastChanged = utils.GetTimestampNow()
@@ -492,26 +477,24 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updates
 				fileInfo.MimeType = mime.TypeByExtension(filepath.Ext(fileInfo.Name))
 			}
 
-			err = vfs.moveFileInDB(user, fileInfo, folderInfo)
+			err = vfs.moveFileInDB(user, fileInfo, newFolderInfo)
 			if err != nil {
 				return
 			}
 
-			/*if fileInfo.OriginalFileID <= 0 {
-				newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
-				err = vfs.fs.MoveFile(oldPath, newPath)
-				if err != nil {
-					log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
-					return
-				}
-			}*/
+			newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+			err = vfs.fs.MoveFile(oldPath, newPath)
+			if err != nil {
+				log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
+				return
+			}
 		} else {
-			err = vfs.copyFile(user, fileInfo, newName, folderInfo)
+			err = vfs.copyFile(user, fileInfo, newName, newFolderInfo)
 			if err != nil {
 				return
 			}
 		}
-	} else if newStarred != fileInfo.Starred && !copyFlag {
+	} else if newStarred != fileInfo.Starred {
 		fileInfo.LastChanged = utils.GetTimestampNow()
 		fileInfo.Starred = newStarred
 		err = vfs.db.UpdateFile(fileInfo)
@@ -554,42 +537,42 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 		newName = fileInfo.Name
 	}
 	parentPath := utils.ConvertToSlash(filepath.Join(newParentFileInfo.Path, newParentFileInfo.Name), true)
-	//newPath := filepath.Join(parentPath, newName)
+	newPath := filepath.Join(parentPath, newName)
 
-	/*if fileInfo.OriginalFileID <= 0 {
-		if fileInfo.IsDir {
-			err = vfs.CreateDirectoryForUser(user, newPath)
-			if err != nil {
-				return
-			}
+	//if fileInfo.OriginalFileID <= 0 {
+	if fileInfo.IsDir {
+		err = vfs.CreateDirectoryForUser(user, newPath)
+		if err != nil {
+			return
+		}
 
-			var newFolderInfo *models.FileInfo
-			newFolderInfo, err = vfs.db.GetFileInfo(user.ID, parentPath, newName)
-			if err != nil {
-				return
-			}
+		var newFolderInfo *models.FileInfo
+		newFolderInfo, err = vfs.db.GetFileInfo(user.ID, parentPath, newName)
+		if err != nil {
+			return
+		}
 
-			var folderContent []*models.FileInfo
-			folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
-			for _, contentInfo := range folderContent {
-				err = vfs.copyFile(user, contentInfo, "", newFolderInfo)
-				if err != nil {
-					return
-				}
-			}
-		} else {
-			userPath := vfs.getUserPath(user)
-			oldPath := filepath.Join(fileInfo.Path, fileInfo.Name)
-			err = vfs.fs.CopyFile(filepath.Join(userPath, oldPath), filepath.Join(userPath, newPath))
-			if err != nil {
-				return
-			}
-			err = vfs.FinishNewFile(user, newPath)
+		var folderContent []*models.FileInfo
+		folderContent, err = vfs.db.GetDirectoryContentWithID(fileInfo.ID)
+		for _, contentInfo := range folderContent {
+			err = vfs.copyFile(user, contentInfo, "", newFolderInfo)
 			if err != nil {
 				return
 			}
 		}
-	} else {*/
+	} else {
+		userPath := vfs.getUserPath(user)
+		oldPath := filepath.Join(fileInfo.Path, fileInfo.Name)
+		err = vfs.fs.CopyFile(filepath.Join(userPath, oldPath), filepath.Join(userPath, newPath))
+		if err != nil {
+			return
+		}
+		err = vfs.FinishNewFile(user, newPath)
+		if err != nil {
+			return
+		}
+	}
+	/*} else {
 		newFileInfo := *fileInfo
 		newFileInfo.Path = parentPath
 		newFileInfo.ParentID = newParentFileInfo.ID
@@ -599,7 +582,7 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 		if err != nil {
 			return
 		}
-	//}
+	}*/
 
 	return
 }
@@ -617,12 +600,12 @@ func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err er
 		return
 	}
 
-	/*if fileInfo.OriginalFileID <= 0 {
-		err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
-		if err != nil {
-			return
-		}
-	}*/
+	//if fileInfo.OriginalFileID <= 0 {
+	err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
+	if err != nil {
+		return
+	}
+	//}
 
 	//TODO: Make asynchronus scan call for dir sizes?!?
 

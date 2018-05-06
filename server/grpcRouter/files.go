@@ -15,10 +15,11 @@ import (
 
 type FilesService struct {
 	filesystem *fs.VirtualFilesystem
+	notifications chan uint32
 }
 
 func NewFilesService(fs *fs.VirtualFilesystem) *FilesService {
-	return &FilesService{fs}
+	return &FilesService{fs, make(chan uint32, 50)}
 }
 
 func (srv *FilesService) ZipFiles(ctx context.Context, req *models.ZipRequest) (*models.Path, error) {
@@ -57,7 +58,17 @@ func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathReques
 }
 
 func (srv *FilesService) UpdateFileInfo(ctx context.Context, req *models.FileInfoUpdateRequest) (*models.FileInfo, error) {
-	return nil, nil
+	user, _, err := authCheck(req.Auth.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedFileInfo, err := srv.filesystem.UpdateFile(user, req.FullPath, req.FileInfoUpdate)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to update user")
+	}
+
+	return updatedFileInfo, nil
 }
 
 func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileRequest) (*models.FileInfo, error) {
@@ -142,8 +153,18 @@ func (srv *FilesService) GetStarredFiles(ctx context.Context, req *models.Authen
 	return &models.FileList{FileInfos: starredFilesInfo}, nil
 }
 
-func (srv *FilesService) GetSharedFiles(context.Context, *models.Authentication) (*models.FileList, error) {
-	return nil, nil
+func (srv *FilesService) GetSharedFiles(ctx context.Context, req *models.Authentication) (*models.FileList, error) {
+	user, _, err := authCheck(req.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	sharedFilesInfo, err := srv.filesystem.ListSharedFilesForUser(user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to get shared files")
+	}
+
+	return &models.FileList{FileInfos: sharedFilesInfo}, nil
 }
 
 func (srv *FilesService) RescanOwnFiles(ctx context.Context, req *models.Authentication) (*models.EmptyMessage, error) {
@@ -171,12 +192,32 @@ func (srv *FilesService) RescanUserFilesByID(ctx context.Context, req *models.Us
 	}
 
 	if err := srv.filesystem.ScanUserFolderForChanges(scanUser); err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to scan folder for &v", req.UserID)
+		return nil, status.Errorf(codes.Internal, "Failed to scan folder for %v", req.UserID)
 	}
 
 	return &models.EmptyMessage{}, nil
 }
 
-func (srv *FilesService) GetUpdateNotifications(*models.Authentication, models.FilesService_GetUpdateNotificationsServer) error {
+func (srv *FilesService) SendUpdateNotification(userID uint32) {
+	 srv.notifications <- userID
+}
+
+func (srv *FilesService) GetUpdateNotifications(req *models.Authentication, stream models.FilesService_GetUpdateNotificationsServer) error {
+	user, _, err := authCheck(req.Token, false)
+	if err != nil {
+		return err
+	}
+
+	msg := &models.EmptyMessage{}
+	for userID := range srv.notifications {
+		if userID != user.ID {
+			continue
+		}
+
+		if err := stream.Send(msg); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
