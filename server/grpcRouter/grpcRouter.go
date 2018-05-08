@@ -2,32 +2,37 @@ package grpcRouter
 
 import (
 	"fmt"
-	"net"
-
 	"github.com/freecloudio/freecloud/models"
-	"google.golang.org/grpc"
-	log "gopkg.in/clog.v1"
 	"github.com/freecloudio/freecloud/fs"
+	"google.golang.org/grpc"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	log "gopkg.in/clog.v1"
+	"net/http"
+	"context"
 )
 
-var grpcServer grpc.Server
+var httpServer http.Server
 
 func Start(port int, hostname string, vfs *fs.VirtualFilesystem) {
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", hostname, port))
-	if err != nil {
-		log.Fatal(0, "grpc: failed to listen: %v", err)
-		return
-	}
-
 	grpcServer := grpc.NewServer()
 	models.RegisterAuthServiceServer(grpcServer, NewAuthService(vfs))
 	models.RegisterUserServiceServer(grpcServer, NewUserService())
 	models.RegisterFilesServiceServer(grpcServer, NewFilesService(vfs))
 	models.RegisterSystemServiceServer(grpcServer, NewSystemService())
 
+	wrappedGrpc := grpcweb.WrapServer(grpcServer)
+	handler := func(resp http.ResponseWriter, req *http.Request) {
+		wrappedGrpc.ServeHTTP(resp, req)
+	}
+
+	httpServer = http.Server{
+		Addr:    fmt.Sprintf("%s:%d", hostname, port),
+		Handler: http.HandlerFunc(handler),
+	}
+
 	// Start server in a goroutine so the method exits and all interrupts can be handled correctly
 	go func() {
-		err := grpcServer.Serve(lis)
+		err := httpServer.ListenAndServe()
 		if err != nil {
 			log.Fatal(0, "Server error: %v", err)
 		}
@@ -36,5 +41,8 @@ func Start(port int, hostname string, vfs *fs.VirtualFilesystem) {
 
 // Stop shutdowns the currently running server
 func Stop() {
-	grpcServer.GracefulStop()
+	err := httpServer.Shutdown(context.Background())
+	if err != nil {
+		log.Error(0, "Error shutting down grpcServer: %v", err)
+	}
 }
