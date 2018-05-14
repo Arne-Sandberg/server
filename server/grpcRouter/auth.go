@@ -38,13 +38,13 @@ func (srv *AuthService) Signup(ctx context.Context, user *models.User) (*models.
 	return &models.Authentication{Token: session.GetTokenString()}, nil
 }
 
-func (srv *AuthService) Login(ctx context.Context, user *models.User) (resp *models.Authentication, err error) {
-	session, err := auth.NewSession(user.Email, user.Password)
+func (srv *AuthService) Login(ctx context.Context, loginData *models.LoginData) (resp *models.Authentication, err error) {
+	session, err := auth.NewSession(loginData.Email, loginData.Password)
 	if err == auth.ErrInvalidCredentials {
 		return nil, status.Error(codes.Unauthenticated,"Wrong credentials or account does not exist")
 	} else if err != nil {
 		// TODO: Catch the "not found" error and also return StatusUnauthorized here
-		return nil, status.Errorf(codes.Unauthenticated, "Failed to get user %s: %v", user.Email, err)
+		return nil, status.Errorf(codes.Unauthenticated, "Failed to get user %s: %v", loginData.Email, err)
 	}
 
 	return &models.Authentication{Token: session.GetTokenString()}, nil

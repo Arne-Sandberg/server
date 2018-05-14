@@ -89,7 +89,7 @@ func TestGrpcRouter(t *testing.T) {
 		return
 	}
 
-	authResp, err = authClient.Login(context.Background(), &models.User{Email: "john.admin@testing.com", Password: "secretPassw0rd"})
+	authResp, err = authClient.Login(context.Background(), &models.LoginData{Email: "john.admin@testing.com", Password: "secretPassw0rd"})
 	if err != nil {
 		t.Errorf("Failed login call: %v", err)
 		return
