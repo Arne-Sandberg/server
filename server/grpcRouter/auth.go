@@ -20,7 +20,6 @@ func NewAuthService(vfs *fs.VirtualFilesystem) *AuthService {
 }
 
 func (srv *AuthService) Signup(ctx context.Context, user *models.User) (*models.Authentication, error) {
-	log.Trace("Signing up user: %s %s with email %s", user.FirstName, user.LastName, user.Email)
 	session, err := auth.NewUser(user)
 	if err == auth.ErrInvalidUserData {
 		return nil, status.Error(codes.InvalidArgument,"Invalid user data")

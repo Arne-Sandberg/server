@@ -17,7 +17,7 @@ var startNatFlag bool
 var grpcServer *grpc.Server
 
 func Start(webPort, natPort int, hostname string, vfs *fs.VirtualFilesystem, startNat bool) {
-	grpcServer = grpc.NewServer()
+	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(loggingInterceptor))
 	models.RegisterAuthServiceServer(grpcServer, NewAuthService(vfs))
 	models.RegisterUserServiceServer(grpcServer, NewUserService())
 	models.RegisterFilesServiceServer(grpcServer, NewFilesService(vfs))
@@ -26,7 +26,6 @@ func Start(webPort, natPort int, hostname string, vfs *fs.VirtualFilesystem, sta
 	wrappedWebGrpc := grpcweb.WrapServer(grpcServer)
 	webHandler := func(resp http.ResponseWriter, req *http.Request) {
 		wrappedWebGrpc.ServeHTTP(resp, req)
-		log.Trace("gRPC requested: %v", req.URL)
 	}
 
 	webGrpcServer = &http.Server{
