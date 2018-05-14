@@ -42,9 +42,9 @@ func TestGrpcRouter(t *testing.T) {
 		return
 	}
 
-	Start(8081, "localhost", vfs)
+	Start(8081, 8082, "localhost", vfs, true)
 
-	conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure())
 	if err != nil {
 		t.Errorf("Failed to dial grpc server: %v", err)
 		return

@@ -10,7 +10,9 @@ func Init() {
 func setDefaults() {
 	viper.SetDefault("net.host", "localhost")
 	viper.SetDefault("http.port", 8080)
-	viper.SetDefault("grpc.port", 8081)
+	viper.SetDefault("grpc.web.port", 8081)
+	viper.SetDefault("grpc.nat.port", 8082)
+	viper.SetDefault("grpc.nat.start", false)
 	viper.SetDefault("auth.session_cookie", "fc-session")
 	// Session expiry is given in hours
 	viper.SetDefault("auth.session_expiry", 24)

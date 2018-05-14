@@ -6,9 +6,9 @@ import (
 	"github.com/freecloudio/freecloud/server/grpcRouter"
 )
 
-func StartAll(httpPort int, grpcPort int, hostname string, virtualFS *fs.VirtualFilesystem) {
+func StartAll(httpPort, webGrpcPort, natGrpcPort int, hostname string, virtualFS *fs.VirtualFilesystem, startNatGrpc bool) {
 	httpRouter.Start(httpPort, hostname, virtualFS)
-	grpcRouter.Start(grpcPort, hostname, virtualFS)
+	grpcRouter.Start(webGrpcPort, natGrpcPort, hostname, virtualFS, startNatGrpc)
 }
 
 func StopAll() {
