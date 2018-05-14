@@ -5,25 +5,32 @@ title: Authentication
 
 # Authentication
 
-## Creating a session
+All authenticated API requests (will be denoted on endpoint's documentation) require you to send a session token in the `Authorization` header.
 
-zigmovazisagetuojrupjihezazukjiliwmoszowetwurruibarelukawiucgumneisakepacodecolmogoavfawustukmadfaka
-
-> To authorize, use this code:
+> Set the authorization header like this:
 
 ```go
-package main
+
+client := http.Client{}
+req := http.NewRequest("GET", "/api/<version>/<endpoint>", nil)
+req.Header.Set("Authorization", "YourToken123")
+client.Do(req)
 
 ```
 
 ```shell
-# With shell, you can just pass the correct header with each request
 curl "api_endpoint_here"
   -H "Authorization: YourToken123"
 ```
 
 ```javascript
-axios.defaults.headers.common.Authorization = "yourAPIToken"
+axios.defaults.headers.common.Authorization = "YourToken123"
 ```
 
-> Make sure to replace `meowmeowmeow` with your API key.
+
+## Creating a session `/auth/login`
+
+## Logout `/auth/logout`
+{{< endpointStats auth="true" >}}
+
+## Creating a user `/auth/signup`
