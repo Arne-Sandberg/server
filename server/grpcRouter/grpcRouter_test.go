@@ -13,7 +13,11 @@ import (
 	"gopkg.in/clog.v1"
 )
 
-func TestGrpcRouter(t *testing.T) {
+var vfs *fs.VirtualFilesystem
+var database *db.StormDB
+var dfs *fs.DiskFilesystem
+
+func SetupTest() error {
 	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
 		Level: clog.TRACE,
 	})
@@ -22,27 +26,51 @@ func TestGrpcRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	dfs, err := fs.NewDiskFilesystem("testData", "testTmp", 100)
+	dfs, err = fs.NewDiskFilesystem("testData", "testTmp", 100)
 	if err != nil {
-		t.Errorf("Failed to initialize diskfilesystem: %v", err)
-		return
+		return fmt.Errorf("failed to initialize diskfilesystem: %v", err)
 	}
 
-	database, err := db.NewStormDB("test.db")
+	database, err = db.NewStormDB("test.db")
 	if err != nil {
-		t.Errorf("Failed to initialize database: %v", err)
-		return
+		return fmt.Errorf("failed to initialize database: %v", err)
 	}
 
 	auth.Init(database, database, 100)
 
-	vfs, err := fs.NewVirtualFilesystem(dfs, database, "testTmp")
+	vfs, err = fs.NewVirtualFilesystem(dfs, database, "testTmp")
 	if err != nil {
-		t.Errorf("Failed to initialize virtualfilesystem: %v", err)
-		return
+		return fmt.Errorf("failed to initialize virtualfilesystem: %v", err)
 	}
 
 	Start(8081, 8082, "localhost", vfs, true)
+
+	return nil
+}
+
+func FinishTest() {
+	//Stop()
+	vfs.Close()
+	auth.Close()
+	database.Close()
+	dfs.Close()
+}
+
+func DeleteTestFiles() {
+	os.RemoveAll("testData")
+	os.RemoveAll("testTmp")
+	os.Remove("test.db")
+	os.Remove("test.db.lock")
+}
+
+func TestGrpcRouter(t *testing.T) {
+	DeleteTestFiles()
+
+	err := SetupTest()
+	if err != nil {
+		t.Errorf("Setup failed: %v", err)
+		return
+	}
 
 	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure())
 	if err != nil {
@@ -126,14 +154,6 @@ func TestGrpcRouter(t *testing.T) {
 		return
 	}
 
-	//Stop()
-	vfs.Close()
-	auth.Close()
-	database.Close()
-	dfs.Close()
-
-	os.RemoveAll("testData")
-	os.RemoveAll("testTmp")
-	os.Remove("test.db")
-	os.Remove("test.db.lock")
+	FinishTest()
+	DeleteTestFiles()
 }
