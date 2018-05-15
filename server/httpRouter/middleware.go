@@ -125,7 +125,7 @@ func JSONEncoder(c *macaron.Context) {
 			res.Error(),
 		})
 	} else {
-		c.JSON(http.StatusOK, res)
+		c.JSON(http.StatusOK, resp)
 	}
 
 	if code, ok := c.Data["responseCode"]; ok == true {
