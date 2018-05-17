@@ -29,6 +29,11 @@ yarn
 yarn build
 ```
 
+## GRPC build
+
+For building the grpc sources use the `build_grpc.sh` script.
+For it to use install `protoc` and `protoc-go-inject-tag`!
+
 ## API reference
 
 The API reference is hosted on the github pages of this project: [https://freecloudio.github.io/freecloud/](https://freecloudio.github.io/freecloud/)
