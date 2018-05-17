@@ -26,7 +26,7 @@ func SetupTest() error {
 		os.Exit(2)
 	}
 
-	dfs, err = fs.NewDiskFilesystem("testData", "testTmp", 100)
+	dfs, err = fs.NewDiskFilesystem("testData", 100)
 	if err != nil {
 		return fmt.Errorf("failed to initialize diskfilesystem: %v", err)
 	}
@@ -38,7 +38,7 @@ func SetupTest() error {
 
 	auth.Init(database, database, 100)
 
-	vfs, err = fs.NewVirtualFilesystem(dfs, database, "testTmp")
+	vfs, err = fs.NewVirtualFilesystem(dfs, database)
 	if err != nil {
 		return fmt.Errorf("failed to initialize virtualfilesystem: %v", err)
 	}

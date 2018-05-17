@@ -26,5 +26,4 @@ data/
 grpc-services/
 
 testData/
-testTmp/
 test.db
