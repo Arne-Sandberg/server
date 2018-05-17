@@ -20,12 +20,11 @@ import (
 // DiskFilesystem implements the Filesystem interface, writing actual files to the disk
 type DiskFilesystem struct {
 	base    string
-	tmpName string
 	done    chan struct{}
 }
 
 // NewDiskFilesystem sets up a disk filesystem and returns it
-func NewDiskFilesystem(baseDir, tmpName string, tmpDataExpiry int) (dfs *DiskFilesystem, err error) {
+func NewDiskFilesystem(baseDir string, tmpDataExpiry int) (dfs *DiskFilesystem, err error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -50,7 +49,7 @@ func NewDiskFilesystem(baseDir, tmpName string, tmpDataExpiry int) (dfs *DiskFil
 	}
 
 	log.Info("Initialized filesystem at base directory %s", base)
-	dfs = &DiskFilesystem{base: base, tmpName: tmpName, done: make(chan struct{})}
+	dfs = &DiskFilesystem{base: base, done: make(chan struct{})}
 
 	go dfs.cleanupTempFolderRoutine(time.Hour * time.Duration(tmpDataExpiry))
 
@@ -89,7 +88,7 @@ func (dfs *DiskFilesystem) cleanupTempFolder() {
 			continue
 		}
 
-		tmpFolderPath := filepath.Join(dfs.base, info.Name(), dfs.tmpName)
+		tmpFolderPath := filepath.Join(dfs.base, info.Name(), TmpName)
 		tmpInfoList, err := ioutil.ReadDir(tmpFolderPath)
 		if err != nil {
 			log.Warn("Error reading temp folder in %v during temp cleanup: %v", tmpFolderPath, err)

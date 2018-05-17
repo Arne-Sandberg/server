@@ -36,14 +36,15 @@ type vfsDatabase interface {
 	GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEntry, err error)
 }
 
+const TmpName = ".tmp"
+
 type VirtualFilesystem struct {
 	fs      Filesystem
 	db      vfsDatabase
-	tmpName string
 }
 
-func NewVirtualFilesystem(fs Filesystem, db vfsDatabase, tmpName string) (vfs *VirtualFilesystem, err error) {
-	vfs = &VirtualFilesystem{fs, db, tmpName}
+func NewVirtualFilesystem(fs Filesystem, db vfsDatabase) (vfs *VirtualFilesystem, err error) {
+	vfs = &VirtualFilesystem{fs, db }
 	err = vfs.ScanFSForChanges()
 
 	return
@@ -232,15 +233,15 @@ func (vfs *VirtualFilesystem) CreateUserFolders(userID uint32) error {
 	}
 
 	//Create tmp dir for if not existing and add it to the db
-	created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(userPath, vfs.tmpName))
+	created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(userPath, TmpName))
 	if err != nil {
 		return fmt.Errorf("failed creating tmp folder for user id %v: %v", userID, err)
 	}
-	_, err = vfs.db.GetFileInfo(userID, "/", vfs.tmpName)
+	_, err = vfs.db.GetFileInfo(userID, "/", TmpName)
 	if created || err != nil {
 		err = vfs.db.InsertFile(&models.FileInfo{
 			Path:        "/",
-			Name:        vfs.tmpName,
+			Name:        TmpName,
 			IsDir:       true,
 			OwnerID:     userID,
 			LastChanged: utils.GetTimestampNow(),
@@ -304,14 +305,14 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	parFolderPath, parFolderName := vfs.splitPath(folderPath)
 	parFolderInfo, err := vfs.db.GetFileInfo(user.ID, parFolderPath, parFolderName)
 	if err != nil {
-		err = fmt.Errorf("Could not find parent folder of folder in db: %v", err)
+		err = fmt.Errorf("could not find parent folder of folder in db: %v", err)
 		log.Error(0, "%v", err)
 		return
 	}
 
 	err = vfs.fs.CreateDirectory(filepath.Join(userPath, path))
 	if err != nil {
-		err = fmt.Errorf("Error creating directory for user %v: %v", user.ID, err)
+		err = fmt.Errorf("error creating directory for user %v: %v", user.ID, err)
 		log.Error(0, "%v", err)
 		return
 	}
@@ -432,7 +433,7 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 		}
 	}
 
-	zipPath = filepath.Join(vfs.tmpName, outputName)
+	zipPath = filepath.Join(TmpName, outputName)
 	outputPath := filepath.Join(userPath, zipPath)
 
 	err = vfs.fs.ZipFiles(paths, outputPath)

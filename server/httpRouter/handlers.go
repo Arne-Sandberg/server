@@ -84,8 +84,14 @@ func (s ServerHandler) DownloadHandler(c *macaron.Context) {
 	path := c.Data["path"].(string)
 	fullPath, filename, err := s.filesystem.GetDownloadPath(user, path)
 	if err != nil || filename == "" {
-		// TODO: ERROR!
 		log.Error(0, "Could not resolve filepath for download: %v", err)
+		c.Data["responseCode"] = http.StatusNotFound
+		c.Data["response"] = struct {
+			Message string `json:"message"`
+		}{
+			"file not found",
+		}
+		return
 	}
 	c.ServeFile(fullPath, filename)
 }
