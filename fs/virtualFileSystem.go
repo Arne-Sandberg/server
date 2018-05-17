@@ -69,46 +69,10 @@ func (vfs *VirtualFilesystem) ScanFSForChanges() (err error) {
 }
 
 func (vfs *VirtualFilesystem) ScanUserFolderForChanges(user *models.User) (err error) {
-	//Create user dir if not existing and add it to db
-	created, err := vfs.fs.CreateDirIfNotExist(vfs.getUserPath(user))
+	err = vfs.CreateUserFolders(user.ID)
 	if err != nil {
-		log.Error(0, "Error creating folder for user id %v", user.ID)
-		return
-	}
-	_, err = vfs.db.GetFileInfo(user.ID, "/", "")
-	if created || err != nil {
-		err = vfs.db.InsertFile(&models.FileInfo{
-			Path:        "/",
-			Name:        "",
-			IsDir:       true,
-			OwnerID:     user.ID,
-			LastChanged: utils.GetTimestampNow(),
-		})
-		if err != nil {
-			log.Error(0, "Error inserting created root folder for user id %v", user.ID)
-			return
-		}
-	}
-
-	//Create tmp dir for every user
-	created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(vfs.getUserPath(user), vfs.tmpName))
-	if err != nil {
-		log.Error(0, "Error creating tmp folder for user id %v", user.ID)
-		return
-	}
-	_, err = vfs.db.GetFileInfo(user.ID, "/", vfs.tmpName)
-	if created || err != nil {
-		err = vfs.db.InsertFile(&models.FileInfo{
-			Path:        "/",
-			Name:        vfs.tmpName,
-			IsDir:       true,
-			OwnerID:     user.ID,
-			LastChanged: utils.GetTimestampNow(),
-		})
-		if err != nil {
-			log.Error(0, "Error inserting created tmp folder for user id %v", user.ID)
-			return
-		}
+		log.Error(0, "Could not create user folders for %v: %v", user.ID, err)
+		return err
 	}
 
 	_, err = vfs.scanDirForChanges(user, "/", "")
@@ -243,6 +207,50 @@ func (vfs *VirtualFilesystem) splitPath(origPath string) (path, name string) {
 
 	name = filepath.Base(origPath)
 	return
+}
+
+func (vfs *VirtualFilesystem) CreateUserFolders(userID uint32) error {
+	userPath := vfs.getUserPathWithID(userID)
+
+	//Create user dir if not existing and add it to the db
+	created, err := vfs.fs.CreateDirIfNotExist(userPath)
+	if err != nil {
+		return fmt.Errorf("failed to create folder for user id %v: %v", userID, err)
+	}
+	_, err = vfs.db.GetFileInfo(userID, "/", "")
+	if created || err != nil {
+		err = vfs.db.InsertFile(&models.FileInfo{
+			Path:        "/",
+			Name:        "",
+			IsDir:       true,
+			OwnerID:     userID,
+			LastChanged: utils.GetTimestampNow(),
+		})
+		if err != nil {
+			return fmt.Errorf("failed inserting created root folder for user id %v: %v", userID, err)
+		}
+	}
+
+	//Create tmp dir for if not existing and add it to the db
+	created, err = vfs.fs.CreateDirIfNotExist(filepath.Join(userPath, vfs.tmpName))
+	if err != nil {
+		return fmt.Errorf("failed creating tmp folder for user id %v: %v", userID, err)
+	}
+	_, err = vfs.db.GetFileInfo(userID, "/", vfs.tmpName)
+	if created || err != nil {
+		err = vfs.db.InsertFile(&models.FileInfo{
+			Path:        "/",
+			Name:        vfs.tmpName,
+			IsDir:       true,
+			OwnerID:     userID,
+			LastChanged: utils.GetTimestampNow(),
+		})
+		if err != nil {
+			return fmt.Errorf("failed inserting created tmp folder for user id %v: %v", userID, err)
+		}
+	}
+
+	return nil
 }
 
 func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
