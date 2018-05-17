@@ -69,7 +69,6 @@ func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileR
 
 	if req.IsDir {
 		err := srv.filesystem.CreateDirectoryForUser(user, req.FullPath)
-		// TODO: match agains path errors and return a http.StatusBadRequest on those
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed to create directory %v", req.FullPath)
 		}

@@ -304,14 +304,14 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	parFolderPath, parFolderName := vfs.splitPath(folderPath)
 	parFolderInfo, err := vfs.db.GetFileInfo(user.ID, parFolderPath, parFolderName)
 	if err != nil {
-		err = fmt.Errorf("Could not find parent folder of folder in db: %v", err)
+		err = fmt.Errorf("could not find parent folder of folder in db: %v", err)
 		log.Error(0, "%v", err)
 		return
 	}
 
 	err = vfs.fs.CreateDirectory(filepath.Join(userPath, path))
 	if err != nil {
-		err = fmt.Errorf("Error creating directory for user %v: %v", user.ID, err)
+		err = fmt.Errorf("error creating directory for user %v: %v", user.ID, err)
 		log.Error(0, "%v", err)
 		return
 	}
