@@ -20,10 +20,7 @@ if [ -d "$GIT_DIR" ]; then
 
 	echo "Checked out ${GIT_BRANCH}"
 else
-	git clone https://github.com/freecloudio/grpc-services.git ${GIT_DIR} > /dev/null
-	cd ${GIT_DIR}
-	git checkout -q ${GIT_BRANCH}
-	cd ..
+	git clone -b ${GIT_BRANCH} https://github.com/freecloudio/grpc-services.git ${GIT_DIR} > /dev/null
 
 	echo "Cloned proto into ${GIT_DIR} and checked out ${GIT_BRANCH}"
 fi
