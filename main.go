@@ -75,7 +75,7 @@ func main() {
 	// TODO: Remove temp folder name from vfs and move completely to dfs
 	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
 
-	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.port"), config.GetString("net.host"), virtualFS)
+	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.web.port"), config.GetInt("grpc.nat.port"), config.GetString("net.host"), virtualFS, config.GetBool("grpc.nat.start"))
 
 	code := <-exitChan
 

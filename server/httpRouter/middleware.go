@@ -118,18 +118,19 @@ func JSONEncoder(c *macaron.Context) {
 		return
 	}
 
+	respCode := http.StatusInternalServerError
+	if code, ok := c.Data["responseCode"]; ok == true {
+		respCode = code.(int)
+	}
+
 	if res, ok := resp.(error); ok == true {
-		c.JSON(http.StatusInternalServerError, struct {
+		c.JSON(respCode, struct {
 			Message string `json:"message"`
 		}{
 			res.Error(),
 		})
 	} else {
-		c.JSON(http.StatusOK, res)
-	}
-
-	if code, ok := c.Data["responseCode"]; ok == true {
-		c.WriteHeader(code.(int))
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -137,7 +138,7 @@ func JSONEncoder(c *macaron.Context) {
 func ResolvePath(c *macaron.Context) {
 	path, err := url.PathUnescape(c.Params("*"))
 	if err != nil {
-		c.Data["response"] = fmt.Errorf("Invalid path format")
+		c.Data["response"] = fmt.Errorf("invalid path format")
 	}
 	c.Data["path"] = path
 }

@@ -30,6 +30,7 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem) {
 	m := macaron.New()
 	m.Use(Logging())
 	m.Use(macaron.Recovery())
+	m.Use(macaron.Renderer())
 
 	// Up- and Download of files
 	m.Get("/download/*", OnlyUsers, ResolvePath, s.DownloadHandler)
