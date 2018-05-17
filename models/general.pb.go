@@ -28,7 +28,7 @@ func (m *EmptyMessage) Reset()         { *m = EmptyMessage{} }
 func (m *EmptyMessage) String() string { return proto.CompactTextString(m) }
 func (*EmptyMessage) ProtoMessage()    {}
 func (*EmptyMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_878096680ff276fa, []int{0}
+	return fileDescriptor_general_c78a29ee25f2e2e2, []int{0}
 }
 func (m *EmptyMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EmptyMessage.Unmarshal(m, b)
@@ -59,7 +59,7 @@ func (m *Authentication) Reset()         { *m = Authentication{} }
 func (m *Authentication) String() string { return proto.CompactTextString(m) }
 func (*Authentication) ProtoMessage()    {}
 func (*Authentication) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_878096680ff276fa, []int{1}
+	return fileDescriptor_general_c78a29ee25f2e2e2, []int{1}
 }
 func (m *Authentication) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Authentication.Unmarshal(m, b)
@@ -91,9 +91,9 @@ func init() {
 	proto.RegisterType((*Authentication)(nil), "general.Authentication")
 }
 
-func init() { proto.RegisterFile("general.proto", fileDescriptor_general_878096680ff276fa) }
+func init() { proto.RegisterFile("general.proto", fileDescriptor_general_c78a29ee25f2e2e2) }
 
-var fileDescriptor_general_878096680ff276fa = []byte{
+var fileDescriptor_general_c78a29ee25f2e2e2 = []byte{
 	// 110 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0x4f, 0xcd, 0x4b,
 	0x2d, 0x4a, 0xcc, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0x95, 0xf8, 0xb8,

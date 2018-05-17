@@ -22,7 +22,7 @@ func NewFilesService(fs *fs.VirtualFilesystem) *FilesService {
 	return &FilesService{fs, make(chan uint32, 50)}
 }
 
-func (srv *FilesService) ZipFiles(ctx context.Context, req *models.ZipRequest) (*models.Path, error) {
+func (srv *FilesService) ZipFiles(ctx context.Context, req *models.PathsRequest) (*models.Path, error) {
 	user, _, err := authCheck(req.Auth.Token, false)
 	if err != nil {
 		return nil, err
@@ -55,20 +55,6 @@ func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathReques
 	}
 
 	return &models.FileInfoResponse{FileInfo: fileInfo, Content: content}, nil
-}
-
-func (srv *FilesService) UpdateFileInfo(ctx context.Context, req *models.FileInfoUpdateRequest) (*models.FileInfo, error) {
-	user, _, err := authCheck(req.Auth.Token, false)
-	if err != nil {
-		return nil, err
-	}
-
-	updatedFileInfo, err := srv.filesystem.UpdateFile(user, req.FullPath, req.FileInfoUpdate)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Failed to update user")
-	}
-
-	return updatedFileInfo, nil
 }
 
 func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileRequest) (*models.FileInfo, error) {
@@ -107,34 +93,54 @@ func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileR
 	return fileInfo, nil
 }
 
-func (srv *FilesService) DeleteFile(ctx context.Context, req *models.PathRequest) (*models.EmptyMessage, error) {
+func (srv *FilesService) UpdateFileInfos(ctx context.Context, req *models.FileInfosUpdateRequest) (*models.EmptyMessage, error) {
 	user, _, err := authCheck(req.Auth.Token, false)
 	if err != nil {
 		return nil, err
 	}
 
-	err = srv.filesystem.DeleteFile(user, req.FullPath)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to delete file %v", req.FullPath)
+	for _, fullPath := range req.FullPaths {
+		_, err := srv.filesystem.UpdateFile(user, fullPath, req.FileInfoUpdate)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Failed to update user")
+		}
 	}
 
 	return &models.EmptyMessage{}, nil
 }
 
-func (srv *FilesService) ShareFile(ctx context.Context, req *models.ShareRequest) (*models.EmptyMessage, error) {
+func (srv *FilesService) DeleteFiles(ctx context.Context, req *models.PathsRequest) (*models.EmptyMessage, error) {
+	user, _, err := authCheck(req.Auth.Token, false)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fullPath := range req.FullPaths {
+		err = srv.filesystem.DeleteFile(user, fullPath)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to delete file %v", fullPath)
+		}
+	}
+
+	return &models.EmptyMessage{}, nil
+}
+
+func (srv *FilesService) ShareFiles(ctx context.Context, req *models.ShareRequest) (*models.EmptyMessage, error) {
 	fromUser, _, err := authCheck(req.Auth.Token, false)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, shareWithID := range req.UserIDs {
-		toUser, err := auth.GetUserByID(shareWithID)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to get user %v", shareWithID)
-		}
+	for _, fullPath := range req.FullPaths {
+		for _, shareWithID := range req.UserIDs {
+			toUser, err := auth.GetUserByID(shareWithID)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "Failed to get user %v", shareWithID)
+			}
 
-		if err := srv.filesystem.ShareFile(fromUser, toUser, req.FullPath); err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to share %v with %v", req.FullPath, shareWithID)
+			if err := srv.filesystem.ShareFile(fromUser, toUser, fullPath); err != nil {
+				return nil, status.Errorf(codes.Internal, "Failed to share %v with %v", fullPath, shareWithID)
+			}
 		}
 	}
 
