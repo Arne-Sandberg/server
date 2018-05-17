@@ -7,14 +7,14 @@ import (
 )
 
 func TestGetUserPath(t *testing.T) {
-	var l = map[models.User]string{
-		models.User{ID: 0}: "/0",
-		models.User{ID: 1}: "/1",
+	var l = map[uint32]string{
+		0: "/0",
+		1: "/1",
 	}
 
 	vfs := VirtualFilesystem{}
 	for input, expOutput := range l {
-		if output := vfs.getUserPath(&input); output != expOutput {
+		if output := vfs.getUserPath(&models.User{ ID: input }); output != expOutput {
 			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
 		}
 	}
@@ -22,20 +22,20 @@ func TestGetUserPath(t *testing.T) {
 
 func TestSplitPath(t *testing.T) {
 	var l = map[string][2]string{
-		"/hello/dear/file.txt": [2]string{"/hello/dear/", "file.txt"},
-		"/file2.txt":           [2]string{"/", "file2.txt"},
-		"/":                    [2]string{"/", ""},
-		"\\":                   [2]string{"/", ""},
-		".":                    [2]string{"/", ""},
-		"\\testFolder\\":       [2]string{"/", "testFolder"},
-		"/testFolder":          [2]string{"/", "testFolder"},
-		"/.tmp":                [2]string{"/", ".tmp"},
-		"testFolder/":          [2]string{"/", "testFolder"},
-		".tmp/":                [2]string{"/", ".tmp"},
-		"/testFolder/":         [2]string{"/", "testFolder"},
-		"/.tmp/":               [2]string{"/", ".tmp"},
-		"testFolder":           [2]string{"/", "testFolder"},
-		".tmp":                 [2]string{"/", ".tmp"},
+		"/hello/dear/file.txt": {"/hello/dear/", "file.txt"},
+		"/file2.txt":           {"/", "file2.txt"},
+		"/":                    {"/", ""},
+		"\\":                   {"/", ""},
+		".":                    {"/", ""},
+		"\\testFolder\\":       {"/", "testFolder"},
+		"/testFolder":          {"/", "testFolder"},
+		"/.tmp":                {"/", ".tmp"},
+		"testFolder/":          {"/", "testFolder"},
+		".tmp/":                {"/", ".tmp"},
+		"/testFolder/":         {"/", "testFolder"},
+		"/.tmp/":               {"/", ".tmp"},
+		"testFolder":           {"/", "testFolder"},
+		".tmp":                 {"/", ".tmp"},
 	}
 
 	vfs := VirtualFilesystem{}

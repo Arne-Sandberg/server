@@ -22,7 +22,7 @@ type Filesystem interface {
 	CreateDirIfNotExist(path string) (created bool, err error)
 	GetFileInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error)
 	GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error)
-	// Prepare download (if remote file locationn) and return local path
+	// Prepare download (if remote file location) and return local path
 	GetDownloadPath(path string) string
 	// ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
 	ZipFiles(paths []string, outputPath string) (err error)

@@ -3,27 +3,32 @@ package models
 import (
 	"fmt"
 	"strconv"
-	"time"
+
+	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 const SessionTokenLength = 32
 
 type Session struct {
-	UserID    int    `storm:"index"`
+	UserID    uint32 `storm:"index"`
 	Token     string `storm:"id,unique"`
-	ExpiresAt time.Time
+	ExpiresAt *timestamp.Timestamp
 }
 
 func (s Session) GetTokenString() string {
 	return fmt.Sprintf("%s%d", s.Token, s.UserID)
 }
 
-func ParseSessionTokenString(cookie string) (*Session, error) {
-	tok := cookie[:SessionTokenLength]
-	userIDStr := cookie[SessionTokenLength:]
+func ParseSessionTokenString(token string) (*Session, error) {
+	if len(token) < SessionTokenLength {
+		return nil, fmt.Errorf("given token '%s' is not long enough", token)
+	}
+
+	tok := token[:SessionTokenLength]
+	userIDStr := token[SessionTokenLength:]
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		return &Session{}, err
 	}
-	return &Session{UserID: userID, Token: tok}, nil
+	return &Session{UserID: uint32(userID), Token: tok}, nil
 }

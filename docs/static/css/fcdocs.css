@@ -1,0 +1,10 @@
+body, p, span, div, aside {
+  text-shadow: none !important;
+}
+
+.endpoint-stats {
+  font-weight: bold;
+  padding-top: 1em !important;
+  padding-bottom: 1em !important;
+  background-color: rgba(0, 0, 0, 0.2);
+}

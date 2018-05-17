@@ -13,8 +13,8 @@ import (
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/db"
 	"github.com/freecloudio/freecloud/fs"
-	"github.com/freecloudio/freecloud/router"
 	"github.com/freecloudio/freecloud/stats"
+	"github.com/freecloudio/freecloud/server"
 )
 
 var (
@@ -59,7 +59,7 @@ func main() {
 		}
 	}()
 
-	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"), config.GetString("fs.tmp_folder_name")) // TODO: Remove temp folder name from dfs and move completely to vfs
+	filesystem, err := fs.NewDiskFilesystem(config.GetString("fs.base_directory"), config.GetString("fs.tmp_folder_name"), config.GetInt("fs.tmp_data_expiry"))
 	if err != nil {
 		os.Exit(3)
 	}
@@ -70,15 +70,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	auth.Init(database, database)
+	auth.Init(database, database, config.GetInt("auth.session_expiry"))
 
+	// TODO: Remove temp folder name from vfs and move completely to dfs
 	virtualFS, err := fs.NewVirtualFilesystem(filesystem, database, config.GetString("fs.tmp_folder_name"))
 
-	router.Start(config.GetInt("http.port"), config.GetString("http.host"), virtualFS, database)
+	server.StartAll(config.GetInt("http.port"), config.GetInt("grpc.web.port"), config.GetInt("grpc.nat.port"), config.GetString("net.host"), virtualFS, config.GetBool("grpc.nat.start"))
 
 	code := <-exitChan
 
-	router.Stop()
+	server.StopAll()
 	virtualFS.Close()
 	auth.Close()
 	database.Close()

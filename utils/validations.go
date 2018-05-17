@@ -24,11 +24,6 @@ func ValidateLastName(lastName string) bool {
 	return len(lastName) > 0
 }
 
-// ValidateAvatarURL checks whether the avatar URL is valid
-func ValidateAvatarURL(avatarURL string) bool {
-	return true // TODO: Check whether there needs to be a check for a valid avatar URL
-}
-
 const (
 	forbiddenPathCharacters = "<>:\"|?*"
 )

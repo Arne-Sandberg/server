@@ -4,10 +4,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	log "gopkg.in/clog.v1"
 )
 
@@ -17,6 +17,7 @@ var (
 	cProvider CredentialsProvider
 	sProvider SessionProvider
 	done      chan struct{}
+	sessionExpiry time.Duration
 
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
@@ -25,12 +26,13 @@ var (
 )
 
 // Init intializes the auth package. You must call this before using any auth function.
-func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider) {
+func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider, sessionExp int) {
 	cProvider = credentialsProvider
 	sProvider = sessionProvider
+	sessionExpiry = time.Hour * time.Duration(sessionExp)
 
 	done = make(chan struct{})
-	go cleanupExpiredSessionsRoutine(time.Hour * time.Duration(config.GetInt("auth.session_expiry")))
+	go cleanupExpiredSessionsRoutine(sessionExpiry)
 }
 
 func Close() {
@@ -77,21 +79,18 @@ func NewSession(email string, password string) (*models.Session, error) {
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(userID int) *models.Session {
+func newUnverifiedSession(userID uint32) *models.Session {
 	sess := &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
-		ExpiresAt: time.Now().UTC().Add(time.Hour * time.Duration(config.GetInt("auth.session_expiry"))),
+		ExpiresAt: utils.GetTimestampFromTime(time.Now().UTC().Add(sessionExpiry)),
 	}
 	err := sProvider.StoreSession(sess)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
 	}
 
-	updates := map[string]interface{}{
-		"lastSession": time.Now().UTC(),
-	}
-	_, err = UpdateUser(userID, updates)
+	err = UpdateLastSession(userID)
 	if err != nil {
 		log.Error(0, "Could not update user with lastSession %v", err)
 	}
@@ -99,7 +98,7 @@ func newUnverifiedSession(userID int) *models.Session {
 	return sess
 }
 
-func TotalSessionCount() int {
+func TotalSessionCount() uint32 {
 	return sProvider.TotalSessionCount()
 }
 
@@ -111,13 +110,13 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	}
 
 	existingUser, err := cProvider.GetUserByEmail(user.Email)
-	if (*existingUser != models.User{}) {
+	if existingUser.Email == user.Email {
 		err = ErrUserAlreadyExists
 		return
 	}
 
-	user.Created = time.Now().UTC()
-	user.Updated = time.Now().UTC()
+	user.CreatedAt = utils.GetTimestampNow()
+	user.UpdatedAt = utils.GetTimestampNow()
 	user.Password, err = HashPassword(user.Password)
 	if err != nil {
 		log.Error(0, "Password hashing failed: %v", err)
@@ -141,7 +140,7 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	return newUnverifiedSession(user.ID), nil
 }
 
-func DeleteUser(userID int) (err error) {
+func DeleteUser(userID uint32) (err error) {
 	if err = sProvider.RemoveUserSessions(userID); err != nil {
 		return
 	}
@@ -164,9 +163,9 @@ func GetAllUsers(isAdmin bool) ([]*models.User, error) {
 
 		// For normal users also mask out created, updated and lastSession
 		if !isAdmin {
-			user.Created = time.Time{}
-			user.Updated = time.Time{}
-			user.LastSession = time.Time{}
+			user.CreatedAt = &timestamp.Timestamp{}
+			user.UpdatedAt = &timestamp.Timestamp{}
+			user.LastSessionAt = &timestamp.Timestamp{}
 		}
 	}
 	return users, nil
@@ -177,8 +176,12 @@ func ValidateSession(sess *models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)
 }
 
-func GetUserByID(userID int) (*models.User, error) {
+func GetUserByID(userID uint32) (*models.User, error) {
 	return cProvider.GetUserByID(userID)
+}
+
+func GetUserByEmail(email string) (*models.User, error) {
+	return cProvider.GetUserByEmail(email)
 }
 
 //RemoveSession removes the session from the session provider
@@ -186,70 +189,65 @@ func RemoveSession(sess *models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
-func UpdateUser(userID int, updates map[string]interface{}) (user *models.User, err error) {
+func UpdateLastSession(userID uint32) (err error) {
+	user, err := GetUserByID(userID)
+	if err != nil {
+		return
+	}
+
+	user.LastSessionAt = utils.GetTimestampNow()
+	err = cProvider.UpdateUser(user)
+
+	return
+}
+
+func UpdateUser(userID uint32, updatedUser *models.UserUpdate) (user *models.User, err error) {
 	user, err = GetUserByID(userID)
 	if err != nil {
 		return
 	}
 
-	if email, ok := updates["email"]; ok == true {
-		user.Email, ok = email.(string)
-		if ok != true || !utils.ValidateEmail(user.Email) {
+	if email, ok := updatedUser.EmailOO.(*models.UserUpdate_Email); ok == true {
+		user.Email = email.Email
+		if !utils.ValidateEmail(user.Email) {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if firstName, ok := updates["firstName"]; ok == true {
-		user.FirstName, ok = firstName.(string)
-		if ok != true || !utils.ValidateFirstName(user.FirstName) {
+
+	if firstName, ok := updatedUser.FirstNameOO.(*models.UserUpdate_FirstName); ok == true {
+		user.FirstName = firstName.FirstName
+		if !utils.ValidateFirstName(user.FirstName) {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if lastName, ok := updates["lastName"]; ok == true {
-		user.LastName, ok = lastName.(string)
-		if ok != true || !utils.ValidateLastName(user.LastName) {
+
+	if lastName, ok := updatedUser.LastNameOO.(*models.UserUpdate_LastName); ok == true {
+		user.LastName = lastName.LastName
+		if !utils.ValidateLastName(user.LastName) {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if avatarURL, ok := updates["avatarURL"]; ok == true {
-		user.AvatarURL, ok = avatarURL.(string)
-		if ok != true || !utils.ValidateAvatarURL(user.AvatarURL) {
-			err = ErrInvalidUserData
-			return
-		}
+
+	if isAdmin, ok := updatedUser.IsAdminOO.(*models.UserUpdate_IsAdmin); ok == true {
+		user.IsAdmin = isAdmin.IsAdmin
 	}
-	if isAdmin, ok := updates["isAdmin"]; ok == true {
-		user.IsAdmin, ok = isAdmin.(bool)
-		if ok != true {
+
+	if password, ok := updatedUser.PasswordOO.(*models.UserUpdate_Password); ok == true {
+		if ok != true || !utils.ValidatePassword(password.Password) {
 			err = ErrInvalidUserData
 			return
 		}
-	}
-	if password, ok := updates["password"]; ok == true {
-		newPassword, ok := password.(string)
-		if ok != true || !utils.ValidatePassword(user.Password) {
-			err = ErrInvalidUserData
-			return
-		}
-		user.Password, err = HashPassword(newPassword)
+		user.Password, err = HashPassword(password.Password)
 		if err != nil {
 			err = ErrInvalidUserData
 			return
 		}
 	}
-	if lastSession, ok := updates["lastSession"]; ok == true {
-		user.LastSession, ok = lastSession.(time.Time)
-		if ok != true {
-			err = ErrInvalidUserData
-			return
-		}
-	} else {
-		// I expect that the lastSession will only be updated if nothing else of the data is updated.
-		// That way the "Updated" only represents changes to the core user data
-		user.Updated = time.Now().UTC()
-	}
+
+	user.UpdatedAt = utils.GetTimestampNow()
 
 	err = cProvider.UpdateUser(user)
 	user.Password = ""
