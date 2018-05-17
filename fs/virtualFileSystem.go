@@ -90,7 +90,7 @@ func (vfs *VirtualFilesystem) scanDirForChanges(user *models.User, path, name st
 	pathInfo, err := vfs.fs.GetFileInfo(userPath, path, name)
 	// Return if the scanning dir is a file
 	if err != nil || !pathInfo.IsDir {
-		return pathInfo.Size, fmt.Errorf("Path is not a directory")
+		return pathInfo.Size, fmt.Errorf("path is not a directory")
 	}
 
 	// Get dir contents of fs and db
@@ -507,11 +507,13 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updated
 				return
 			}
 
-			newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
-			err = vfs.fs.MoveFile(oldPath, newPath)
-			if err != nil {
-				log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
-				return
+			if fileInfo.ShareID <= 0 {
+				newPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
+				err = vfs.fs.MoveFile(oldPath, newPath)
+				if err != nil {
+					log.Error(0, "Error moving file from %v to %v: %v", oldPath, newPath, err)
+					return
+				}
 			}
 		} else {
 			err = vfs.copyFile(user, fileInfo, newName, newFolderInfo)
@@ -658,7 +660,7 @@ func (vfs *VirtualFilesystem) SearchForFiles(user *models.User, path string) (re
 	return vfs.db.SearchForFiles(user.ID, filePath, fileName)
 }
 
-func (vfs *VirtualFilesystem) DeleteUser(user *models.User) (err error) {
+func (vfs *VirtualFilesystem) DeleteUserFiles(user *models.User) (err error) {
 	err = vfs.db.DeleteUserFiles(user.ID)
 	if err != nil {
 		return
