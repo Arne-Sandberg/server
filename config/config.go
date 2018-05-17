@@ -20,7 +20,6 @@ func setDefaults() {
 	// Upload limit is given in GB
 	viper.SetDefault("http.upload_limit", 10)
 	viper.SetDefault("fs.base_directory", "data")
-	viper.SetDefault("fs.tmp_folder_name", ".tmp")
 	viper.SetDefault("fs.tmp_data_expiry", 24)
 	viper.SetDefault("db.name", "freecloud.db")
 }
