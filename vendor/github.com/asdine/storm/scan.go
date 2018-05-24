@@ -3,7 +3,7 @@ package storm
 import (
 	"bytes"
 
-	"github.com/coreos/bbolt"
+	"github.com/boltdb/bolt"
 )
 
 // A BucketScanner scans a Node for a list of buckets

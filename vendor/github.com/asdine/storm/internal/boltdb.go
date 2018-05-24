@@ -3,7 +3,7 @@ package internal
 import (
 	"bytes"
 
-	"github.com/coreos/bbolt"
+	"github.com/boltdb/bolt"
 )
 
 // Cursor that can be reversed

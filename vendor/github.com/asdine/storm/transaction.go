@@ -1,8 +1,8 @@
 package storm
 
-import "github.com/coreos/bbolt"
+import "github.com/boltdb/bolt"
 
-// Tx is a transaction.
+// Tx is a transaction
 type Tx interface {
 	// Commit writes all changes to disk.
 	Commit() error

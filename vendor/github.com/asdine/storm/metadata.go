@@ -3,7 +3,7 @@ package storm
 import (
 	"reflect"
 
-	"github.com/coreos/bbolt"
+	"github.com/boltdb/bolt"
 )
 
 const (

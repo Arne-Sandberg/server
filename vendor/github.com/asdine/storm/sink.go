@@ -6,7 +6,7 @@ import (
 
 	"github.com/asdine/storm/index"
 	"github.com/asdine/storm/q"
-	"github.com/coreos/bbolt"
+	"github.com/boltdb/bolt"
 )
 
 type item struct {
