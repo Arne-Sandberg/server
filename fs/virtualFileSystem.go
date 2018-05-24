@@ -719,27 +719,26 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 	return
 }
 
-func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath string) (finalFileInfo *models.FileInfo, err error) {
+func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath string) (*models.FileInfo, error) {
 	filePath, fileName := vfs.splitPath(requestedPath)
 	var fileInfo *models.FileInfo
-	fileInfo, err = vfs.db.GetFileInfo(userID, filePath, fileName)
+	fileInfo, err := vfs.db.GetFileInfo(userID, filePath, fileName)
 
 	if err == nil && fileInfo.ShareID <= 0 {  // File exists in db for user and is owned by him: Directly return info
-		finalFileInfo = fileInfo
-		return
+		return fileInfo, nil
 	} else if err == nil && fileInfo.ShareID > 0 {  // File exists in db for user and is shared with him: Get orig file and return it
 		shareEntry, err := vfs.CheckShareEntry(userID, fileInfo.ShareID)
 		if err != nil {
-			return
+			return nil, err
 		}
 
-		finalFileInfo = &models.FileInfo{}
+		finalFileInfo := &models.FileInfo{}
 		finalFileInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
 		if err != nil {
-			return
+			return nil, err
 		}
 
-		return
+		return finalFileInfo, err
 	} else {  // File does not exist in db: Check recusively if it is in a shared folder otherwise return not found
 		var sharedParentInfo *models.FileInfo = nil
 		var removedPath string
@@ -757,13 +756,13 @@ func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath strin
 			} else if err == nil && fileInfo.ShareID > 0 {  // Found existing parent that is shared --> Check share and remember parent
 				shareEntry, err := vfs.CheckShareEntry(userID, fileInfo.ShareID)
 				if err != nil {
-					return
+					return nil, err
 				}
 
 				sharedParentInfo = &models.FileInfo{}
-				finalFileInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
+				sharedParentInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
 				if err != nil {
-					return
+					return nil, err
 				}
 
 				break
@@ -774,14 +773,14 @@ func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath strin
 			return nil, ErrFileNotFound
 		}
 
-		finalFileInfo = &models.FileInfo{}
+		finalFileInfo := &models.FileInfo{}
 		finalFileInfo, err = vfs.db.GetFileInfo(sharedParentInfo.OwnerID, filepath.Join(sharedParentInfo.Path, sharedParentInfo.Name, removedPath), fileName)
 		if err != nil {
-			return
+			return nil, err
 		}
-	}
 
-	return
+		return finalFileInfo, nil
+	}
 }
 
 func (vfs *VirtualFilesystem) CheckShareEntry(userID, shareID uint32) (shareEntry *models.ShareEntry, err error) {
