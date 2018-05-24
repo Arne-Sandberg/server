@@ -13,6 +13,7 @@ import (
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
 	log "gopkg.in/clog.v1"
+	"errors"
 )
 
 type vfsDatabase interface {
@@ -37,6 +38,8 @@ type vfsDatabase interface {
 }
 
 const TmpName = ".tmp"
+
+var ErrFileNotFound = errors.New("vfs: File not found")
 
 type VirtualFilesystem struct {
 	fs      Filesystem
@@ -680,6 +683,10 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 		return
 	}
 
+	if fileInfo.ShareID > 0 {
+		return fmt.Errorf("sharing shared files is forbidden")
+	}
+
 	shareEntry := &models.ShareEntry{
 		OwnerID:			fromUser.ID,
 		SharedWithID:	toUser.ID,
@@ -709,6 +716,71 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 	}
 
 	err = vfs.db.InsertFile(sharedFileInfo)
+	return
+}
+
+func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath string) (finalFileInfo *models.FileInfo, err error) {
+	filePath, fileName := vfs.splitPath(requestedPath)
+	var fileInfo *models.FileInfo
+	fileInfo, err = vfs.db.GetFileInfo(userID, filePath, fileName)
+
+	if err == nil && fileInfo.ShareID <= 0 {  // File exists in db for user and is owned by him: Directly return info
+		finalFileInfo = fileInfo
+		return
+	} else if err == nil && fileInfo.ShareID > 0 {  // File exists in db for user and is shared with him: Get orig file and return it
+		shareEntry, err := vfs.CheckShareEntry(userID, fileInfo.ShareID)
+		if err != nil {
+			return
+		}
+
+		finalFileInfo = &models.FileInfo{}
+		finalFileInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
+		if err != nil {
+			return
+		}
+
+		return
+	} else {  // File does not exist in db: Check recusively if it is in a shared folder otherwise return not found
+		var sharedParentInfo *models.FileInfo = nil
+		var removedPath string
+		parentPath := filePath
+		parentName := ""
+		for {
+			removedPath = filepath.Join(removedPath, parentName)
+			parentPath, parentName = vfs.splitPath(parentPath)
+
+			var fileInfo *models.FileInfo
+			fileInfo, err = vfs.db.GetFileInfo(userID, parentPath, parentName)
+
+			if err == nil && fileInfo.ShareID <= 0 {  // Found existing parent but it is not shared --> Requested file does not exist
+				break
+			} else if err == nil && fileInfo.ShareID > 0 {  // Found existing parent that is shared --> Check share and remember parent
+				shareEntry, err := vfs.CheckShareEntry(userID, fileInfo.ShareID)
+				if err != nil {
+					return
+				}
+
+				sharedParentInfo = &models.FileInfo{}
+				finalFileInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
+				if err != nil {
+					return
+				}
+
+				break
+			}
+		}
+
+		if sharedParentInfo == nil {
+			return nil, ErrFileNotFound
+		}
+
+		finalFileInfo = &models.FileInfo{}
+		finalFileInfo, err = vfs.db.GetFileInfo(sharedParentInfo.OwnerID, filepath.Join(sharedParentInfo.Path, sharedParentInfo.Name, removedPath), fileName)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
