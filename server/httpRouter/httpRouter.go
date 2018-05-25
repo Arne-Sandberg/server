@@ -35,6 +35,9 @@ func Start(port int, hostname string, virtualFS *fs.VirtualFilesystem) {
 	// Up- and Download of files
 	m.Get("/download/*", OnlyUsers, ResolvePath, s.DownloadHandler)
 	m.Post("/upload/*", OnlyUsers, ResolvePath, s.UploadHandler, JSONEncoder)
+	m.Get("/avatar/me", OnlyUsers, s.GetMyAvatarHandler)
+	m.Post("/avatar/me", OnlyUsers, s.SetMyAvatarHandler, JSONEncoder)
+	m.Get("/avatar/:uid", OnlyUsers, s.GetAvatarHandler)
 
 	m.Use(macaron.Static("client/dist", macaron.StaticOptions{SkipLogging: true}))
 	m.NotFound(s.NotFoundHandler)

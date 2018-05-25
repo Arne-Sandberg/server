@@ -859,8 +859,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for FilesService service
-
+// FilesServiceClient is the client API for FilesService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type FilesServiceClient interface {
 	ZipFiles(ctx context.Context, in *PathsRequest, opts ...grpc.CallOption) (*Path, error)
 	GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*FileInfoResponse, error)
@@ -886,7 +887,7 @@ func NewFilesServiceClient(cc *grpc.ClientConn) FilesServiceClient {
 
 func (c *filesServiceClient) ZipFiles(ctx context.Context, in *PathsRequest, opts ...grpc.CallOption) (*Path, error) {
 	out := new(Path)
-	err := grpc.Invoke(ctx, "/files.FilesService/ZipFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/ZipFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -895,7 +896,7 @@ func (c *filesServiceClient) ZipFiles(ctx context.Context, in *PathsRequest, opt
 
 func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*FileInfoResponse, error) {
 	out := new(FileInfoResponse)
-	err := grpc.Invoke(ctx, "/files.FilesService/GetFileInfo", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/GetFileInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -904,7 +905,7 @@ func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, o
 
 func (c *filesServiceClient) CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileInfo, error) {
 	out := new(FileInfo)
-	err := grpc.Invoke(ctx, "/files.FilesService/CreateFile", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/CreateFile", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -913,7 +914,7 @@ func (c *filesServiceClient) CreateFile(ctx context.Context, in *CreateFileReque
 
 func (c *filesServiceClient) UpdateFileInfos(ctx context.Context, in *FileInfosUpdateRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/UpdateFileInfos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/UpdateFileInfos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -922,7 +923,7 @@ func (c *filesServiceClient) UpdateFileInfos(ctx context.Context, in *FileInfosU
 
 func (c *filesServiceClient) DeleteFiles(ctx context.Context, in *PathsRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/DeleteFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/DeleteFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -931,7 +932,7 @@ func (c *filesServiceClient) DeleteFiles(ctx context.Context, in *PathsRequest, 
 
 func (c *filesServiceClient) ShareFiles(ctx context.Context, in *ShareRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/ShareFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/ShareFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -940,7 +941,7 @@ func (c *filesServiceClient) ShareFiles(ctx context.Context, in *ShareRequest, o
 
 func (c *filesServiceClient) SearchFiles(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*FileList, error) {
 	out := new(FileList)
-	err := grpc.Invoke(ctx, "/files.FilesService/SearchFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/SearchFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -949,7 +950,7 @@ func (c *filesServiceClient) SearchFiles(ctx context.Context, in *SearchRequest,
 
 func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*FileList, error) {
 	out := new(FileList)
-	err := grpc.Invoke(ctx, "/files.FilesService/GetStarredFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/GetStarredFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -958,7 +959,7 @@ func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentica
 
 func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*FileList, error) {
 	out := new(FileList)
-	err := grpc.Invoke(ctx, "/files.FilesService/GetSharedFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/GetSharedFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -967,7 +968,7 @@ func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authenticat
 
 func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/RescanOwnFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/RescanOwnFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -976,7 +977,7 @@ func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authenticat
 
 func (c *filesServiceClient) RescanUserFilesByID(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/RescanUserFilesByID", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/RescanUserFilesByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -984,7 +985,7 @@ func (c *filesServiceClient) RescanUserFilesByID(ctx context.Context, in *UserID
 }
 
 func (c *filesServiceClient) GetUpdateNotifications(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (FilesService_GetUpdateNotificationsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_FilesService_serviceDesc.Streams[0], c.cc, "/files.FilesService/GetUpdateNotifications", opts...)
+	stream, err := c.cc.NewStream(ctx, &_FilesService_serviceDesc.Streams[0], "/files.FilesService/GetUpdateNotifications", opts...)
 	if err != nil {
 		return nil, err
 	}

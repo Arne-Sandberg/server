@@ -138,8 +138,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for SystemService service
-
+// SystemServiceClient is the client API for SystemService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SystemServiceClient interface {
 	GetSystemStats(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*SystemStats, error)
 }
@@ -154,7 +155,7 @@ func NewSystemServiceClient(cc *grpc.ClientConn) SystemServiceClient {
 
 func (c *systemServiceClient) GetSystemStats(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*SystemStats, error) {
 	out := new(SystemStats)
-	err := grpc.Invoke(ctx, "/system.SystemService/GetSystemStats", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/system.SystemService/GetSystemStats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
