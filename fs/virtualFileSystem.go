@@ -265,6 +265,7 @@ func (vfs *VirtualFilesystem) NewFileHandleForUser(user *models.User, path strin
 	return vfs.fs.NewFileHandle(filepath.Join(vfs.getUserPath(user), path))
 }
 
+// TODO: CheckedFileInfo
 func (vfs *VirtualFilesystem) FinishNewFile(user *models.User, path string) (err error) {
 	if !utils.ValidatePath(path) {
 		err = ErrForbiddenPathName
@@ -305,8 +306,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	folderPath, folderName := vfs.splitPath(path)
 	userPath := vfs.getUserPath(user)
 
-	parFolderPath, parFolderName := vfs.splitPath(folderPath)
-	parFolderInfo, err := vfs.db.GetFileInfo(user.ID, parFolderPath, parFolderName)
+	parFolderInfo, err := vfs.GetCheckedFileInfo(user, folderPath)
 	if err != nil {
 		err = fmt.Errorf("could not find parent folder of folder in db: %v", err)
 		log.Error(0, "%v", err)
@@ -324,7 +324,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 		Path:        utils.ConvertToSlash(folderPath, true),
 		Name:        folderName,
 		IsDir:       true,
-		OwnerID:     user.ID,
+		OwnerID:     parFolderInfo.OwnerID,
 		LastChanged: utils.GetTimestampNow(),
 		ParentID:    parFolderInfo.ID,
 	}
@@ -336,6 +336,7 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	return
 }
 
+// TODO: Include shared content
 func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
 	folderPath, folderName := vfs.splitPath(path)
 	dirInfo, content, err = vfs.db.GetDirectoryContent(user.ID, folderPath, folderName)
@@ -362,8 +363,7 @@ func (vfs *VirtualFilesystem) ListSharedFilesForUser(user *models.User) (sharedF
 }
 
 func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileInfo *models.FileInfo, err error) {
-	filePath, fileName := vfs.splitPath(path)
-	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	fileInfo, err = vfs.GetCheckedFileInfo(user, path)
 	if err != nil {
 		return
 	}
@@ -371,31 +371,14 @@ func (vfs *VirtualFilesystem) GetFileInfo(user *models.User, path string) (fileI
 }
 
 func (vfs *VirtualFilesystem) GetDownloadPath(user *models.User, path string) (downloadURL, filename string, err error) {
-	filePath, fileName := vfs.splitPath(path)
-	fileInfo, err := vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	fileInfo, err := vfs.GetCheckedFileInfo(user, path)
 	if err != nil {
 		return
 	}
 
-	if fileInfo.ShareID > 0 {
-		var shareEntry *models.ShareEntry
-		shareEntry, err = vfs.CheckShareEntry(user.ID, fileInfo.ShareID)
-		if err != nil {
-			return
-		}
+	downloadURL = vfs.fs.GetDownloadPath(filepath.Join(vfs.getUserPathWithID(fileInfo.OwnerID), fileInfo.Path, fileInfo.Name))
 
-		var origFileInfo *models.FileInfo
-		origFileInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
-		if err != nil {
-			return
-		}
-		userPath := vfs.getUserPathWithID(origFileInfo.OwnerID)
-		downloadURL = vfs.fs.GetDownloadPath(filepath.Join(userPath, fileInfo.Path, fileInfo.Name))
-	} else {
-		userPath := vfs.getUserPath(user)
-		downloadURL = vfs.fs.GetDownloadPath(filepath.Join(userPath, path))
-	}
-
+	_, fileName := vfs.splitPath(path)
 	filename = fileName
 	return
 }
@@ -407,37 +390,18 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 		return
 	}
 
-	userPath := vfs.getUserPath(user)
 	for it := 0; it < len(paths); it++ {
-		filePath, fileName := vfs.splitPath(paths[it])
 		var fileInfo *models.FileInfo
-		fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+		fileInfo, err = vfs.GetCheckedFileInfo(user, paths[it])
 		if err != nil {
 			return
 		}
 
-		if fileInfo.ShareID > 0 {
-			var shareEntry *models.ShareEntry
-			shareEntry, err = vfs.db.GetShareEntryByID(fileInfo.ShareID)
-			if err != nil {
-				return
-			}
-
-			var origFileInfo *models.FileInfo
-			origFileInfo, err = vfs.db.GetFileInfoWithID(shareEntry.FileID)
-			if err != nil {
-				return
-			}
-
-			origUserPath := vfs.getUserPathWithID(origFileInfo.OwnerID)
-			paths[it] = filepath.Join(origUserPath, paths[it])
-		} else {
-			paths[it] = filepath.Join(userPath, paths[it])
-		}
+		paths[it] = filepath.Join(vfs.getUserPathWithID(fileInfo.OwnerID), paths[it])
 	}
 
 	zipPath = filepath.Join(TmpName, outputName)
-	outputPath := filepath.Join(userPath, zipPath)
+	outputPath := filepath.Join(vfs.getUserPath(user), zipPath)
 
 	err = vfs.fs.ZipFiles(paths, outputPath)
 	if err != nil {
@@ -452,8 +416,7 @@ func (vfs *VirtualFilesystem) ZipFiles(user *models.User, paths []string, output
 }
 
 func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updatedFileInfo *models.FileInfoUpdate) (fileInfo *models.FileInfo, err error) {
-	filePath, fileName := vfs.splitPath(path)
-	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	fileInfo, err = vfs.GetCheckedFileInfo(user, path)
 	if err != nil {
 		return
 	}
@@ -488,9 +451,8 @@ func (vfs *VirtualFilesystem) UpdateFile(user *models.User, path string, updated
 		userPath := vfs.getUserPath(user)
 		oldPath := filepath.Join(userPath, fileInfo.Path, fileInfo.Name)
 
-		newFolderPath, newFolderName := vfs.splitPath(newPath)
 		var newFolderInfo *models.FileInfo
-		newFolderInfo, err = vfs.db.GetFileInfo(user.ID, newFolderPath, newFolderName)
+		newFolderInfo, err = vfs.GetCheckedFileInfo(user, newPath)
 		if err != nil {
 			log.Error(0, "Error getting parent for changed file %v%v: %v", fileInfo.Path, fileInfo.Name, err)
 			return
@@ -577,7 +539,7 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 			}
 
 			var newFolderInfo *models.FileInfo
-			newFolderInfo, err = vfs.db.GetFileInfo(user.ID, parentPath, newName)
+			newFolderInfo, err = vfs.GetCheckedFileInfo(user, newPath)
 			if err != nil {
 				return
 			}
@@ -618,9 +580,8 @@ func (vfs *VirtualFilesystem) copyFile(user *models.User, fileInfo *models.FileI
 }
 
 func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err error) {
-	filePath, fileName := vfs.splitPath(path)
 	var fileInfo *models.FileInfo
-	fileInfo, err = vfs.db.GetFileInfo(user.ID, filePath, fileName)
+	fileInfo, err = vfs.GetCheckedFileInfo(user, path)
 	if err != nil {
 		return
 	}
@@ -631,7 +592,7 @@ func (vfs *VirtualFilesystem) DeleteFile(user *models.User, path string) (err er
 	}
 
 	if fileInfo.ShareID <= 0 {
-		err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPath(user), path))
+		err = vfs.fs.DeleteFile(filepath.Join(vfs.getUserPathWithID(fileInfo.OwnerID), path))
 		if err != nil {
 			return
 		}
@@ -719,15 +680,15 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 	return
 }
 
-func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath string) (*models.FileInfo, error) {
+func (vfs *VirtualFilesystem) GetCheckedFileInfo(user *models.User, requestedPath string) (*models.FileInfo, error) {
 	filePath, fileName := vfs.splitPath(requestedPath)
 	var fileInfo *models.FileInfo
-	fileInfo, err := vfs.db.GetFileInfo(userID, filePath, fileName)
+	fileInfo, err := vfs.db.GetFileInfo(user.ID, filePath, fileName)
 
 	if err == nil && fileInfo.ShareID <= 0 {  // File exists in db for user and is owned by him: Directly return info
 		return fileInfo, nil
 	} else if err == nil && fileInfo.ShareID > 0 {  // File exists in db for user and is shared with him: Get orig file and return it
-		shareEntry, err := vfs.CheckShareEntry(userID, fileInfo.ShareID)
+		shareEntry, err := vfs.getCheckedShareEntry(user.ID, fileInfo.ShareID)
 		if err != nil {
 			return nil, err
 		}
@@ -749,12 +710,12 @@ func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath strin
 			parentPath, parentName = vfs.splitPath(parentPath)
 
 			var fileInfo *models.FileInfo
-			fileInfo, err = vfs.db.GetFileInfo(userID, parentPath, parentName)
+			fileInfo, err = vfs.db.GetFileInfo(user.ID, parentPath, parentName)
 
 			if err == nil && fileInfo.ShareID <= 0 {  // Found existing parent but it is not shared --> Requested file does not exist
 				break
 			} else if err == nil && fileInfo.ShareID > 0 {  // Found existing parent that is shared --> Check share and remember parent
-				shareEntry, err := vfs.CheckShareEntry(userID, fileInfo.ShareID)
+				shareEntry, err := vfs.getCheckedShareEntry(user.ID, fileInfo.ShareID)
 				if err != nil {
 					return nil, err
 				}
@@ -783,7 +744,7 @@ func (vfs *VirtualFilesystem) CheckPathAccess(userID uint32, requestedPath strin
 	}
 }
 
-func (vfs *VirtualFilesystem) CheckShareEntry(userID, shareID uint32) (shareEntry *models.ShareEntry, err error) {
+func (vfs *VirtualFilesystem) getCheckedShareEntry(userID, shareID uint32) (shareEntry *models.ShareEntry, err error) {
 	shareEntry, err = vfs.db.GetShareEntryByID(shareID)
 	if err != nil {
 		return
