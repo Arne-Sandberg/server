@@ -32,7 +32,7 @@ yarn build
 ## GRPC build
 
 For building the grpc sources use the `build_grpc.sh` script.
-For it to use install `protoc` and `protoc-go-inject-tag`!
+For it to use install `protoc` and the go package `protoc-go-inject-tag`!
 
 ## API reference
 
