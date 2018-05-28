@@ -96,7 +96,7 @@ func NewRouter() *Router {
 }
 
 // SetAutoHead sets the value who determines whether add HEAD method automatically
-// when GET method is added.
+// when GET method is added. Combo router will not be affected by this value.
 func (r *Router) SetAutoHead(v bool) {
 	r.autoHead = v
 }
@@ -341,9 +341,6 @@ func (cr *ComboRouter) route(fn func(string, ...Handler) *Route, method string, 
 }
 
 func (cr *ComboRouter) Get(h ...Handler) *ComboRouter {
-	if cr.router.autoHead {
-		cr.Head(h...)
-	}
 	return cr.route(cr.router.Get, "GET", h...)
 }
 

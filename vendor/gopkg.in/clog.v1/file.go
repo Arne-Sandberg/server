@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	SIMPLE_DATE_FORMAT = "2006-01-02"
-	LOG_PREFIX_LENGTH  = len("2017/02/06 21:20:08 ")
+	FILE               MODE = "file"
+	SIMPLE_DATE_FORMAT      = "2006-01-02"
+	LOG_PREFIX_LENGTH       = len("2017/02/06 21:20:08 ")
 )
 
 // FileRotationConfig represents rotation related configurations for file mode logger.

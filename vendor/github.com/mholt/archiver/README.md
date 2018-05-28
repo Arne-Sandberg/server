@@ -3,17 +3,20 @@ archiver [![archiver GoDoc](https://img.shields.io/badge/reference-godoc-blue.sv
 
 Package archiver makes it trivially easy to make and extract common archive formats such as .zip, and .tar.gz. Simply name the input and output file(s).
 
-Files are put into the root of the archive; directories are recursively added.
+Files are put into the root of the archive; directories are recursively added, preserving structure.
 
-The `archiver` command runs the same cross-platform and has no external dependencies (not even libc); powered by the Go standard library, [dsnet/compress](https://github.com/dsnet/compress), and [nwaples/rardecode](https://github.com/nwaples/rardecode). Enjoy!
+The `archiver` command runs the same cross-platform and has no external dependencies (not even libc); powered by the Go standard library, [dsnet/compress](https://github.com/dsnet/compress), [nwaples/rardecode](https://github.com/nwaples/rardecode), and [ulikunitz/xz](https://github.com/ulikunitz/xz). Enjoy!
 
 Supported formats/extensions:
 
 - .zip
-- .tar.gz
-- .tgz
-- .tar.bz2
-- .rar (open)
+- .tar
+- .tar.gz & .tgz
+- .tar.bz2 & .tbz2
+- .tar.xz & .txz
+- .tar.lz4 & .tlz4
+- .tar.sz & .tsz
+- .rar (open only)
 
 
 ## Install
@@ -55,16 +58,16 @@ import "github.com/mholt/archiver"
 Create a .zip file:
 
 ```go
-err := archiver.Zip("output.zip", []string{"file.txt", "folder"})
+err := archiver.Zip.Make("output.zip", []string{"file.txt", "folder"})
 ```
 
 Extract a .zip file:
 
 ```go
-err := archiver.Unzip("input.zip", "output_folder")
+err := archiver.Zip.Open("input.zip", "output_folder")
 ```
 
-Working with other file formats is exactly the same, but with [their own functions](https://godoc.org/github.com/mholt/archiver).
+Working with other file formats is exactly the same, but with [their own Archiver implementations](https://godoc.org/github.com/mholt/archiver#Archiver).
 
 
 
