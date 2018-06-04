@@ -63,30 +63,9 @@ func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileR
 		return nil, err
 	}
 
-	if exisFileInfo, _ := srv.filesystem.GetFileInfo(user, req.FullPath); exisFileInfo.ID > 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "File %v already exists", req.FullPath)
-	}
-
-	if req.IsDir {
-		err := srv.filesystem.CreateDirectoryForUser(user, req.FullPath)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to create directory %v", req.FullPath)
-		}
-	} else {
-		file, err := srv.filesystem.NewFileHandleForUser(user, req.FullPath)
-		defer file.Close()
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to create file %v", req.FullPath)
-		}
-		err = srv.filesystem.FinishNewFile(user, req.FullPath)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to finish creating file %v", req.FullPath)
-		}
-	}
-
-	fileInfo, err := srv.filesystem.GetFileInfo(user, req.FullPath)
+	fileInfo, err := srv.filesystem.CreateFile(user, req.FullPath, req.IsDir)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get fileInfo of created file %v", req.FullPath)
+		return nil, status.Errorf(codes.Internal, "Failed to create file: %v", err)
 	}
 
 	return fileInfo, nil

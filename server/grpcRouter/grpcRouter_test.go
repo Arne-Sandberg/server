@@ -81,8 +81,10 @@ func TestGrpcRouter(t *testing.T) {
 
 	authClient := models.NewAuthServiceClient(conn)
 	userClient := models.NewUserServiceClient(conn)
+	filesClient := models.NewFilesServiceClient(conn)
 	systemClient := models.NewSystemServiceClient(conn)
 
+	// Auth
 	authResp, err := authClient.Signup(context.Background(), &models.User{FirstName: "Jon", LastName: "Doe", Email: "john.admin@testing.com", Password: "secretPassw0rd"})
 	if err != nil {
 		t.Errorf("Failed signup call: %v", err)
@@ -94,37 +96,38 @@ func TestGrpcRouter(t *testing.T) {
 		t.Errorf("Failed login call: %v", err)
 		return
 	}
-	adminToken := authResp.Token
+	adminAuth := &models.Authentication{Token: authResp.Token}
 
 	authResp, err = authClient.Signup(context.Background(), &models.User{FirstName: "Jon", LastName: "Doe", Email: "john.user@testing.com", Password: "secretPassw0rd"})
 	if err != nil {
 		t.Errorf("Failed signup call: %v", err)
 		return
 	}
-	userToken := authResp.Token
+	userAuth := &models.Authentication{Token: authResp.Token}
 
-	userResp, err := userClient.GetOwnUser(context.Background(), &models.Authentication{Token: adminToken})
+	// User
+	userResp, err := userClient.GetOwnUser(context.Background(), adminAuth)
 	if err != nil {
 		t.Errorf("Failed getting own user: %v", err)
 	} else if userResp.IsAdmin == false {
 		t.Error("First user is not an admin!")
 	}
 
-	userResp, err = userClient.GetUserByID(context.Background(), &models.UserIDRequest{Auth: &models.Authentication{Token: adminToken}, UserID: 2})
+	userResp, err = userClient.GetUserByID(context.Background(), &models.UserIDRequest{Auth: adminAuth, UserID: 2})
 	if err != nil {
 		t.Errorf("Failed getting user by ID: %v", err)
 	} else if userResp.IsAdmin != false {
 		t.Error("Second user is an admin!")
 	}
 
-	userResp, err = userClient.GetUserByEmail(context.Background(), &models.UserEmailRequest{Auth: &models.Authentication{Token: userToken}, UserEmail: "john.admin@testing.com"})
+	userResp, err = userClient.GetUserByEmail(context.Background(), &models.UserEmailRequest{Auth: userAuth, UserEmail: "john.admin@testing.com"})
 	if err != nil {
 		t.Errorf("Failed getting user by email: %v", err)
 	} else if userResp.Email != "john.admin@testing.com" {
 		t.Errorf("Got email %v instead of email john.admin@testing.com", userResp.Email)
 	}
 
-	userResp, err = userClient.UpdateOwnUser(context.Background(), &models.UserUpdateRequest{Auth: &models.Authentication{Token: userToken}, UserUpdate: &models.UserUpdate{IsAdminOO: &models.UserUpdate_IsAdmin{IsAdmin: true}, FirstNameOO: &models.UserUpdate_FirstName{FirstName: "Peter"}}})
+	userResp, err = userClient.UpdateOwnUser(context.Background(), &models.UserUpdateRequest{Auth: userAuth, UserUpdate: &models.UserUpdate{IsAdminOO: &models.UserUpdate_IsAdmin{IsAdmin: true}, FirstNameOO: &models.UserUpdate_FirstName{FirstName: "Peter"}}})
 	if err != nil {
 		t.Errorf("Failed updating user: %v", err)
 	} else if userResp.IsAdmin != false {
@@ -133,22 +136,70 @@ func TestGrpcRouter(t *testing.T) {
 		t.Errorf("Changed firstName to %v instead of Peter", userResp.FirstName)
 	}
 
-	_, err = systemClient.GetSystemStats(context.Background(), &models.Authentication{Token: adminToken})
+	// Files
+	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testFile.txt"})
+	if err != nil {
+		t.Errorf("Failed to create file: %v", err)
+	}
+
+	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testFile.txt"})
+	if err == nil {
+		t.Errorf("Could create duplicate file: %v", err)
+	}
+
+	_, err = filesClient.ShareFiles(context.Background(), &models.ShareRequest{Auth: adminAuth, FullPaths: []string{"/testFile.txt"}, UserIDs: []uint32{2}})
+	if err != nil {
+		t.Errorf("Could not share file with other user: %v", err)
+	}
+
+	_, err = filesClient.GetFileInfo(context.Background(), &models.PathRequest{Auth: userAuth, FullPath: "/testFile.txt"})
+	if err != nil {
+		t.Errorf("Could not get shared file info: %v", err)
+	}
+
+	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: true, FullPath: "/testDir"})
+	if err != nil {
+		t.Errorf("Failed to create folder: %v", err)
+	}
+
+	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testDir/testFile.txt"})
+	if err != nil {
+		t.Errorf("Failed to create file in folder: %v", err)
+	}
+
+	_, err = filesClient.ShareFiles(context.Background(), &models.ShareRequest{Auth: adminAuth, FullPaths: []string{"/testDir"}, UserIDs: []uint32{2}})
+	if err != nil {
+		t.Errorf("Could not share folder with other user: %v", err)
+	}
+
+	_, err = filesClient.GetFileInfo(context.Background(), &models.PathRequest{Auth: userAuth, FullPath: "/testDir"})
+	if err != nil {
+		t.Errorf("Could not get shared folder info: %v", err)
+	}
+
+	_, err = filesClient.GetFileInfo(context.Background(), &models.PathRequest{Auth: userAuth, FullPath: "/testDir/testFile.txt"})
+	if err != nil {
+		t.Errorf("Could not get file info inside shared folder: %v", err)
+	}
+
+	// System stats
+	_, err = systemClient.GetSystemStats(context.Background(), adminAuth)
 	if err != nil {
 		t.Errorf("Failed to get systemStats: %v", err)
 	}
 
-	_, err = systemClient.GetSystemStats(context.Background(), &models.Authentication{Token: userToken})
+	_, err = systemClient.GetSystemStats(context.Background(), userAuth)
 	if err == nil {
 		t.Error("User could get system stats")
 	}
 
-	_, err = userClient.DeleteOwnUser(context.Background(), &models.Authentication{Token: userToken})
+	// User and Auth cleanup
+	_, err = userClient.DeleteOwnUser(context.Background(), userAuth)
 	if err != nil {
 		t.Errorf("Could not delete own user: %v", err)
 	}
 
-	_, err = authClient.Logout(context.Background(), &models.Authentication{Token: adminToken})
+	_, err = authClient.Logout(context.Background(), adminAuth)
 	if err != nil {
 		t.Errorf("Failed logout call: %v", err)
 		return

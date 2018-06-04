@@ -297,6 +297,36 @@ func (vfs *VirtualFilesystem) FinishNewFile(user *models.User, path string) (err
 	return
 }
 
+func (vfs *VirtualFilesystem) CreateFile(user *models.User, path string, isDir bool) (fileInfo *models.FileInfo, err error) {
+	if exisFileInfo, _ := vfs.GetFileInfo(user, path); exisFileInfo != nil && exisFileInfo.ID > 0 {
+		return nil, fmt.Errorf("file %v already exists", path)
+	}
+
+	if isDir {
+		err := vfs.CreateDirectoryForUser(user, path)
+		if err != nil {
+			return nil, fmt.Errorf("directory creation failed for path '%s': %v", path, err)
+		}
+	} else {
+		file, err := vfs.NewFileHandleForUser(user, path)
+		defer file.Close()
+		if err != nil {
+			return nil, fmt.Errorf("creating new file handle failed for path '%s': %v", path, err)
+		}
+		err = vfs.FinishNewFile(user, path)
+		if err != nil {
+			return nil, fmt.Errorf("finishing created file failed for path '%s': %v", path, err)
+		}
+	}
+
+	fileInfo, err = vfs.GetFileInfo(user, path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fileInfo of created file '%s': %v", path, err)
+	}
+
+	return fileInfo, nil
+}
+
 func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path string) (err error) {
 	if !utils.ValidatePath(path) {
 		err = ErrForbiddenPathName
@@ -336,13 +366,19 @@ func (vfs *VirtualFilesystem) CreateDirectoryForUser(user *models.User, path str
 	return
 }
 
-// TODO: Include shared content
 func (vfs *VirtualFilesystem) ListFilesForUser(user *models.User, path string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
-	folderPath, folderName := vfs.splitPath(path)
-	dirInfo, content, err = vfs.db.GetDirectoryContent(user.ID, folderPath, folderName)
+	dirInfo, err = vfs.GetCheckedFileInfo(user, path)
 	if err != nil {
 		return
 	}
+
+	if dirInfo.IsDir {
+		content, err = vfs.db.GetDirectoryContentWithID(dirInfo.ID)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -648,6 +684,10 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 		return fmt.Errorf("sharing shared files is forbidden")
 	}
 
+	if exisFileInfo, _ := vfs.db.GetFileInfo(toUser.ID, "/", fileInfo.Name); exisFileInfo != nil && exisFileInfo.ID > 0 {
+		return fmt.Errorf("file already exists at target user")
+	}
+
 	shareEntry := &models.ShareEntry{
 		OwnerID:			fromUser.ID,
 		SharedWithID:	toUser.ID,
@@ -735,7 +775,8 @@ func (vfs *VirtualFilesystem) GetCheckedFileInfo(user *models.User, requestedPat
 		}
 
 		finalFileInfo := &models.FileInfo{}
-		finalFileInfo, err = vfs.db.GetFileInfo(sharedParentInfo.OwnerID, filepath.Join(sharedParentInfo.Path, sharedParentInfo.Name, removedPath), fileName)
+		finalPath := utils.ConvertToSlash(filepath.Join(sharedParentInfo.Path, sharedParentInfo.Name, removedPath), true)
+		finalFileInfo, err = vfs.db.GetFileInfo(sharedParentInfo.OwnerID, finalPath, fileName)
 		if err != nil {
 			return nil, err
 		}
