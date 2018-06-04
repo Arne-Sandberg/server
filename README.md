@@ -1,6 +1,6 @@
 # freecloud
 
-[![Build Status](https://travis-ci.org/freecloudio/freecloud.svg?branch=master)](https://travis-ci.org/freecloudio/freecloud)
+[![Build Status](https://travis-ci.com/freecloudio/freecloud.svg?branch=master)](https://travis-ci.org/freecloudio/freecloud)
 [![license](https://img.shields.io/github/license/freecloudio/freecloud.svg)](https://github.com/freecloudio/freecloud/blob/master/LICENSE)
 
 
