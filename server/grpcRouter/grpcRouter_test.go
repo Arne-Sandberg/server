@@ -182,6 +182,21 @@ func TestGrpcRouter(t *testing.T) {
 		t.Errorf("Could not get file info inside shared folder: %v", err)
 	}
 
+	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: true, FullPath: "/testDir/subDir"})
+	if err != nil {
+		t.Errorf("Failed to create subfolder in folder: %v", err)
+	}
+
+	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testDir/subDir/subDirFile.txt"})
+	if err != nil {
+		t.Errorf("Failed to create file in subfolder: %v", err)
+	}
+
+	_, err = filesClient.GetFileInfo(context.Background(), &models.PathRequest{Auth: userAuth, FullPath: "/testDir/subDir/subDirFile.txt"})
+	if err != nil {
+		t.Errorf("Could not get file info inside shared subfolder: %v", err)
+	}
+
 	// System stats
 	_, err = systemClient.GetSystemStats(context.Background(), adminAuth)
 	if err != nil {
