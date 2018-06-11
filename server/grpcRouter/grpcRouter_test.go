@@ -14,7 +14,7 @@ import (
 )
 
 var vfs *fs.VirtualFilesystem
-var database *db.StormDB
+var database *db.xormDB
 var dfs *fs.DiskFilesystem
 
 func SetupTest() error {
