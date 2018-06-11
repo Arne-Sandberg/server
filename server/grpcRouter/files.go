@@ -49,7 +49,7 @@ func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathReques
 		return nil, err
 	}
 
-	fileInfo, content, err := srv.filesystem.ListFilesForUser(user, req.FullPath)
+	fileInfo, content, err := srv.filesystem.GetDirInfo(user, req.FullPath)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Getting fileInfo for %v failed", req.FullPath)
 	}

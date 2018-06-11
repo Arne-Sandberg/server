@@ -348,3 +348,12 @@ func (db *StormDB) GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEn
 	}
 	return
 }
+
+func (db *StormDB) GetShareEntriesForFile(fileID uint32) (shareEntries []*models.ShareEntry, err error) {
+	err = db.c.Find("FileID", fileID, &shareEntries)
+	if err != nil {
+		log.Error(0, "Could not get shareEntries for FileID %v: %v", fileID, err)
+		return
+	}
+	return
+}
