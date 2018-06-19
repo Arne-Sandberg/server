@@ -44,6 +44,9 @@ type Decoder struct {
 	extLen int
 	rec    []byte // accumulates read data if not nil
 
+	useLoose   bool
+	useJSONTag bool
+
 	decodeMapFunc func(*Decoder) (interface{}, error)
 }
 
@@ -64,6 +67,19 @@ func NewDecoder(r io.Reader) *Decoder {
 
 func (d *Decoder) SetDecodeMapFunc(fn func(*Decoder) (interface{}, error)) {
 	d.decodeMapFunc = fn
+}
+
+// UseDecodeInterfaceLoose causes decoder to use DecodeInterfaceLoose
+// to decode msgpack value into Go interface{}.
+func (d *Decoder) UseDecodeInterfaceLoose(flag bool) {
+	d.useLoose = flag
+}
+
+// UseJSONTag causes the Decoder to use json struct tag as fallback option
+// if there is no msgpack tag.
+func (d *Decoder) UseJSONTag(v bool) *Decoder {
+	d.useJSONTag = v
+	return d
 }
 
 func (d *Decoder) Reset(r io.Reader) error {
@@ -196,6 +212,13 @@ func (d *Decoder) decode(dst interface{}) error {
 	return d.DecodeValue(v)
 }
 
+func (d *Decoder) decodeInterface() (interface{}, error) {
+	if d.useLoose {
+		return d.DecodeInterfaceLoose()
+	}
+	return d.DecodeInterface()
+}
+
 func (d *Decoder) DecodeValue(v reflect.Value) error {
 	decode := getDecoder(v.Type())
 	return decode(d, v)
@@ -242,7 +265,7 @@ func (d *Decoder) bool(c codes.Code) (bool, error) {
 	return false, fmt.Errorf("msgpack: invalid code=%x decoding bool", c)
 }
 
-// DecodeInterface decodes value into interface. Possible value types are:
+// DecodeInterface decodes value into interface. It returns following types:
 //   - nil,
 //   - bool,
 //   - int8, int16, int32, int64,
@@ -252,6 +275,10 @@ func (d *Decoder) bool(c codes.Code) (bool, error) {
 //   - []byte,
 //   - slices of any of the above,
 //   - maps of any of the above.
+//
+// DecodeInterface should be used only when you don't know the type of value
+// you are decoding. For example, if you are decoding number it is better to use
+// DecodeInt64 for negative numbers and DecodeUint64 for positive numbers.
 func (d *Decoder) DecodeInterface() (interface{}, error) {
 	c, err := d.readCode()
 	if err != nil {
@@ -262,7 +289,7 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 		return int8(c), nil
 	}
 	if codes.IsFixedMap(c) {
-		d.s.UnreadByte()
+		_ = d.s.UnreadByte()
 		return d.DecodeMap()
 	}
 	if codes.IsFixedArray(c) {
