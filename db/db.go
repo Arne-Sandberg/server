@@ -268,9 +268,9 @@ func (db *xormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirI
 }
 
 func (db *xormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
-	content, err = db.getSortedFileInfoResultFromQuery(db.engine.Select(q.Eq("ParentID", directoryID)))
+	err = db.engine.Find(&content, &models.FileInfo{ParentID: directoryID})
 
-	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+	if err != nil && err.Error() == "not found" { // TODO: Check error for not found from XORM
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
@@ -280,10 +280,9 @@ func (db *xormDB) GetDirectoryContentWithID(directoryID uint32) (content []*mode
 	return
 }
 
-func (db *xormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
-	err = query.OrderBy("IsDir", "Name").Find(&content)
-	sort.SliceStable(content, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
-
+//TODO: Sort by name
+func (db *xormDB) sortFileInfos(fileInfos *{}*models.FileInfo) () {
+	sort.SliceStable(fileInfos, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
 	return
 }
 
