@@ -3,6 +3,10 @@
 # cd into the directory of the script
 cd "$(dirname "$0")"
 
+if ! type "protoc-gen-go" > /dev/null; then
+  go get -u github.com/golang/protobuf/protoc-gen-go
+fi
+
 GIT_DIR=grpc-services
 
 if [ "$1" != "" ]; then

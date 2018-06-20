@@ -25,8 +25,8 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type PathRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	FullPath             string          `protobuf:"bytes,2,opt,name=fullPath" json:"fullPath,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	FullPath             string          `protobuf:"bytes,2,opt,name=fullPath,proto3" json:"fullPath,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -36,7 +36,7 @@ func (m *PathRequest) Reset()         { *m = PathRequest{} }
 func (m *PathRequest) String() string { return proto.CompactTextString(m) }
 func (*PathRequest) ProtoMessage()    {}
 func (*PathRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{0}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{0}
 }
 func (m *PathRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathRequest.Unmarshal(m, b)
@@ -71,8 +71,8 @@ func (m *PathRequest) GetFullPath() string {
 }
 
 type PathsRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	FullPaths            []string        `protobuf:"bytes,2,rep,name=fullPaths" json:"fullPaths,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	FullPaths            []string        `protobuf:"bytes,2,rep,name=fullPaths,proto3" json:"fullPaths,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -82,7 +82,7 @@ func (m *PathsRequest) Reset()         { *m = PathsRequest{} }
 func (m *PathsRequest) String() string { return proto.CompactTextString(m) }
 func (*PathsRequest) ProtoMessage()    {}
 func (*PathsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{1}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{1}
 }
 func (m *PathsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathsRequest.Unmarshal(m, b)
@@ -117,8 +117,8 @@ func (m *PathsRequest) GetFullPaths() []string {
 }
 
 type SearchRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	Term                 string          `protobuf:"bytes,2,opt,name=term" json:"term,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	Term                 string          `protobuf:"bytes,2,opt,name=term,proto3" json:"term,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -128,7 +128,7 @@ func (m *SearchRequest) Reset()         { *m = SearchRequest{} }
 func (m *SearchRequest) String() string { return proto.CompactTextString(m) }
 func (*SearchRequest) ProtoMessage()    {}
 func (*SearchRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{2}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{2}
 }
 func (m *SearchRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchRequest.Unmarshal(m, b)
@@ -163,9 +163,9 @@ func (m *SearchRequest) GetTerm() string {
 }
 
 type ShareRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	FullPaths            []string        `protobuf:"bytes,2,rep,name=fullPaths" json:"fullPaths,omitempty"`
-	UserIDs              []uint32        `protobuf:"varint,3,rep,packed,name=userIDs" json:"userIDs,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	FullPaths            []string        `protobuf:"bytes,2,rep,name=fullPaths,proto3" json:"fullPaths,omitempty"`
+	UserIDs              []uint32        `protobuf:"varint,3,rep,packed,name=userIDs,proto3" json:"userIDs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -175,7 +175,7 @@ func (m *ShareRequest) Reset()         { *m = ShareRequest{} }
 func (m *ShareRequest) String() string { return proto.CompactTextString(m) }
 func (*ShareRequest) ProtoMessage()    {}
 func (*ShareRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{3}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{3}
 }
 func (m *ShareRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ShareRequest.Unmarshal(m, b)
@@ -217,9 +217,9 @@ func (m *ShareRequest) GetUserIDs() []uint32 {
 }
 
 type CreateFileRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	FullPath             string          `protobuf:"bytes,2,opt,name=fullPath" json:"fullPath,omitempty"`
-	IsDir                bool            `protobuf:"varint,3,opt,name=isDir" json:"isDir,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	FullPath             string          `protobuf:"bytes,2,opt,name=fullPath,proto3" json:"fullPath,omitempty"`
+	IsDir                bool            `protobuf:"varint,3,opt,name=isDir,proto3" json:"isDir,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -229,7 +229,7 @@ func (m *CreateFileRequest) Reset()         { *m = CreateFileRequest{} }
 func (m *CreateFileRequest) String() string { return proto.CompactTextString(m) }
 func (*CreateFileRequest) ProtoMessage()    {}
 func (*CreateFileRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{4}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{4}
 }
 func (m *CreateFileRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateFileRequest.Unmarshal(m, b)
@@ -271,8 +271,8 @@ func (m *CreateFileRequest) GetIsDir() bool {
 }
 
 type FileInfoResponse struct {
-	FileInfo             *FileInfo   `protobuf:"bytes,1,opt,name=fileInfo" json:"fileInfo,omitempty"`
-	Content              []*FileInfo `protobuf:"bytes,2,rep,name=content" json:"content,omitempty"`
+	FileInfo             *FileInfo   `protobuf:"bytes,1,opt,name=fileInfo,proto3" json:"fileInfo,omitempty"`
+	Content              []*FileInfo `protobuf:"bytes,2,rep,name=content,proto3" json:"content,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -282,7 +282,7 @@ func (m *FileInfoResponse) Reset()         { *m = FileInfoResponse{} }
 func (m *FileInfoResponse) String() string { return proto.CompactTextString(m) }
 func (*FileInfoResponse) ProtoMessage()    {}
 func (*FileInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{5}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{5}
 }
 func (m *FileInfoResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfoResponse.Unmarshal(m, b)
@@ -317,9 +317,9 @@ func (m *FileInfoResponse) GetContent() []*FileInfo {
 }
 
 type FileInfosUpdateRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	FullPaths            []string        `protobuf:"bytes,2,rep,name=fullPaths" json:"fullPaths,omitempty"`
-	FileInfoUpdate       *FileInfoUpdate `protobuf:"bytes,3,opt,name=fileInfoUpdate" json:"fileInfoUpdate,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	FullPaths            []string        `protobuf:"bytes,2,rep,name=fullPaths,proto3" json:"fullPaths,omitempty"`
+	FileInfoUpdate       *FileInfoUpdate `protobuf:"bytes,3,opt,name=fileInfoUpdate,proto3" json:"fileInfoUpdate,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -329,7 +329,7 @@ func (m *FileInfosUpdateRequest) Reset()         { *m = FileInfosUpdateRequest{}
 func (m *FileInfosUpdateRequest) String() string { return proto.CompactTextString(m) }
 func (*FileInfosUpdateRequest) ProtoMessage()    {}
 func (*FileInfosUpdateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{6}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{6}
 }
 func (m *FileInfosUpdateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfosUpdateRequest.Unmarshal(m, b)
@@ -371,7 +371,7 @@ func (m *FileInfosUpdateRequest) GetFileInfoUpdate() *FileInfoUpdate {
 }
 
 type FileList struct {
-	FileInfos            []*FileInfo `protobuf:"bytes,1,rep,name=fileInfos" json:"fileInfos,omitempty"`
+	FileInfos            []*FileInfo `protobuf:"bytes,1,rep,name=fileInfos,proto3" json:"fileInfos,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -381,7 +381,7 @@ func (m *FileList) Reset()         { *m = FileList{} }
 func (m *FileList) String() string { return proto.CompactTextString(m) }
 func (*FileList) ProtoMessage()    {}
 func (*FileList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{7}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{7}
 }
 func (m *FileList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileList.Unmarshal(m, b)
@@ -409,7 +409,7 @@ func (m *FileList) GetFileInfos() []*FileInfo {
 }
 
 type Path struct {
-	Path                 string   `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
+	Path                 string   `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -419,7 +419,7 @@ func (m *Path) Reset()         { *m = Path{} }
 func (m *Path) String() string { return proto.CompactTextString(m) }
 func (*Path) ProtoMessage()    {}
 func (*Path) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{8}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{8}
 }
 func (m *Path) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Path.Unmarshal(m, b)
@@ -447,18 +447,20 @@ func (m *Path) GetPath() string {
 }
 
 type FileInfo struct {
-	// @inject_tag: storm:"id,increment"
-	ID                   uint32               `protobuf:"varint,1,opt,name=ID" json:"ID,omitempty" storm:"id,increment"`
-	Path                 string               `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
-	Name                 string               `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-	IsDir                bool                 `protobuf:"varint,4,opt,name=isDir" json:"isDir,omitempty"`
-	Size                 int64                `protobuf:"varint,5,opt,name=size" json:"size,omitempty"`
-	OwnerID              uint32               `protobuf:"varint,6,opt,name=ownerID" json:"ownerID,omitempty"`
-	MimeType             string               `protobuf:"bytes,7,opt,name=mimeType" json:"mimeType,omitempty"`
-	Starred              bool                 `protobuf:"varint,8,opt,name=starred" json:"starred,omitempty"`
-	ParentID             uint32               `protobuf:"varint,9,opt,name=parentID" json:"parentID,omitempty"`
-	ShareID              uint32               `protobuf:"varint,10,opt,name=shareID" json:"shareID,omitempty"`
-	LastChanged          *timestamp.Timestamp `protobuf:"bytes,11,opt,name=lastChanged" json:"lastChanged,omitempty"`
+	// @inject_tag: xorm:"pk autoincr"
+	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	// @inject_tag: xorm:"index(fullPath)"
+	Path string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	// @inject_tag: xorm:"index(fullPath)"
+	Name                 string               `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	IsDir                bool                 `protobuf:"varint,4,opt,name=isDir,proto3" json:"isDir,omitempty"`
+	Size                 int64                `protobuf:"varint,5,opt,name=size,proto3" json:"size,omitempty"`
+	OwnerID              uint32               `protobuf:"varint,6,opt,name=ownerID,proto3" json:"ownerID,omitempty"`
+	MimeType             string               `protobuf:"bytes,7,opt,name=mimeType,proto3" json:"mimeType,omitempty"`
+	Starred              bool                 `protobuf:"varint,8,opt,name=starred,proto3" json:"starred,omitempty"`
+	ParentID             uint32               `protobuf:"varint,9,opt,name=parentID,proto3" json:"parentID,omitempty"`
+	ShareID              uint32               `protobuf:"varint,10,opt,name=shareID,proto3" json:"shareID,omitempty"`
+	LastChanged          *timestamp.Timestamp `protobuf:"bytes,11,opt,name=lastChanged,proto3" json:"lastChanged,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -468,7 +470,7 @@ func (m *FileInfo) Reset()         { *m = FileInfo{} }
 func (m *FileInfo) String() string { return proto.CompactTextString(m) }
 func (*FileInfo) ProtoMessage()    {}
 func (*FileInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{9}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{9}
 }
 func (m *FileInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfo.Unmarshal(m, b)
@@ -587,7 +589,7 @@ func (m *FileInfoUpdate) Reset()         { *m = FileInfoUpdate{} }
 func (m *FileInfoUpdate) String() string { return proto.CompactTextString(m) }
 func (*FileInfoUpdate) ProtoMessage()    {}
 func (*FileInfoUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{10}
+	return fileDescriptor_files_6bb7e75cc8b85249, []int{10}
 }
 func (m *FileInfoUpdate) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfoUpdate.Unmarshal(m, b)
@@ -621,16 +623,16 @@ type isFileInfoUpdate_CopyOO interface {
 }
 
 type FileInfoUpdate_Path struct {
-	Path string `protobuf:"bytes,1,opt,name=path,oneof"`
+	Path string `protobuf:"bytes,1,opt,name=path,proto3,oneof"`
 }
 type FileInfoUpdate_Name struct {
-	Name string `protobuf:"bytes,2,opt,name=name,oneof"`
+	Name string `protobuf:"bytes,2,opt,name=name,proto3,oneof"`
 }
 type FileInfoUpdate_Starred struct {
-	Starred bool `protobuf:"varint,3,opt,name=starred,oneof"`
+	Starred bool `protobuf:"varint,3,opt,name=starred,proto3,oneof"`
 }
 type FileInfoUpdate_Copy struct {
-	Copy bool `protobuf:"varint,4,opt,name=copy,oneof"`
+	Copy bool `protobuf:"varint,4,opt,name=copy,proto3,oneof"`
 }
 
 func (*FileInfoUpdate_Path) isFileInfoUpdate_PathOO()       {}
@@ -851,8 +853,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for FilesService service
-
+// FilesServiceClient is the client API for FilesService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type FilesServiceClient interface {
 	ZipFiles(ctx context.Context, in *PathsRequest, opts ...grpc.CallOption) (*Path, error)
 	GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*FileInfoResponse, error)
@@ -878,7 +881,7 @@ func NewFilesServiceClient(cc *grpc.ClientConn) FilesServiceClient {
 
 func (c *filesServiceClient) ZipFiles(ctx context.Context, in *PathsRequest, opts ...grpc.CallOption) (*Path, error) {
 	out := new(Path)
-	err := grpc.Invoke(ctx, "/files.FilesService/ZipFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/ZipFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -887,7 +890,7 @@ func (c *filesServiceClient) ZipFiles(ctx context.Context, in *PathsRequest, opt
 
 func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, opts ...grpc.CallOption) (*FileInfoResponse, error) {
 	out := new(FileInfoResponse)
-	err := grpc.Invoke(ctx, "/files.FilesService/GetFileInfo", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/GetFileInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -896,7 +899,7 @@ func (c *filesServiceClient) GetFileInfo(ctx context.Context, in *PathRequest, o
 
 func (c *filesServiceClient) CreateFile(ctx context.Context, in *CreateFileRequest, opts ...grpc.CallOption) (*FileInfo, error) {
 	out := new(FileInfo)
-	err := grpc.Invoke(ctx, "/files.FilesService/CreateFile", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/CreateFile", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -905,7 +908,7 @@ func (c *filesServiceClient) CreateFile(ctx context.Context, in *CreateFileReque
 
 func (c *filesServiceClient) UpdateFileInfos(ctx context.Context, in *FileInfosUpdateRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/UpdateFileInfos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/UpdateFileInfos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -914,7 +917,7 @@ func (c *filesServiceClient) UpdateFileInfos(ctx context.Context, in *FileInfosU
 
 func (c *filesServiceClient) DeleteFiles(ctx context.Context, in *PathsRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/DeleteFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/DeleteFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -923,7 +926,7 @@ func (c *filesServiceClient) DeleteFiles(ctx context.Context, in *PathsRequest, 
 
 func (c *filesServiceClient) ShareFiles(ctx context.Context, in *ShareRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/ShareFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/ShareFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -932,7 +935,7 @@ func (c *filesServiceClient) ShareFiles(ctx context.Context, in *ShareRequest, o
 
 func (c *filesServiceClient) SearchFiles(ctx context.Context, in *SearchRequest, opts ...grpc.CallOption) (*FileList, error) {
 	out := new(FileList)
-	err := grpc.Invoke(ctx, "/files.FilesService/SearchFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/SearchFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -941,7 +944,7 @@ func (c *filesServiceClient) SearchFiles(ctx context.Context, in *SearchRequest,
 
 func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*FileList, error) {
 	out := new(FileList)
-	err := grpc.Invoke(ctx, "/files.FilesService/GetStarredFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/GetStarredFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -950,7 +953,7 @@ func (c *filesServiceClient) GetStarredFiles(ctx context.Context, in *Authentica
 
 func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*FileList, error) {
 	out := new(FileList)
-	err := grpc.Invoke(ctx, "/files.FilesService/GetSharedFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/GetSharedFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -959,7 +962,7 @@ func (c *filesServiceClient) GetSharedFiles(ctx context.Context, in *Authenticat
 
 func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/RescanOwnFiles", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/RescanOwnFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -968,7 +971,7 @@ func (c *filesServiceClient) RescanOwnFiles(ctx context.Context, in *Authenticat
 
 func (c *filesServiceClient) RescanUserFilesByID(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/files.FilesService/RescanUserFilesByID", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/files.FilesService/RescanUserFilesByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -976,7 +979,7 @@ func (c *filesServiceClient) RescanUserFilesByID(ctx context.Context, in *UserID
 }
 
 func (c *filesServiceClient) GetUpdateNotifications(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (FilesService_GetUpdateNotificationsClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_FilesService_serviceDesc.Streams[0], c.cc, "/files.FilesService/GetUpdateNotifications", opts...)
+	stream, err := c.cc.NewStream(ctx, &_FilesService_serviceDesc.Streams[0], "/files.FilesService/GetUpdateNotifications", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1007,8 +1010,7 @@ func (x *filesServiceGetUpdateNotificationsClient) Recv() (*EmptyMessage, error)
 	return m, nil
 }
 
-// Server API for FilesService service
-
+// FilesServiceServer is the server API for FilesService service.
 type FilesServiceServer interface {
 	ZipFiles(context.Context, *PathsRequest) (*Path, error)
 	GetFileInfo(context.Context, *PathRequest) (*FileInfoResponse, error)
@@ -1306,9 +1308,9 @@ var _FilesService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "files.proto",
 }
 
-func init() { proto.RegisterFile("files.proto", fileDescriptor_files_57d178c76649084f) }
+func init() { proto.RegisterFile("files.proto", fileDescriptor_files_6bb7e75cc8b85249) }
 
-var fileDescriptor_files_57d178c76649084f = []byte{
+var fileDescriptor_files_6bb7e75cc8b85249 = []byte{
 	// 813 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x5f, 0x6f, 0xe3, 0x44,
 	0x10, 0x8f, 0x93, 0x34, 0xb5, 0xc7, 0x4d, 0x0a, 0xdb, 0xdc, 0x9d, 0x65, 0x81, 0x88, 0xfc, 0x14,

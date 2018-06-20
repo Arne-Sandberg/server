@@ -25,15 +25,15 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type SystemStats struct {
-	Version              string             `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
-	AllocMem             uint64             `protobuf:"varint,2,opt,name=allocMem" json:"allocMem,omitempty"`
-	TotalAllocMem        uint64             `protobuf:"varint,3,opt,name=totalAllocMem" json:"totalAllocMem,omitempty"`
-	SystemMem            uint64             `protobuf:"varint,4,opt,name=systemMem" json:"systemMem,omitempty"`
-	NumGC                uint32             `protobuf:"varint,5,opt,name=numGC" json:"numGC,omitempty"`
-	GoVersion            string             `protobuf:"bytes,6,opt,name=goVersion" json:"goVersion,omitempty"`
-	NumGoroutines        uint32             `protobuf:"varint,7,opt,name=numGoroutines" json:"numGoroutines,omitempty"`
-	NumSessions          uint32             `protobuf:"varint,8,opt,name=numSessions" json:"numSessions,omitempty"`
-	Uptime               *duration.Duration `protobuf:"bytes,9,opt,name=uptime" json:"uptime,omitempty"`
+	Version              string             `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	AllocMem             uint64             `protobuf:"varint,2,opt,name=allocMem,proto3" json:"allocMem,omitempty"`
+	TotalAllocMem        uint64             `protobuf:"varint,3,opt,name=totalAllocMem,proto3" json:"totalAllocMem,omitempty"`
+	SystemMem            uint64             `protobuf:"varint,4,opt,name=systemMem,proto3" json:"systemMem,omitempty"`
+	NumGC                uint32             `protobuf:"varint,5,opt,name=numGC,proto3" json:"numGC,omitempty"`
+	GoVersion            string             `protobuf:"bytes,6,opt,name=goVersion,proto3" json:"goVersion,omitempty"`
+	NumGoroutines        uint32             `protobuf:"varint,7,opt,name=numGoroutines,proto3" json:"numGoroutines,omitempty"`
+	NumSessions          uint32             `protobuf:"varint,8,opt,name=numSessions,proto3" json:"numSessions,omitempty"`
+	Uptime               *duration.Duration `protobuf:"bytes,9,opt,name=uptime,proto3" json:"uptime,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
@@ -138,8 +138,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for SystemService service
-
+// SystemServiceClient is the client API for SystemService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SystemServiceClient interface {
 	GetSystemStats(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*SystemStats, error)
 }
@@ -154,15 +155,14 @@ func NewSystemServiceClient(cc *grpc.ClientConn) SystemServiceClient {
 
 func (c *systemServiceClient) GetSystemStats(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*SystemStats, error) {
 	out := new(SystemStats)
-	err := grpc.Invoke(ctx, "/system.SystemService/GetSystemStats", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/system.SystemService/GetSystemStats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for SystemService service
-
+// SystemServiceServer is the server API for SystemService service.
 type SystemServiceServer interface {
 	GetSystemStats(context.Context, *Authentication) (*SystemStats, error)
 }

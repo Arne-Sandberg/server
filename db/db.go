@@ -1,9 +1,6 @@
 package db
 
 import (
-	"regexp"
-	"sort"
-
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
@@ -242,8 +239,8 @@ func (db *xormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *xormDB) GetStarredFilesForUser(userID uint32) (starredFilesForUser []*models.FileInfo, err error) {
-	starredFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.engine.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
-	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+	err = db.engine.Asc("IsDir", "Name").Find(starredFilesForUser, &models.FileInfo{OwnerID: userID, Starred: true})
+	if err == xorm.ErrNotExist { // TODO: Check error for not found from XORM
 		err = nil
 		starredFilesForUser = make([]*models.FileInfo, 0)
 	} else if err != nil {
@@ -268,9 +265,9 @@ func (db *xormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirI
 }
 
 func (db *xormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
-	err = db.engine.Find(&content, &models.FileInfo{ParentID: directoryID})
+	err = db.engine.Asc("IsDir", "Name").Find(&content, &models.FileInfo{ParentID: directoryID})
 
-	if err != nil && err.Error() == "not found" { // TODO: Check error for not found from XORM
+	if err == xorm.ErrNotExist { // TODO: Check error for not found from XORM
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
@@ -280,19 +277,16 @@ func (db *xormDB) GetDirectoryContentWithID(directoryID uint32) (content []*mode
 	return
 }
 
-//TODO: Sort by name
-func (db *xormDB) sortFileInfos(fileInfos *{}*models.FileInfo) () {
-	sort.SliceStable(fileInfos, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
-	return
-}
-
 func (db *xormDB) GetFileInfo(userID uint32, path, fileName string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = db.engine.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
-	if err != nil {
+	fileInfos := []*models.FileInfo{nil}
+	err = db.engine.Find(fileInfos, &models.FileInfo{Path: path, Name: fileName, OwnerID: userID})
+	if err != nil && len(fileInfos) != 1 {
 		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, fileName, userID, err)
 		return
 	}
+
+	fileInfo = fileInfos[0]
 	return
 }
 
@@ -307,11 +301,14 @@ func (db *xormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, e
 }
 
 func (db *xormDB) SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error) {
-	pathRegex := "(?i)^" + regexp.QuoteMeta(path)
-	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
-	results, err = db.getSortedFileInfoResultFromQuery(db.engine.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))
+	//res, err := db.engine.QueryInterface("select * from files where OwnerID = %d and Path like \"%s%%\" and Name like \"%%%s%%\"")
+	// TODO: Parse search result into file result
+	//log.Trace("Search result: %v", res)
 
-	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+	// TODO: Use engine.Where("a = ? AND b = ?", 1, 2).Find(&beans)
+	// engine.SQL("select * from table").Find(&beans)
+
+	if err == xorm.ErrNotExist { // TODO: Check error for not found from XORM
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", fileName, path, userID, err)

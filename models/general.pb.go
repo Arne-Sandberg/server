@@ -49,7 +49,7 @@ func (m *EmptyMessage) XXX_DiscardUnknown() {
 var xxx_messageInfo_EmptyMessage proto.InternalMessageInfo
 
 type Authentication struct {
-	Token                string   `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

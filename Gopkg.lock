@@ -8,26 +8,6 @@
   revision = "da59b551951d50441ca26b7a8cd81317f34df87f"
 
 [[projects]]
-  name = "github.com/asdine/storm"
-  packages = [
-    ".",
-    "codec",
-    "codec/json",
-    "codec/msgpack",
-    "index",
-    "internal",
-    "q"
-  ]
-  revision = "bda68dab90fc908ee5dbccb36400edf4f54972d6"
-  version = "v2.1.1"
-
-[[projects]]
-  name = "github.com/coreos/bbolt"
-  packages = ["."]
-  revision = "583e8937c61f1af6513608ccc75c97b6abdf4ff9"
-  version = "v1.3.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/dsnet/compress"
   packages = [
@@ -57,6 +37,24 @@
   name = "github.com/go-macaron/inject"
   packages = ["."]
   revision = "d8a0b8677191f4380287cfebd08e462217bac7ad"
+
+[[projects]]
+  name = "github.com/go-xorm/builder"
+  packages = ["."]
+  revision = "bad0a612f0d6277b953910822ab5dfb30dd18237"
+  version = "v0.2.0"
+
+[[projects]]
+  name = "github.com/go-xorm/core"
+  packages = ["."]
+  revision = "c10e21e7e1cec20e09398f2dfae385e58c8df555"
+  version = "v0.6.0"
+
+[[projects]]
+  name = "github.com/go-xorm/xorm"
+  packages = ["."]
+  revision = "d85bb4911c725a53b135fc12862748a41b6c07da"
+  version = "v0.7.0"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -116,6 +114,12 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  revision = "25ecb14adfc7543176f7d85291ec7dba82c6f7e4"
+  version = "v1.9.0"
 
 [[projects]]
   name = "github.com/mholt/archiver"
@@ -198,15 +202,6 @@
   version = "v0.5.4"
 
 [[projects]]
-  name = "github.com/vmihailenco/msgpack"
-  packages = [
-    ".",
-    "codes"
-  ]
-  revision = "b5e691b1eb52a28c05e67ab9df303626c095c23b"
-  version = "v3.3.3"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -255,22 +250,6 @@
   ]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
-
-[[projects]]
-  name = "google.golang.org/appengine"
-  packages = [
-    ".",
-    "datastore",
-    "internal",
-    "internal/app_identity",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/modules",
-    "internal/remote_api"
-  ]
-  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
-  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -336,6 +315,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e9941f39f26bf5abccbb41f85d5be652e0e51b0b7be16a2208e137aa3d9f0f7c"
+  inputs-digest = "bdc8cefb5fe4d22899a456f9e06dfa9645aaac043e62cec490aeb4a06ebe55ca"
   solver-name = "gps-cdcl"
   solver-version = 1

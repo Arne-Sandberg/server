@@ -25,8 +25,8 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type UserRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	User                 *User           `protobuf:"bytes,2,opt,name=user" json:"user,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	User                 *User           `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -36,7 +36,7 @@ func (m *UserRequest) Reset()         { *m = UserRequest{} }
 func (m *UserRequest) String() string { return proto.CompactTextString(m) }
 func (*UserRequest) ProtoMessage()    {}
 func (*UserRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_984ba6f534287b59, []int{0}
+	return fileDescriptor_user_3823b991cda751c6, []int{0}
 }
 func (m *UserRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserRequest.Unmarshal(m, b)
@@ -71,8 +71,8 @@ func (m *UserRequest) GetUser() *User {
 }
 
 type UserIDRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	UserID               uint32          `protobuf:"varint,2,opt,name=userID" json:"userID,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	UserID               uint32          `protobuf:"varint,2,opt,name=userID,proto3" json:"userID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -82,7 +82,7 @@ func (m *UserIDRequest) Reset()         { *m = UserIDRequest{} }
 func (m *UserIDRequest) String() string { return proto.CompactTextString(m) }
 func (*UserIDRequest) ProtoMessage()    {}
 func (*UserIDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_984ba6f534287b59, []int{1}
+	return fileDescriptor_user_3823b991cda751c6, []int{1}
 }
 func (m *UserIDRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserIDRequest.Unmarshal(m, b)
@@ -117,8 +117,8 @@ func (m *UserIDRequest) GetUserID() uint32 {
 }
 
 type UserEmailRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	UserEmail            string          `protobuf:"bytes,2,opt,name=userEmail" json:"userEmail,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	UserEmail            string          `protobuf:"bytes,2,opt,name=userEmail,proto3" json:"userEmail,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -128,7 +128,7 @@ func (m *UserEmailRequest) Reset()         { *m = UserEmailRequest{} }
 func (m *UserEmailRequest) String() string { return proto.CompactTextString(m) }
 func (*UserEmailRequest) ProtoMessage()    {}
 func (*UserEmailRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_984ba6f534287b59, []int{2}
+	return fileDescriptor_user_3823b991cda751c6, []int{2}
 }
 func (m *UserEmailRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserEmailRequest.Unmarshal(m, b)
@@ -163,8 +163,8 @@ func (m *UserEmailRequest) GetUserEmail() string {
 }
 
 type UserUpdateRequest struct {
-	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth" json:"auth,omitempty"`
-	UserUpdate           *UserUpdate     `protobuf:"bytes,2,opt,name=userUpdate" json:"userUpdate,omitempty"`
+	Auth                 *Authentication `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
+	UserUpdate           *UserUpdate     `protobuf:"bytes,2,opt,name=userUpdate,proto3" json:"userUpdate,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -174,7 +174,7 @@ func (m *UserUpdateRequest) Reset()         { *m = UserUpdateRequest{} }
 func (m *UserUpdateRequest) String() string { return proto.CompactTextString(m) }
 func (*UserUpdateRequest) ProtoMessage()    {}
 func (*UserUpdateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_984ba6f534287b59, []int{3}
+	return fileDescriptor_user_3823b991cda751c6, []int{3}
 }
 func (m *UserUpdateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserUpdateRequest.Unmarshal(m, b)
@@ -209,18 +209,18 @@ func (m *UserUpdateRequest) GetUserUpdate() *UserUpdate {
 }
 
 type User struct {
-	// @inject_tag: storm:"id,increment"
-	ID        uint32 `protobuf:"varint,1,opt,name=ID" json:"ID,omitempty" storm:"id,increment"`
-	FirstName string `protobuf:"bytes,2,opt,name=firstName" json:"firstName,omitempty"`
-	LastName  string `protobuf:"bytes,3,opt,name=lastName" json:"lastName,omitempty"`
-	// @inject_tag: storm:"unique"
-	Email                string               `protobuf:"bytes,4,opt,name=email" json:"email,omitempty" storm:"unique"`
-	Password             string               `protobuf:"bytes,5,opt,name=password" json:"password,omitempty"`
-	IsAdmin              bool                 `protobuf:"varint,6,opt,name=isAdmin" json:"isAdmin,omitempty"`
-	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,7,opt,name=createdAt" json:"createdAt,omitempty"`
-	UpdatedAt            *timestamp.Timestamp `protobuf:"bytes,8,opt,name=updatedAt" json:"updatedAt,omitempty"`
-	LastSessionAt        *timestamp.Timestamp `protobuf:"bytes,9,opt,name=lastSessionAt" json:"lastSessionAt,omitempty"`
-	HasAvatar            bool                 `protobuf:"varint,10,opt,name=hasAvatar" json:"hasAvatar,omitempty"`
+	// @inject_tag: xorm:"pk autoincr"
+	ID        uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	FirstName string `protobuf:"bytes,2,opt,name=firstName,proto3" json:"firstName,omitempty"`
+	LastName  string `protobuf:"bytes,3,opt,name=lastName,proto3" json:"lastName,omitempty"`
+	// @inject_tag: xorm:"unique"
+	Email                string               `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	Password             string               `protobuf:"bytes,5,opt,name=password,proto3" json:"password,omitempty"`
+	IsAdmin              bool                 `protobuf:"varint,6,opt,name=isAdmin,proto3" json:"isAdmin,omitempty"`
+	CreatedAt            *timestamp.Timestamp `protobuf:"bytes,7,opt,name=createdAt,proto3" json:"createdAt,omitempty"`
+	UpdatedAt            *timestamp.Timestamp `protobuf:"bytes,8,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"`
+	LastSessionAt        *timestamp.Timestamp `protobuf:"bytes,9,opt,name=lastSessionAt,proto3" json:"lastSessionAt,omitempty"`
+	HasAvatar            bool                 `protobuf:"varint,10,opt,name=hasAvatar,proto3" json:"hasAvatar,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -230,7 +230,7 @@ func (m *User) Reset()         { *m = User{} }
 func (m *User) String() string { return proto.CompactTextString(m) }
 func (*User) ProtoMessage()    {}
 func (*User) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_984ba6f534287b59, []int{4}
+	return fileDescriptor_user_3823b991cda751c6, []int{4}
 }
 func (m *User) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_User.Unmarshal(m, b)
@@ -348,7 +348,7 @@ func (m *UserUpdate) Reset()         { *m = UserUpdate{} }
 func (m *UserUpdate) String() string { return proto.CompactTextString(m) }
 func (*UserUpdate) ProtoMessage()    {}
 func (*UserUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_user_984ba6f534287b59, []int{5}
+	return fileDescriptor_user_3823b991cda751c6, []int{5}
 }
 func (m *UserUpdate) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserUpdate.Unmarshal(m, b)
@@ -388,22 +388,22 @@ type isUserUpdate_HasAvatarOO interface {
 }
 
 type UserUpdate_FirstName struct {
-	FirstName string `protobuf:"bytes,2,opt,name=firstName,oneof"`
+	FirstName string `protobuf:"bytes,2,opt,name=firstName,proto3,oneof"`
 }
 type UserUpdate_LastName struct {
-	LastName string `protobuf:"bytes,3,opt,name=lastName,oneof"`
+	LastName string `protobuf:"bytes,3,opt,name=lastName,proto3,oneof"`
 }
 type UserUpdate_Email struct {
-	Email string `protobuf:"bytes,4,opt,name=email,oneof"`
+	Email string `protobuf:"bytes,4,opt,name=email,proto3,oneof"`
 }
 type UserUpdate_Password struct {
-	Password string `protobuf:"bytes,5,opt,name=password,oneof"`
+	Password string `protobuf:"bytes,5,opt,name=password,proto3,oneof"`
 }
 type UserUpdate_IsAdmin struct {
-	IsAdmin bool `protobuf:"varint,6,opt,name=isAdmin,oneof"`
+	IsAdmin bool `protobuf:"varint,6,opt,name=isAdmin,proto3,oneof"`
 }
 type UserUpdate_HasAvatar struct {
-	HasAvatar bool `protobuf:"varint,7,opt,name=hasAvatar,oneof"`
+	HasAvatar bool `protobuf:"varint,7,opt,name=hasAvatar,proto3,oneof"`
 }
 
 func (*UserUpdate_FirstName) isUserUpdate_FirstNameOO() {}
@@ -701,8 +701,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for UserService service
-
+// UserServiceClient is the client API for UserService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type UserServiceClient interface {
 	GetOwnUser(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*User, error)
 	GetUserByID(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*User, error)
@@ -722,7 +723,7 @@ func NewUserServiceClient(cc *grpc.ClientConn) UserServiceClient {
 
 func (c *userServiceClient) GetOwnUser(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := grpc.Invoke(ctx, "/user.UserService/GetOwnUser", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserService/GetOwnUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -731,7 +732,7 @@ func (c *userServiceClient) GetOwnUser(ctx context.Context, in *Authentication, 
 
 func (c *userServiceClient) GetUserByID(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := grpc.Invoke(ctx, "/user.UserService/GetUserByID", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserService/GetUserByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -740,7 +741,7 @@ func (c *userServiceClient) GetUserByID(ctx context.Context, in *UserIDRequest, 
 
 func (c *userServiceClient) GetUserByEmail(ctx context.Context, in *UserEmailRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := grpc.Invoke(ctx, "/user.UserService/GetUserByEmail", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserService/GetUserByEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -749,7 +750,7 @@ func (c *userServiceClient) GetUserByEmail(ctx context.Context, in *UserEmailReq
 
 func (c *userServiceClient) UpdateOwnUser(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := grpc.Invoke(ctx, "/user.UserService/UpdateOwnUser", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserService/UpdateOwnUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -758,7 +759,7 @@ func (c *userServiceClient) UpdateOwnUser(ctx context.Context, in *UserUpdateReq
 
 func (c *userServiceClient) DeleteOwnUser(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/user.UserService/DeleteOwnUser", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserService/DeleteOwnUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -767,15 +768,14 @@ func (c *userServiceClient) DeleteOwnUser(ctx context.Context, in *Authenticatio
 
 func (c *userServiceClient) DeleteUserByID(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*EmptyMessage, error) {
 	out := new(EmptyMessage)
-	err := grpc.Invoke(ctx, "/user.UserService/DeleteUserByID", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/user.UserService/DeleteUserByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for UserService service
-
+// UserServiceServer is the server API for UserService service.
 type UserServiceServer interface {
 	GetOwnUser(context.Context, *Authentication) (*User, error)
 	GetUserByID(context.Context, *UserIDRequest) (*User, error)
@@ -930,9 +930,9 @@ var _UserService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "user.proto",
 }
 
-func init() { proto.RegisterFile("user.proto", fileDescriptor_user_984ba6f534287b59) }
+func init() { proto.RegisterFile("user.proto", fileDescriptor_user_3823b991cda751c6) }
 
-var fileDescriptor_user_984ba6f534287b59 = []byte{
+var fileDescriptor_user_3823b991cda751c6 = []byte{
 	// 587 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x4d, 0x6b, 0xdb, 0x40,
 	0x10, 0x8d, 0x15, 0x7f, 0x69, 0x5c, 0x99, 0x74, 0xdb, 0xba, 0x42, 0x18, 0x37, 0xe8, 0x14, 0x28,
