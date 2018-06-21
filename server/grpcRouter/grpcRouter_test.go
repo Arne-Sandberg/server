@@ -14,8 +14,8 @@ import (
 )
 
 var vfs *fs.VirtualFilesystem
-var database *db.xormDB
 var dfs *fs.DiskFilesystem
+var database *db.XormDB
 
 func SetupTest() error {
 	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
@@ -31,7 +31,7 @@ func SetupTest() error {
 		return fmt.Errorf("failed to initialize diskfilesystem: %v", err)
 	}
 
-	database, err = db.NewStormDB("test.db")
+	database, err = db.NewXormDB("test.db")
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %v", err)
 	}
