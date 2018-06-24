@@ -448,11 +448,11 @@ func (m *Path) GetPath() string {
 
 type FileInfo struct {
 	// @inject_tag: xorm:"pk autoincr"
-	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" xorm:"pk autoincr"`
 	// @inject_tag: xorm:"index(fullPath)"
-	Path string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Path string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty" xorm:"index(fullPath)"`
 	// @inject_tag: xorm:"index(fullPath)"
-	Name                 string               `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Name                 string               `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty" xorm:"index(fullPath)"`
 	IsDir                bool                 `protobuf:"varint,4,opt,name=isDir,proto3" json:"isDir,omitempty"`
 	Size                 int64                `protobuf:"varint,5,opt,name=size,proto3" json:"size,omitempty"`
 	OwnerID              uint32               `protobuf:"varint,6,opt,name=ownerID,proto3" json:"ownerID,omitempty"`

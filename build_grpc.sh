@@ -7,6 +7,10 @@ if ! type "protoc-gen-go" > /dev/null; then
   go get -u github.com/golang/protobuf/protoc-gen-go
 fi
 
+if ! type "protoc-go-inject-tag" > /dev/null; then
+  go get -u github.com/favadi/protoc-go-inject-tag
+fi
+
 GIT_DIR=grpc-services
 
 if [ "$1" != "" ]; then
