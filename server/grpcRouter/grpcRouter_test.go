@@ -163,12 +163,12 @@ func TestGrpcRouter(t *testing.T) {
 
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testDir/testFile.txt"})
 	if err != nil {
-		t.Errorf("Failed to create file in folder: %v", err)
+		t.Fatalf("Failed to create file in folder: %v", err)
 	}
 
 	_, err = filesClient.ShareFiles(context.Background(), &models.ShareRequest{Auth: adminAuth, FullPaths: []string{"/testDir"}, UserIDs: []uint32{2}})
 	if err != nil {
-		t.Errorf("Could not share folder with other user: %v", err)
+		t.Fatalf("Could not share folder with other user: %v", err)
 	}
 
 	_, err = filesClient.GetFileInfo(context.Background(), &models.PathRequest{Auth: userAuth, FullPath: "/testDir"})
@@ -183,12 +183,12 @@ func TestGrpcRouter(t *testing.T) {
 
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: true, FullPath: "/testDir/subDir"})
 	if err != nil {
-		t.Errorf("Failed to create subfolder in folder: %v", err)
+		t.Fatalf("Failed to create subfolder in folder: %v", err)
 	}
 
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testDir/subDir/subDirFile.txt"})
 	if err != nil {
-		t.Errorf("Failed to create file in subfolder: %v", err)
+		t.Fatalf("Failed to create file in subfolder: %v", err)
 	}
 
 	_, err = filesClient.GetFileInfo(context.Background(), &models.PathRequest{Auth: userAuth, FullPath: "/testDir/subDir/subDirFile.txt"})
