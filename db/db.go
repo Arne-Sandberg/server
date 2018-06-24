@@ -1,43 +1,45 @@
 package db
 
 import (
-	"regexp"
 	"sort"
 
-	"github.com/asdine/storm/q"
-
-	"github.com/asdine/storm"
-	"github.com/asdine/storm/codec/msgpack"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
+	"github.com/asdine/storm"
 )
 
-type StormDB struct {
-	c *storm.DB
+// TODO: Prevent SQL injection (docs: problem with primary key access)
+
+type GormDB struct {
+	gorm *gorm.DB
 }
 
-func NewStormDB(name string) (*StormDB, error) {
-	db, err := storm.Open(name, storm.Codec(msgpack.Codec))
+func NewStormDB(name string) (*GormDB, error) {
+	db, err := gorm.Open("sqlite3", name)
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
 		return nil, err
 	}
 	log.Info("Initialized database")
-	s := StormDB{c: db}
+	s := GormDB{gorm: db}
+
+	db.AutoMigrate(&models.FileInfo{}, &models.User{}, &models.Session{}, &models.ShareEntry{})
 
 	return &s, nil
 }
 
-func (db *StormDB) CleanupExpiredSessions() {
+func (db *GormDB) CleanupExpiredSessions() {
 	log.Trace("Cleaning old sessions")
-	var sessions []models.Session
-	db.c.All(&sessions)
+	var sessions []models.Session // TODO: Error handling; make nicer
+	db.gorm.Find(&sessions)
 	for _, sess := range sessions {
 		if sess.ExpiresAt.Seconds < utils.GetTimestampNow().Seconds {
-			err := db.c.DeleteStruct(&sess)
+			err := db.gorm.Delete(&sess)
 			if err != nil {
 				log.Error(0, "Deleting expired session failed: %v", err)
 			}
@@ -45,28 +47,28 @@ func (db *StormDB) CleanupExpiredSessions() {
 	}
 }
 
-func (db *StormDB) Close() {
-	if err := db.c.Close(); err != nil {
-		log.Fatal(0, "Error shutting down db: %v", err)
+func (db *GormDB) Close() {
+	if err := db.gorm.Close(); err != nil {
+		log.Fatal(0, "Error shutting down gorm: %v", err)
 		return
 	}
 
-	db.c = nil
+	db.gorm = nil
 }
 
-func (db *StormDB) CreateUser(user *models.User) (err error) {
+func (db *GormDB) CreateUser(user *models.User) (err error) {
 	user.CreatedAt = utils.GetTimestampNow()
 	user.UpdatedAt = utils.GetTimestampNow()
-	err = db.c.Save(user)
+	err = db.gorm.Create(user).Error
 	if err != nil {
-		log.Error(0, "Could not save user: %v", err)
+		log.Error(0, "Could not create user: %v", err)
 		return
 	}
 	return
 }
 
-func (db *StormDB) DeleteUser(userID uint32) (err error) {
-	err = db.c.DeleteStruct(&models.User{ID: userID})
+func (db *GormDB) DeleteUser(userID uint32) (err error) {
+	err = db.gorm.Delete(&models.User{ID: userID}).Error
 	if err != nil {
 		log.Error(0, "Could not delete user: %v", err)
 		return
@@ -74,9 +76,9 @@ func (db *StormDB) DeleteUser(userID uint32) (err error) {
 	return
 }
 
-func (db *StormDB) UpdateUser(user *models.User) (err error) {
+func (db *GormDB) UpdateUser(user *models.User) (err error) {
 	user.UpdatedAt = utils.GetTimestampNow()
-	err = db.c.Save(user)
+	err = db.gorm.Create(user).Error
 	if err != nil {
 		log.Error(0, "Could not update user: %v", err)
 		return
@@ -84,29 +86,26 @@ func (db *StormDB) UpdateUser(user *models.User) (err error) {
 	return
 }
 
-func (db *StormDB) GetUserByID(userID uint32) (user *models.User, err error) {
-	var u models.User
-	err = db.c.One("ID", userID, &u)
-	user = &u
+func (db *GormDB) GetUserByID(userID uint32) (user *models.User, err error) {
+	user = &models.User{}
+	err = db.gorm.First(&user, userID).Error
 	return
 }
 
-func (db *StormDB) GetUserByEmail(email string) (user *models.User, err error) {
-	var u models.User
-	err = db.c.One("Email", email, &u)
-	user = &u
+func (db *GormDB) GetUserByEmail(email string) (user *models.User, err error) {
+	user = &models.User{}
+	err = db.gorm.First(user, &models.User{Email: email}).Error
 	return
 }
 
-func (db *StormDB) GetAllUsers() ([]*models.User, error) {
-	var users []*models.User
-	err := db.c.All(&users)
-	return users, err
+func (db *GormDB) GetAllUsers() (users []*models.User, err error) {
+	err = db.gorm.Find(&users).Error
+	return
 }
 
-func (db *StormDB) GetAdminCount() (count int, err error) {
+func (db *GormDB) GetAdminCount() (count int, err error) {
 	var admins []*models.User
-	err = db.c.Find("IsAdmin", true, &admins)
+	err = db.gorm.Find(&admins, &models.User{IsAdmin: true}).Error
 	if err != nil {
 		log.Error(0, "Could not get all admins: %v", err)
 		count = -1
@@ -116,9 +115,9 @@ func (db *StormDB) GetAdminCount() (count int, err error) {
 	return
 }
 
-func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
+func (db *GormDB) VerifyUserPassword(email string, plaintext string) (valid bool, err error) {
 	var user models.User
-	err = db.c.One("Email", email, &user)
+	err = db.gorm.First(&user, &models.User{Email: email}).Error
 	if err != nil {
 		log.Warn("Could not find user by email %s: %v", email, err)
 		valid = false
@@ -137,32 +136,38 @@ func (db *StormDB) VerifyUserPassword(email string, plaintext string) (valid boo
 	return
 }
 
-func (db *StormDB) TotalSessionCount() uint32 {
-	c, err := db.c.Count(&models.Session{})
+func (db *GormDB) TotalSessionCount() (count uint32, err error) {
+	err = db.gorm.Model(&models.Session{}).Count(&count).Error
 	if err != nil {
 		log.Error(0, "Error counting total sessions: %v", err)
+		return
 	}
-	return uint32(c)
+	return
 }
 
-func (db *StormDB) StoreSession(session *models.Session) error {
-	return db.c.Save(session)
+func (db *GormDB) StoreSession(session *models.Session) (err error) {
+	err = db.gorm.Create(session).Error
+	if err != nil {
+		log.Error(0, "Could not store session: %v", err)
+		return
+	}
+	return
 }
 
-func (db *StormDB) RemoveSession(session *models.Session) error {
-	return db.c.DeleteStruct(session)
+func (db *GormDB) RemoveSession(session *models.Session) error {
+	return db.gorm.Delete(session).Error
 }
 
-func (db *StormDB) RemoveUserSessions(userID uint32) (err error) {
+func (db *GormDB) RemoveUserSessions(userID uint32) (err error) {
 	var sessions []models.Session
-	err = db.c.Find("UserID", userID, &sessions)
+	err = db.gorm.Find(&sessions, &models.Session{UserID: userID}).Error
 	if err != nil {
 		log.Error(0, "Could not get all sessions for %v: %v", userID, err)
 		return
 	}
 
 	for _, session := range sessions {
-		err = db.c.DeleteStruct(&session)
+		err = db.gorm.Delete(&session).Error
 		if err != nil {
 			log.Warn("Could not delete session: %v", err)
 			return
@@ -172,9 +177,9 @@ func (db *StormDB) RemoveUserSessions(userID uint32) (err error) {
 	return
 }
 
-func (db *StormDB) SessionIsValid(session *models.Session) bool {
+func (db *GormDB) SessionIsValid(session *models.Session) bool {
 	var s models.Session
-	err := db.c.One("Token", session.Token, &s)
+	err := db.gorm.First(&s, models.Session{Token: session.Token}).Error
 	if err != nil {
 		log.Info("Could not get session for verification, assuming it is invalid: %v", err)
 		return false
@@ -194,8 +199,8 @@ func (db *StormDB) SessionIsValid(session *models.Session) bool {
 	return true
 }
 
-func (db *StormDB) InsertFile(fileInfo *models.FileInfo) (err error) {
-	err = db.c.Save(fileInfo)
+func (db *GormDB) InsertFile(fileInfo *models.FileInfo) (err error) {
+	err = db.gorm.Create(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not insert file: %v", err)
 		return
@@ -203,8 +208,8 @@ func (db *StormDB) InsertFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
-	err = db.c.DeleteStruct(fileInfo)
+func (db *GormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
+	err = db.gorm.Delete(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not delete file: %v", err)
 		return
@@ -212,8 +217,8 @@ func (db *StormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
-	err = db.c.Save(fileInfo)
+func (db *GormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
+	err = db.gorm.Create(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not update fileInfo: %v", err)
 		return
@@ -221,8 +226,8 @@ func (db *StormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
-	err = db.c.DeleteStruct(fileInfo)
+func (db *GormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
+	err = db.gorm.Delete(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not delete fileInfo: %v", err)
 		return
@@ -230,23 +235,25 @@ func (db *StormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (db *StormDB) GetStarredFilesForUser(userID uint32) (starredFilesForUser []*models.FileInfo, err error) {
-	starredFilesForUser, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Eq("Starred", true)))
-	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+func (db *GormDB) GetStarredFilesForUser(userID uint32) (starredFilesForUser []*models.FileInfo, err error) {
+	err = db.gorm.Where(&models.FileInfo{OwnerID: userID, Starred: true}).Order("isDir, name").Find(&starredFilesForUser).Error
+	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 		starredFilesForUser = make([]*models.FileInfo, 0)
 	} else if err != nil {
 		log.Error(0, "Could not get starred files for userID %v: %v", userID, err)
 		return
 	}
+
+
 	return
 }
 
-func (db *StormDB) GetSharedFilesForUser(userID uint32) (sharedFilesForUser []*models.FileInfo, err error) {
+func (db *GormDB) GetSharedFilesForUser(userID uint32) (sharedFilesForUser []*models.FileInfo, err error) {
 	return
 }
 
-func (db *StormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
+func (db *GormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
 	dirInfo, err = db.GetFileInfo(userID, path, dirName)
 	if err != nil || !dirInfo.IsDir {
 		return
@@ -256,10 +263,9 @@ func (db *StormDB) GetDirectoryContent(userID uint32, path, dirName string) (dir
 	return
 }
 
-func (db *StormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
-	content, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("ParentID", directoryID)))
-
-	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+func (db *GormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
+	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order("isDir, name").Find(&content).Error
+	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
@@ -269,26 +275,26 @@ func (db *StormDB) GetDirectoryContentWithID(directoryID uint32) (content []*mod
 	return
 }
 
-func (db *StormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
+func (db *GormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
 	err = query.OrderBy("IsDir", "Name").Find(&content)
 	sort.SliceStable(content, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
 
 	return
 }
 
-func (db *StormDB) GetFileInfo(userID uint32, path, fileName string) (fileInfo *models.FileInfo, err error) {
+func (db *GormDB) GetFileInfo(userID uint32, path, name string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = db.c.Select(q.Eq("Path", path), q.Eq("Name", fileName), q.Eq("OwnerID", userID)).First(fileInfo)
+	err = db.gorm.Where(&models.FileInfo{Path: path, Name: name}).First(fileInfo).Error
 	if err != nil {
-		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, fileName, userID, err)
+		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, name, userID, err)
 		return
 	}
 	return
 }
 
-func (db *StormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, err error) {
+func (db *GormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = db.c.One("ID", fileID, fileInfo)
+	err = db.gorm.First(fileInfo, fileID).Error
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
 		return
@@ -296,12 +302,13 @@ func (db *StormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, 
 	return
 }
 
-func (db *StormDB) SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error) {
-	pathRegex := "(?i)^" + regexp.QuoteMeta(path)
+func (db *GormDB) SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error) {
+	// TODO: Implement searching again
+	/*pathRegex := "(?i)^" + regexp.QuoteMeta(path)
 	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
-	results, err = db.getSortedFileInfoResultFromQuery(db.c.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))
+	results, err = db.getSortedFileInfoResultFromQuery(db.gorm.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))*/
 
-	if err != nil && err.Error() == "not found" { // TODO: Is this needed? Should reference to the error directly
+	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", fileName, path, userID, err)
@@ -311,16 +318,16 @@ func (db *StormDB) SearchForFiles(userID uint32, path, fileName string) (results
 	return
 }
 
-func (db *StormDB) DeleteUserFiles(userID uint32) (err error) {
+func (db *GormDB) DeleteUserFiles(userID uint32) (err error) {
 	var files []models.FileInfo
-	err = db.c.Find("OwnerID", userID, &files)
+	err = db.gorm.Find(&files, &models.FileInfo{OwnerID: userID}).Error
 	if err != nil {
 		log.Error(0, "Could not get all files for %v: %v", userID, err)
 		return
 	}
 
 	for _, file := range files {
-		err = db.c.DeleteStruct(&file)
+		err = db.gorm.Delete(&file).Error
 		if err != nil {
 			log.Warn("Could not delete file: %v", err)
 			continue
@@ -330,8 +337,8 @@ func (db *StormDB) DeleteUserFiles(userID uint32) (err error) {
 	return
 }
 
-func (db *StormDB) InsertShareEntry(shareEntry *models.ShareEntry) (err error) {
-	err = db.c.Save(shareEntry)
+func (db *GormDB) InsertShareEntry(shareEntry *models.ShareEntry) (err error) {
+	err = db.gorm.Create(shareEntry).Error
 	if err != nil {
 		log.Error(0, "Could not insert share entry: %v", err)
 		return
@@ -339,9 +346,9 @@ func (db *StormDB) InsertShareEntry(shareEntry *models.ShareEntry) (err error) {
 	return
 }
 
-func (db *StormDB) GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEntry, err error) {
+func (db *GormDB) GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEntry, err error) {
 	shareEntry = &models.ShareEntry{}
-	err = db.c.One("ID", shareID, shareEntry)
+	err = db.gorm.First(shareEntry, shareID).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntry for ID %v: %v", shareID, err)
 		return
@@ -349,8 +356,8 @@ func (db *StormDB) GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEn
 	return
 }
 
-func (db *StormDB) GetShareEntriesForFile(fileID uint32) (shareEntries []*models.ShareEntry, err error) {
-	err = db.c.Find("FileID", fileID, &shareEntries)
+func (db *GormDB) GetShareEntriesForFile(fileID uint32) (shareEntries []*models.ShareEntry, err error) {
+	err = db.gorm.Find(&shareEntries, &models.ShareEntry{FileID: fileID}).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntries for FileID %v: %v", fileID, err)
 		return

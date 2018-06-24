@@ -101,7 +101,8 @@ func newUnverifiedSession(userID uint32) (sess *models.Session, err error) {
 }
 
 func TotalSessionCount() uint32 {
-	return sProvider.TotalSessionCount()
+	count, _ := sProvider.TotalSessionCount()
+	return count
 }
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.

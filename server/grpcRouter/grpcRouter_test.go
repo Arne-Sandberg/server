@@ -15,7 +15,7 @@ import (
 
 var vfs *fs.VirtualFilesystem
 var dfs *fs.DiskFilesystem
-var database *db.StormDB
+var database *db.GormDB
 
 func SetupTest() error {
 	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
