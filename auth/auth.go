@@ -73,29 +73,31 @@ func NewSession(email string, password string) (*models.Session, error) {
 		return &models.Session{}, err
 	}
 	if valid {
-		return newUnverifiedSession(user.ID), nil
+		return newUnverifiedSession(user.ID)
 	}
 	return &models.Session{}, ErrInvalidCredentials
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(userID uint32) *models.Session {
-	sess := &models.Session{
+func newUnverifiedSession(userID uint32) (sess *models.Session, err error) {
+	sess = &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
 		ExpiresAt: utils.GetTimestampFromTime(time.Now().UTC().Add(sessionExpiry)),
 	}
-	err := sProvider.StoreSession(sess)
+	err = sProvider.StoreSession(sess)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
+		return
 	}
 
 	err = UpdateLastSession(userID)
 	if err != nil {
 		log.Error(0, "Could not update user with lastSession %v", err)
+		return
 	}
 
-	return sess
+	return
 }
 
 func TotalSessionCount() uint32 {
@@ -137,7 +139,7 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	}
 
 	// Now, create a session for the user
-	return newUnverifiedSession(user.ID), nil
+	return newUnverifiedSession(user.ID)
 }
 
 func DeleteUser(userID uint32) (err error) {

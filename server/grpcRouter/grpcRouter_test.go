@@ -15,15 +15,14 @@ import (
 
 var vfs *fs.VirtualFilesystem
 var dfs *fs.DiskFilesystem
-var database *db.XormDB
+var database *db.StormDB
 
 func SetupTest() error {
 	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
 		Level: clog.TRACE,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not initialize logging: %v", err)
-		os.Exit(2)
+		return fmt.Errorf("could not initialize logging: %v", err)
 	}
 
 	dfs, err = fs.NewDiskFilesystem("testData", 100)
@@ -31,7 +30,7 @@ func SetupTest() error {
 		return fmt.Errorf("failed to initialize diskfilesystem: %v", err)
 	}
 
-	database, err = db.NewXormDB("test.db")
+	database, err = db.NewStormDB("test.db")
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %v", err)
 	}
@@ -68,13 +67,13 @@ func TestGrpcRouter(t *testing.T) {
 
 	err := SetupTest()
 	if err != nil {
-		t.Errorf("Setup failed: %v", err)
+		t.Fatalf("Setup failed: %v", err)
 		return
 	}
 
 	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure())
 	if err != nil {
-		t.Errorf("Failed to dial grpc server: %v", err)
+		t.Fatalf("Failed to dial grpc server: %v", err)
 		return
 	}
 	defer conn.Close()
@@ -87,20 +86,20 @@ func TestGrpcRouter(t *testing.T) {
 	// Auth
 	authResp, err := authClient.Signup(context.Background(), &models.User{FirstName: "Jon", LastName: "Doe", Email: "john.admin@testing.com", Password: "secretPassw0rd"})
 	if err != nil {
-		t.Errorf("Failed signup call: %v", err)
+		t.Fatalf("Failed signup call: %v", err)
 		return
 	}
 
 	authResp, err = authClient.Login(context.Background(), &models.LoginData{Email: "john.admin@testing.com", Password: "secretPassw0rd"})
 	if err != nil {
-		t.Errorf("Failed login call: %v", err)
+		t.Fatalf("Failed login call: %v", err)
 		return
 	}
 	adminAuth := &models.Authentication{Token: authResp.Token}
 
 	authResp, err = authClient.Signup(context.Background(), &models.User{FirstName: "Jon", LastName: "Doe", Email: "john.user@testing.com", Password: "secretPassw0rd"})
 	if err != nil {
-		t.Errorf("Failed signup call: %v", err)
+		t.Fatalf("Failed signup call: %v", err)
 		return
 	}
 	userAuth := &models.Authentication{Token: authResp.Token}
@@ -139,7 +138,7 @@ func TestGrpcRouter(t *testing.T) {
 	// Files
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testFile.txt"})
 	if err != nil {
-		t.Errorf("Failed to create file: %v", err)
+		t.Fatalf("Failed to create file: %v", err)
 	}
 
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testFile.txt"})
@@ -159,7 +158,7 @@ func TestGrpcRouter(t *testing.T) {
 
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: true, FullPath: "/testDir"})
 	if err != nil {
-		t.Errorf("Failed to create folder: %v", err)
+		t.Fatalf("Failed to create folder: %v", err)
 	}
 
 	_, err = filesClient.CreateFile(context.Background(), &models.CreateFileRequest{Auth: adminAuth, IsDir: false, FullPath: "/testDir/testFile.txt"})
