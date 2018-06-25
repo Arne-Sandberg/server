@@ -289,7 +289,7 @@ func (db *GormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content [
 
 func (db *GormDB) GetFileInfo(userID uint32, path, name string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = db.gorm.Where(&models.FileInfo{Path: path, Name: name}).First(fileInfo).Error
+	err = db.gorm.Where(&models.FileInfo{OwnerID: userID, Path: path, Name: name}).First(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, name, userID, err)
 		return
