@@ -14,6 +14,7 @@ import (
 	log "gopkg.in/clog.v1"
 	"errors"
 	"mime"
+	"github.com/jinzhu/gorm"
 )
 
 type vfsDatabase interface {
@@ -224,7 +225,7 @@ func (vfs *VirtualFilesystem) CreateUserFolders(userID uint32) error {
 		return fmt.Errorf("failed to create folder for user id %v: %v", userID, err)
 	}
 	_, err = vfs.db.GetFileInfo(userID, "/", "")
-	if created || err != nil {
+	if created || gorm.IsRecordNotFoundError(err) {
 		err = vfs.db.InsertFile(&models.FileInfo{
 			Path:        "/",
 			Name:        "",
@@ -243,7 +244,7 @@ func (vfs *VirtualFilesystem) CreateUserFolders(userID uint32) error {
 		return fmt.Errorf("failed creating tmp folder for user id %v: %v", userID, err)
 	}
 	_, err = vfs.db.GetFileInfo(userID, "/", TmpName)
-	if created || err != nil {
+	if created || gorm.IsRecordNotFoundError(err) {
 		err = vfs.db.InsertFile(&models.FileInfo{
 			Path:        "/",
 			Name:        TmpName,

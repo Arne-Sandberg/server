@@ -38,7 +38,7 @@ func (db *GormDB) CleanupExpiredSessions() {
 	var sessions []models.Session // TODO: Error handling; make nicer
 	db.gorm.Find(&sessions)
 	for _, sess := range sessions {
-		if sess.ExpiresAt.Seconds < utils.GetTimestampNow().Seconds {
+		if sess.ExpiresAt < utils.GetTimestampNow() {
 			err := db.gorm.Delete(&sess)
 			if err != nil {
 				log.Error(0, "Deleting expired session failed: %v", err)
@@ -78,7 +78,7 @@ func (db *GormDB) DeleteUser(userID uint32) (err error) {
 
 func (db *GormDB) UpdateUser(user *models.User) (err error) {
 	user.UpdatedAt = utils.GetTimestampNow()
-	err = db.gorm.Create(user).Error
+	err = db.gorm.Save(user).Error
 	if err != nil {
 		log.Error(0, "Could not update user: %v", err)
 		return
@@ -154,8 +154,13 @@ func (db *GormDB) StoreSession(session *models.Session) (err error) {
 	return
 }
 
-func (db *GormDB) RemoveSession(session *models.Session) error {
-	return db.gorm.Delete(session).Error
+func (db *GormDB) RemoveSession(session *models.Session) (err error) {
+	err = db.gorm.Delete(session).Error
+	if err != nil {
+		log.Error(0, "Could not delete session: %v", err)
+		return
+	}
+	return
 }
 
 func (db *GormDB) RemoveUserSessions(userID uint32) (err error) {
@@ -191,8 +196,8 @@ func (db *GormDB) SessionIsValid(session *models.Session) bool {
 	}
 
 	now := utils.GetTimestampNow()
-	log.Trace("Session expires at %v, now is %v", s.ExpiresAt.Seconds, now.Seconds)
-	if s.ExpiresAt.Seconds < now.Seconds {
+	log.Trace("Session expires at %v, now is %v", s.ExpiresAt, now)
+	if s.ExpiresAt < now {
 		log.Info("Session has expired")
 		return false
 	}
@@ -218,7 +223,7 @@ func (db *GormDB) RemoveFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *GormDB) UpdateFile(fileInfo *models.FileInfo) (err error) {
-	err = db.gorm.Create(fileInfo).Error
+	err = db.gorm.Save(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not update fileInfo: %v", err)
 		return
@@ -264,7 +269,7 @@ func (db *GormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirI
 }
 
 func (db *GormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
-	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order("isDir, name").Find(&content).Error
+	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order("is_dir, name").Find(&content).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
