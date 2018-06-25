@@ -13,7 +13,6 @@
     ".",
     "codec",
     "codec/json",
-    "codec/msgpack",
     "index",
     "internal",
     "q"
@@ -219,15 +218,6 @@
   version = "v0.5.4"
 
 [[projects]]
-  name = "github.com/vmihailenco/msgpack"
-  packages = [
-    ".",
-    "codes"
-  ]
-  revision = "b5e691b1eb52a28c05e67ab9df303626c095c23b"
-  version = "v3.3.3"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -276,22 +266,6 @@
   ]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
-
-[[projects]]
-  name = "google.golang.org/appengine"
-  packages = [
-    ".",
-    "datastore",
-    "internal",
-    "internal/app_identity",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/modules",
-    "internal/remote_api"
-  ]
-  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
-  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -357,6 +331,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5a3e030a171a0c15c6bee850dc8c25e62c7329434e79bc304754fccdebdb6842"
+  inputs-digest = "b6da025b9c4c78a404aeb1075a376050977710f931f30ae3ceb4be16f1be1ad4"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -36,7 +36,7 @@ func (m *PathRequest) Reset()         { *m = PathRequest{} }
 func (m *PathRequest) String() string { return proto.CompactTextString(m) }
 func (*PathRequest) ProtoMessage()    {}
 func (*PathRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{0}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{0}
 }
 func (m *PathRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathRequest.Unmarshal(m, b)
@@ -82,7 +82,7 @@ func (m *PathsRequest) Reset()         { *m = PathsRequest{} }
 func (m *PathsRequest) String() string { return proto.CompactTextString(m) }
 func (*PathsRequest) ProtoMessage()    {}
 func (*PathsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{1}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{1}
 }
 func (m *PathsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathsRequest.Unmarshal(m, b)
@@ -128,7 +128,7 @@ func (m *SearchRequest) Reset()         { *m = SearchRequest{} }
 func (m *SearchRequest) String() string { return proto.CompactTextString(m) }
 func (*SearchRequest) ProtoMessage()    {}
 func (*SearchRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{2}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{2}
 }
 func (m *SearchRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchRequest.Unmarshal(m, b)
@@ -175,7 +175,7 @@ func (m *ShareRequest) Reset()         { *m = ShareRequest{} }
 func (m *ShareRequest) String() string { return proto.CompactTextString(m) }
 func (*ShareRequest) ProtoMessage()    {}
 func (*ShareRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{3}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{3}
 }
 func (m *ShareRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ShareRequest.Unmarshal(m, b)
@@ -229,7 +229,7 @@ func (m *CreateFileRequest) Reset()         { *m = CreateFileRequest{} }
 func (m *CreateFileRequest) String() string { return proto.CompactTextString(m) }
 func (*CreateFileRequest) ProtoMessage()    {}
 func (*CreateFileRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{4}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{4}
 }
 func (m *CreateFileRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateFileRequest.Unmarshal(m, b)
@@ -282,7 +282,7 @@ func (m *FileInfoResponse) Reset()         { *m = FileInfoResponse{} }
 func (m *FileInfoResponse) String() string { return proto.CompactTextString(m) }
 func (*FileInfoResponse) ProtoMessage()    {}
 func (*FileInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{5}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{5}
 }
 func (m *FileInfoResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfoResponse.Unmarshal(m, b)
@@ -329,7 +329,7 @@ func (m *FileInfosUpdateRequest) Reset()         { *m = FileInfosUpdateRequest{}
 func (m *FileInfosUpdateRequest) String() string { return proto.CompactTextString(m) }
 func (*FileInfosUpdateRequest) ProtoMessage()    {}
 func (*FileInfosUpdateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{6}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{6}
 }
 func (m *FileInfosUpdateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfosUpdateRequest.Unmarshal(m, b)
@@ -381,7 +381,7 @@ func (m *FileList) Reset()         { *m = FileList{} }
 func (m *FileList) String() string { return proto.CompactTextString(m) }
 func (*FileList) ProtoMessage()    {}
 func (*FileList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{7}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{7}
 }
 func (m *FileList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileList.Unmarshal(m, b)
@@ -419,7 +419,7 @@ func (m *Path) Reset()         { *m = Path{} }
 func (m *Path) String() string { return proto.CompactTextString(m) }
 func (*Path) ProtoMessage()    {}
 func (*Path) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{8}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{8}
 }
 func (m *Path) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Path.Unmarshal(m, b)
@@ -447,10 +447,12 @@ func (m *Path) GetPath() string {
 }
 
 type FileInfo struct {
-	// @inject_tag: storm:"id,increment"
-	ID                   uint32               `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" storm:"id,increment"`
-	Path                 string               `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Name                 string               `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// @inject_tag: gorm:"primary_key;auto_increment"
+	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty" gorm:"primary_key;auto_increment"`
+	// @inject_tag: gorm:"index:fullPath"
+	Path string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty" gorm:"index:fullPath"`
+	// @inject_tag: gorm:"index:fullPath"
+	Name                 string               `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty" gorm:"index:fullPath"`
 	IsDir                bool                 `protobuf:"varint,4,opt,name=isDir,proto3" json:"isDir,omitempty"`
 	Size                 int64                `protobuf:"varint,5,opt,name=size,proto3" json:"size,omitempty"`
 	OwnerID              uint32               `protobuf:"varint,6,opt,name=ownerID,proto3" json:"ownerID,omitempty"`
@@ -468,7 +470,7 @@ func (m *FileInfo) Reset()         { *m = FileInfo{} }
 func (m *FileInfo) String() string { return proto.CompactTextString(m) }
 func (*FileInfo) ProtoMessage()    {}
 func (*FileInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{9}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{9}
 }
 func (m *FileInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfo.Unmarshal(m, b)
@@ -587,7 +589,7 @@ func (m *FileInfoUpdate) Reset()         { *m = FileInfoUpdate{} }
 func (m *FileInfoUpdate) String() string { return proto.CompactTextString(m) }
 func (*FileInfoUpdate) ProtoMessage()    {}
 func (*FileInfoUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_files_57d178c76649084f, []int{10}
+	return fileDescriptor_files_3c259d65fe7dd189, []int{10}
 }
 func (m *FileInfoUpdate) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileInfoUpdate.Unmarshal(m, b)
@@ -1306,9 +1308,9 @@ var _FilesService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "files.proto",
 }
 
-func init() { proto.RegisterFile("files.proto", fileDescriptor_files_57d178c76649084f) }
+func init() { proto.RegisterFile("files.proto", fileDescriptor_files_3c259d65fe7dd189) }
 
-var fileDescriptor_files_57d178c76649084f = []byte{
+var fileDescriptor_files_3c259d65fe7dd189 = []byte{
 	// 813 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x5f, 0x6f, 0xe3, 0x44,
 	0x10, 0x8f, 0x93, 0x34, 0xb5, 0xc7, 0x4d, 0x0a, 0xdb, 0xdc, 0x9d, 0x65, 0x81, 0x88, 0xfc, 0x14,

@@ -10,8 +10,8 @@ import (
 const SessionTokenLength = 32
 
 type Session struct {
-	UserID    uint32 `storm:"index"`
-	Token     string `storm:"id,unique"`
+	UserID    uint32 `gorm:"index"`
+	Token     string `gorm:"primary_key"`
 	ExpiresAt *timestamp.Timestamp
 }
 
