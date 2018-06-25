@@ -8,25 +8,6 @@
   revision = "da59b551951d50441ca26b7a8cd81317f34df87f"
 
 [[projects]]
-  name = "github.com/asdine/storm"
-  packages = [
-    ".",
-    "codec",
-    "codec/json",
-    "index",
-    "internal",
-    "q"
-  ]
-  revision = "bda68dab90fc908ee5dbccb36400edf4f54972d6"
-  version = "v2.1.1"
-
-[[projects]]
-  name = "github.com/coreos/bbolt"
-  packages = ["."]
-  revision = "583e8937c61f1af6513608ccc75c97b6abdf4ff9"
-  version = "v1.3.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/dsnet/compress"
   packages = [
@@ -331,6 +312,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6207d3dd93c22e260b5a0308b07c5b60d5edc340c64c2719a9b15de22c9ae7e7"
+  inputs-digest = "655456bc0871707922fffae7a8a2156961f7e3b2eb85dfdf6410dc4427c77b57"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,8 +1,6 @@
 package db
 
 import (
-	"sort"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/freecloudio/freecloud/auth"
@@ -10,7 +8,6 @@ import (
 	"github.com/freecloudio/freecloud/utils"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
-	"github.com/asdine/storm"
 )
 
 // TODO: Prevent SQL injection (docs: problem with primary key access)
@@ -276,13 +273,6 @@ func (db *GormDB) GetDirectoryContentWithID(directoryID uint32) (content []*mode
 		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
 		return
 	}
-
-	return
-}
-
-func (db *GormDB) getSortedFileInfoResultFromQuery(query storm.Query) (content []*models.FileInfo, err error) {
-	err = query.OrderBy("IsDir", "Name").Find(&content)
-	sort.SliceStable(content, func(i, j int) bool { return content[i].IsDir != content[j].IsDir })
 
 	return
 }
