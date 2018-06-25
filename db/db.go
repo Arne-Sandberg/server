@@ -10,7 +10,7 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
-// TODO: Prevent SQL injection (docs: problem with primary key access)
+const FileListOrder = "is_dir, name"
 
 type GormDB struct {
 	gorm *gorm.DB
@@ -85,7 +85,7 @@ func (db *GormDB) UpdateUser(user *models.User) (err error) {
 
 func (db *GormDB) GetUserByID(userID uint32) (user *models.User, err error) {
 	user = &models.User{}
-	err = db.gorm.First(&user, userID).Error
+	err = db.gorm.First(&user, "id = ?", userID).Error
 	return
 }
 
@@ -266,7 +266,7 @@ func (db *GormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirI
 }
 
 func (db *GormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
-	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order("is_dir, name").Find(&content).Error
+	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order(FileListOrder).Find(&content).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
@@ -289,7 +289,7 @@ func (db *GormDB) GetFileInfo(userID uint32, path, name string) (fileInfo *model
 
 func (db *GormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = db.gorm.First(fileInfo, fileID).Error
+	err = db.gorm.First(fileInfo, "id = ?", fileID).Error
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
 		return
@@ -298,10 +298,9 @@ func (db *GormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, e
 }
 
 func (db *GormDB) SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error) {
-	// TODO: Implement searching again
-	/*pathRegex := "(?i)^" + regexp.QuoteMeta(path)
-	fileNameRegex := "(?i)" + regexp.QuoteMeta(fileName)
-	results, err = db.getSortedFileInfoResultFromQuery(db.gorm.Select(q.Eq("OwnerID", userID), q.Re("Path", pathRegex), q.Re("Name", fileNameRegex)))*/
+	pathSearch := path + "%"
+	fileNameSearch := "%" + fileName + "%"
+	err = db.gorm.Where("owner_id = ? AND path LIKE ? AND name LIKE ?", userID, pathSearch, fileNameSearch).Order(FileListOrder).Find(&results).Error
 
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
@@ -343,7 +342,7 @@ func (db *GormDB) InsertShareEntry(shareEntry *models.ShareEntry) (err error) {
 
 func (db *GormDB) GetShareEntryByID(shareID uint32) (shareEntry *models.ShareEntry, err error) {
 	shareEntry = &models.ShareEntry{}
-	err = db.gorm.First(shareEntry, shareID).Error
+	err = db.gorm.First(shareEntry, "id = ?", shareID).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntry for ID %v: %v", shareID, err)
 		return
