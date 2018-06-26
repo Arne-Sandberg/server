@@ -64,7 +64,7 @@ func main() {
 		os.Exit(3)
 	}
 
-	database, err := db.NewStormDB(config.GetString("db.name"))
+	database, err := db.NewStormDB(config.GetString("db.type"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.name"))
 	if err != nil {
 		clog.Fatal(0, "Database setup failed, bailing out!")
 		os.Exit(1)

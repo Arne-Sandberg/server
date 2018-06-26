@@ -2,30 +2,25 @@
 
 
 [[projects]]
+  name = "cloud.google.com/go"
+  packages = ["civil"]
+  revision = "777200caa7fb8936aed0f12b1fd79af64cc83ec9"
+  version = "v0.24.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/Unknwon/com"
   packages = ["."]
   revision = "da59b551951d50441ca26b7a8cd81317f34df87f"
 
 [[projects]]
-  name = "github.com/asdine/storm"
+  branch = "master"
+  name = "github.com/denisenkom/go-mssqldb"
   packages = [
     ".",
-    "codec",
-    "codec/json",
-    "codec/msgpack",
-    "index",
-    "internal",
-    "q"
+    "internal/cp"
   ]
-  revision = "bda68dab90fc908ee5dbccb36400edf4f54972d6"
-  version = "v2.1.1"
-
-[[projects]]
-  name = "github.com/coreos/bbolt"
-  packages = ["."]
-  revision = "583e8937c61f1af6513608ccc75c97b6abdf4ff9"
-  version = "v1.3.0"
+  revision = "3724b4745ca99cd0374ace516e93c022c00dfda9"
 
 [[projects]]
   branch = "master"
@@ -57,6 +52,12 @@
   name = "github.com/go-macaron/inject"
   packages = ["."]
   revision = "d8a0b8677191f4380287cfebd08e462217bac7ad"
+
+[[projects]]
+  name = "github.com/go-sql-driver/mysql"
+  packages = ["."]
+  revision = "d523deb1b23d913de5bdada721a6071e71283618"
+  version = "v1.4.0"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -100,6 +101,34 @@
   version = "0.6.2"
 
 [[projects]]
+  name = "github.com/jinzhu/gorm"
+  packages = [
+    ".",
+    "dialects/mssql",
+    "dialects/mysql",
+    "dialects/postgres",
+    "dialects/sqlite"
+  ]
+  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
+  version = "v1.9.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  revision = "04140366298a54a039076d798123ffa108fff46c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "hstore",
+    "oid"
+  ]
+  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
+
+[[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
   revision = "c2353362d570a7bfa228149c62842019201cfb71"
@@ -116,6 +145,12 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  revision = "25ecb14adfc7543176f7d85291ec7dba82c6f7e4"
+  version = "v1.9.0"
 
 [[projects]]
   name = "github.com/mholt/archiver"
@@ -198,18 +233,10 @@
   version = "v0.5.4"
 
 [[projects]]
-  name = "github.com/vmihailenco/msgpack"
-  packages = [
-    ".",
-    "codes"
-  ]
-  revision = "b5e691b1eb52a28c05e67ab9df303626c095c23b"
-  version = "v3.3.3"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "md4",
     "pbkdf2",
     "scrypt"
   ]
@@ -258,17 +285,7 @@
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = [
-    ".",
-    "datastore",
-    "internal",
-    "internal/app_identity",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/modules",
-    "internal/remote_api"
-  ]
+  packages = ["cloudsql"]
   revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
   version = "v1.1.0"
 
@@ -336,6 +353,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5cfdcb67ab3d24d3c8cc61c2e491118f870415275841c4cf3282c5478e0e469f"
+  inputs-digest = "860115aff76d95ecabbb7cd6d23b6014d676a77bb6d68b392521ddb4c8f58e80"
   solver-name = "gps-cdcl"
   solver-version = 1

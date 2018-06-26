@@ -15,7 +15,7 @@ import (
 
 var vfs *fs.VirtualFilesystem
 var dfs *fs.DiskFilesystem
-var database *db.StormDB
+var database *db.GormDB
 
 func SetupTest() error {
 	err := clog.New(clog.CONSOLE, clog.ConsoleConfig{
@@ -30,7 +30,7 @@ func SetupTest() error {
 		return fmt.Errorf("failed to initialize diskfilesystem: %v", err)
 	}
 
-	database, err = db.NewStormDB("test.db")
+	database, err = db.NewStormDB("sqlite3", "", 0, "", "", "testDB.db")
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %v", err)
 	}

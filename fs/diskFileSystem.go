@@ -194,7 +194,7 @@ func (dfs *DiskFilesystem) generateFileInfo(osFileInfo os.FileInfo, path string)
 		Name:        osFileInfo.Name(),
 		IsDir:       osFileInfo.IsDir(),
 		Size:        osFileInfo.Size(),
-		LastChanged: utils.GetTimestampFromTime(osFileInfo.ModTime()),
+		LastChanged: osFileInfo.ModTime().UTC().Unix(),
 		MimeType:    mime.TypeByExtension(filepath.Ext(osFileInfo.Name())),
 	}
 }

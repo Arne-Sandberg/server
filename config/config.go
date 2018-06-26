@@ -9,18 +9,28 @@ func Init() {
 
 func setDefaults() {
 	viper.SetDefault("net.host", "localhost")
+
 	viper.SetDefault("http.port", 8080)
-	viper.SetDefault("grpc.web.port", 9090)
-	viper.SetDefault("grpc.nat.port", 9091)
-	viper.SetDefault("grpc.nat.start", false)
-	viper.SetDefault("auth.session_cookie", "fc-session")
-	// Session expiry is given in hours
-	viper.SetDefault("auth.session_expiry", 24)
 	viper.SetDefault("http.ssl", false)
 	// Upload limit is given in GB
 	viper.SetDefault("http.upload_limit", 10)
+
+	viper.SetDefault("grpc.web.port", 9090)
+	viper.SetDefault("grpc.nat.port", 9091)
+	viper.SetDefault("grpc.nat.start", false)
+
+	viper.SetDefault("auth.session_cookie", "fc-session")
+	// Session expiry is given in hours
+	viper.SetDefault("auth.session_expiry", 24)
+
 	viper.SetDefault("fs.base_directory", "data")
 	viper.SetDefault("fs.tmp_data_expiry", 24)
+
+	viper.SetDefault("db.type", "sqlite3")
+	viper.SetDefault("db.host", "")
+	viper.SetDefault("db.port", 0)
+	viper.SetDefault("db.user", "")
+	viper.SetDefault("db.password", "")
 	viper.SetDefault("db.name", "freecloud.db")
 }
 

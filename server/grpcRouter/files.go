@@ -113,11 +113,11 @@ func (srv *FilesService) ShareFiles(ctx context.Context, req *models.ShareReques
 		for _, shareWithID := range req.UserIDs {
 			toUser, err := auth.GetUserByID(shareWithID)
 			if err != nil {
-				return nil, status.Errorf(codes.Internal, "Failed to get user %v", shareWithID)
+				return nil, status.Errorf(codes.Internal, "Failed to get user %v: %v", shareWithID, err)
 			}
 
 			if err := srv.filesystem.ShareFile(fromUser, toUser, fullPath); err != nil {
-				return nil, status.Errorf(codes.Internal, "Failed to share %v with %v", fullPath, shareWithID)
+				return nil, status.Errorf(codes.Internal, "Failed to share %v with %v: %v", fullPath, shareWithID, err)
 			}
 		}
 	}
