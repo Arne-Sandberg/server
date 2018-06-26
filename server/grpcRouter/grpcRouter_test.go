@@ -30,7 +30,7 @@ func SetupTest() error {
 		return fmt.Errorf("failed to initialize diskfilesystem: %v", err)
 	}
 
-	database, err = db.NewStormDB("sqlite3", "", 0, "", "", "testDB.db")
+	database, err = db.NewStormDB("sqlite3", "", 0, "", "", "test.db")
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %v", err)
 	}
