@@ -3,21 +3,44 @@ package db
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/mssql"
+
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 	"github.com/pkg/errors"
 	log "gopkg.in/clog.v1"
+	"fmt"
 )
 
-const FileListOrder = "is_dir, name"
+const fileListOrder = "is_dir, name"
 
 type GormDB struct {
 	gorm *gorm.DB
 }
 
-func NewStormDB(name string) (*GormDB, error) {
-	db, err := gorm.Open("sqlite3", name)
+func NewStormDB(dbType, dbHost string, dbPort int, dbUser, dbPassword, dbName string) (*GormDB, error) {
+	var args string
+
+	switch dbType {
+	case "mysql":
+		args = fmt.Sprintf("%s:%s@%s:%d/%s?charset=utf8&parseTime=True&loc=Local", dbUser, dbPassword, dbHost, dbPort, dbName)
+		break
+	case "postgres":
+		args = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s", dbHost, dbPort, dbUser, dbName, dbPassword)
+		break
+	case "mssql":
+		args = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s", dbUser, dbPassword, dbHost, dbPort, dbPassword)
+		break
+	case "sqlite3": fallthrough
+	default:
+		dbType = "sqlite3"
+		args = dbName
+	}
+
+	db, err := gorm.Open(dbType, args)
 	if err != nil {
 		log.Error(0, "Could not open datbase: %v", err)
 		return nil, err
@@ -25,7 +48,11 @@ func NewStormDB(name string) (*GormDB, error) {
 	log.Info("Initialized database")
 	s := GormDB{gorm: db}
 
-	db.AutoMigrate(&models.FileInfo{}, &models.User{}, &models.Session{}, &models.ShareEntry{})
+	err = db.AutoMigrate(&models.FileInfo{}, &models.User{}, &models.Session{}, &models.ShareEntry{}).Error
+	if err != nil {
+		log.Error(0, "Failed to auto migrate db structs: %v", err);
+		return nil, err
+	}
 
 	return &s, nil
 }
@@ -238,7 +265,7 @@ func (db *GormDB) DeleteFile(fileInfo *models.FileInfo) (err error) {
 }
 
 func (db *GormDB) GetStarredFilesForUser(userID uint32) (starredFilesForUser []*models.FileInfo, err error) {
-	err = db.gorm.Where(&models.FileInfo{OwnerID: userID, Starred: true}).Order("isDir, name").Find(&starredFilesForUser).Error
+	err = db.gorm.Where(&models.FileInfo{OwnerID: userID, Starred: true}).Order(fileListOrder).Find(&starredFilesForUser).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 		starredFilesForUser = make([]*models.FileInfo, 0)
@@ -266,7 +293,7 @@ func (db *GormDB) GetDirectoryContent(userID uint32, path, dirName string) (dirI
 }
 
 func (db *GormDB) GetDirectoryContentWithID(directoryID uint32) (content []*models.FileInfo, err error) {
-	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order(FileListOrder).Find(&content).Error
+	err = db.gorm.Where(&models.FileInfo{ParentID: directoryID}).Order(fileListOrder).Find(&content).Error
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
@@ -300,7 +327,7 @@ func (db *GormDB) GetFileInfoWithID(fileID uint32) (fileInfo *models.FileInfo, e
 func (db *GormDB) SearchForFiles(userID uint32, path, fileName string) (results []*models.FileInfo, err error) {
 	pathSearch := path + "%"
 	fileNameSearch := "%" + fileName + "%"
-	err = db.gorm.Where("owner_id = ? AND path LIKE ? AND name LIKE ?", userID, pathSearch, fileNameSearch).Order(FileListOrder).Find(&results).Error
+	err = db.gorm.Where("owner_id = ? AND path LIKE ? AND name LIKE ?", userID, pathSearch, fileNameSearch).Order(fileListOrder).Find(&results).Error
 
 	if err != nil && gorm.IsRecordNotFoundError(err) {
 		err = nil
