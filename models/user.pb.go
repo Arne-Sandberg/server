@@ -319,6 +319,13 @@ func (m *User) GetHasAvatar() bool {
 	return false
 }
 
+func (m *User) GetHasAvatar() bool {
+	if m != nil {
+		return m.HasAvatar
+	}
+	return false
+}
+
 type UserUpdate struct {
 	// Types that are valid to be assigned to FirstNameOO:
 	//	*UserUpdate_FirstName
@@ -403,6 +410,9 @@ type UserUpdate_IsAdmin struct {
 }
 type UserUpdate_HasAvatar struct {
 	HasAvatar bool `protobuf:"varint,7,opt,name=hasAvatar,proto3,oneof"`
+}
+type UserUpdate_HasAvatar struct {
+	HasAvatar bool `protobuf:"varint,7,opt,name=hasAvatar,oneof"`
 }
 
 func (*UserUpdate_FirstName) isUserUpdate_FirstNameOO() {}

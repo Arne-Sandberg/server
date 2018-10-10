@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/auth"
@@ -45,12 +46,12 @@ var ErrFileNotFound = errors.New("vfs: File not found")
 var ErrSharedIntoShared = errors.New("vfs: Moving or copying shared file into shared folder")
 
 type VirtualFilesystem struct {
-	fs      Filesystem
-	db      vfsDatabase
+	fs Filesystem
+	db vfsDatabase
 }
 
 func NewVirtualFilesystem(fs Filesystem, db vfsDatabase) (vfs *VirtualFilesystem, err error) {
-	vfs = &VirtualFilesystem{fs, db }
+	vfs = &VirtualFilesystem{fs, db}
 	err = vfs.ScanFSForChanges()
 
 	return
@@ -773,9 +774,9 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 	}
 
 	shareEntry := &models.ShareEntry{
-		OwnerID:			fromUser.ID,
-		SharedWithID:	toUser.ID,
-		FileID:				fileInfo.ID,
+		OwnerID:      fromUser.ID,
+		SharedWithID: toUser.ID,
+		FileID:       fileInfo.ID,
 	}
 	err = vfs.db.InsertShareEntry(shareEntry)
 	if err != nil {
@@ -788,16 +789,16 @@ func (vfs *VirtualFilesystem) ShareFile(fromUser, toUser *models.User, path stri
 	}
 
 	sharedFileInfo := &models.FileInfo{
-		Path:           "/",
-		Name:           fileInfo.Name,
-		IsDir:          fileInfo.IsDir,
-		Size:           fileInfo.Size,
-		OwnerID:        toUser.ID,
-		LastChanged:    utils.GetTimestampNow(),
-		MimeType:       fileInfo.MimeType,
-		ParentID:       sharedParentInfo.ID,
-		ShareID:				shareEntry.ID,
-		Starred:        false,
+		Path:        "/",
+		Name:        fileInfo.Name,
+		IsDir:       fileInfo.IsDir,
+		Size:        fileInfo.Size,
+		OwnerID:     toUser.ID,
+		LastChanged: utils.GetTimestampNow(),
+		MimeType:    fileInfo.MimeType,
+		ParentID:    sharedParentInfo.ID,
+		ShareID:     shareEntry.ID,
+		Starred:     false,
 	}
 
 	err = vfs.db.InsertFile(sharedFileInfo)
@@ -843,4 +844,18 @@ func (vfs *VirtualFilesystem) getCheckedShareEntry(userID, shareID uint32) (shar
 	}
 
 	return
+}
+
+func (vfs *VirtualFilesystem) GetAvatarForUser(userID uint32) (string, error) {
+	p := filepath.Join(config.GetString("fs.base_directory"), config.GetString("fs.avatar_directory"), string(userID))
+	_, err := os.Stat(p)
+	if err != nil {
+		log.Error(0, "DB says user %d has avatar, but the file was not found: %v", userID, err)
+		return "", err
+	}
+	return p, nil
+}
+
+func (vfs *VirtualFilesystem) NewAvatarFileHandleForuser(userID uint32) (*os.File, error) {
+	return vfs.fs.NewFileHandle(filepath.Join(config.GetString("fs.base_directory"), config.GetString("fs.avatar_directory"), string(userID)))
 }
