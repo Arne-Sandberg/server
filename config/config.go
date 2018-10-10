@@ -24,6 +24,7 @@ func setDefaults() {
 	viper.SetDefault("auth.session_expiry", 24)
 
 	viper.SetDefault("fs.base_directory", "data")
+	viper.SetDefault("fs.avatar_directory", "avatars")
 	viper.SetDefault("fs.tmp_data_expiry", 24)
 
 	viper.SetDefault("db.type", "sqlite3")
