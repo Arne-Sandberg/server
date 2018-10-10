@@ -3,9 +3,11 @@
 
 package models
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -28,16 +30,17 @@ func (m *EmptyMessage) Reset()         { *m = EmptyMessage{} }
 func (m *EmptyMessage) String() string { return proto.CompactTextString(m) }
 func (*EmptyMessage) ProtoMessage()    {}
 func (*EmptyMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_c78a29ee25f2e2e2, []int{0}
+	return fileDescriptor_a913b1a5d8940539, []int{0}
 }
+
 func (m *EmptyMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EmptyMessage.Unmarshal(m, b)
 }
 func (m *EmptyMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_EmptyMessage.Marshal(b, m, deterministic)
 }
-func (dst *EmptyMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EmptyMessage.Merge(dst, src)
+func (m *EmptyMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EmptyMessage.Merge(m, src)
 }
 func (m *EmptyMessage) XXX_Size() int {
 	return xxx_messageInfo_EmptyMessage.Size(m)
@@ -49,7 +52,7 @@ func (m *EmptyMessage) XXX_DiscardUnknown() {
 var xxx_messageInfo_EmptyMessage proto.InternalMessageInfo
 
 type Authentication struct {
-	Token                string   `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -59,16 +62,17 @@ func (m *Authentication) Reset()         { *m = Authentication{} }
 func (m *Authentication) String() string { return proto.CompactTextString(m) }
 func (*Authentication) ProtoMessage()    {}
 func (*Authentication) Descriptor() ([]byte, []int) {
-	return fileDescriptor_general_c78a29ee25f2e2e2, []int{1}
+	return fileDescriptor_a913b1a5d8940539, []int{1}
 }
+
 func (m *Authentication) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Authentication.Unmarshal(m, b)
 }
 func (m *Authentication) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Authentication.Marshal(b, m, deterministic)
 }
-func (dst *Authentication) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Authentication.Merge(dst, src)
+func (m *Authentication) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Authentication.Merge(m, src)
 }
 func (m *Authentication) XXX_Size() int {
 	return xxx_messageInfo_Authentication.Size(m)
@@ -91,9 +95,9 @@ func init() {
 	proto.RegisterType((*Authentication)(nil), "general.Authentication")
 }
 
-func init() { proto.RegisterFile("general.proto", fileDescriptor_general_c78a29ee25f2e2e2) }
+func init() { proto.RegisterFile("general.proto", fileDescriptor_a913b1a5d8940539) }
 
-var fileDescriptor_general_c78a29ee25f2e2e2 = []byte{
+var fileDescriptor_a913b1a5d8940539 = []byte{
 	// 110 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4d, 0x4f, 0xcd, 0x4b,
 	0x2d, 0x4a, 0xcc, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x87, 0x72, 0x95, 0xf8, 0xb8,

@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 const SessionTokenLength = 32
 
 type Session struct {
-	UserID    uint32 `storm:"index"`
-	Token     string `storm:"id,unique"`
-	ExpiresAt *timestamp.Timestamp
+	UserID    uint32 `gorm:"index"`
+	Token     string `gorm:"primary_key"`
+	ExpiresAt int64
 }
 
 func (s Session) GetTokenString() string {

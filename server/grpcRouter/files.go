@@ -49,7 +49,7 @@ func (srv *FilesService) GetFileInfo(ctx context.Context, req *models.PathReques
 		return nil, err
 	}
 
-	fileInfo, content, err := srv.filesystem.ListFilesForUser(user, req.FullPath)
+	fileInfo, content, err := srv.filesystem.GetDirInfo(user, req.FullPath)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Getting fileInfo for %v failed", req.FullPath)
 	}
@@ -63,30 +63,9 @@ func (srv *FilesService) CreateFile(ctx context.Context, req *models.CreateFileR
 		return nil, err
 	}
 
-	if exisFileInfo, _ := srv.filesystem.GetFileInfo(user, req.FullPath); exisFileInfo.ID > 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "File %v already exists", req.FullPath)
-	}
-
-	if req.IsDir {
-		err := srv.filesystem.CreateDirectoryForUser(user, req.FullPath)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to create directory %v", req.FullPath)
-		}
-	} else {
-		file, err := srv.filesystem.NewFileHandleForUser(user, req.FullPath)
-		defer file.Close()
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to create file %v", req.FullPath)
-		}
-		err = srv.filesystem.FinishNewFile(user, req.FullPath)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to finish creating file %v", req.FullPath)
-		}
-	}
-
-	fileInfo, err := srv.filesystem.GetFileInfo(user, req.FullPath)
+	fileInfo, err := srv.filesystem.CreateFile(user, req.FullPath, req.IsDir)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get fileInfo of created file %v", req.FullPath)
+		return nil, status.Errorf(codes.Internal, "Failed to create file: %v", err)
 	}
 
 	return fileInfo, nil
@@ -134,11 +113,11 @@ func (srv *FilesService) ShareFiles(ctx context.Context, req *models.ShareReques
 		for _, shareWithID := range req.UserIDs {
 			toUser, err := auth.GetUserByID(shareWithID)
 			if err != nil {
-				return nil, status.Errorf(codes.Internal, "Failed to get user %v", shareWithID)
+				return nil, status.Errorf(codes.Internal, "Failed to get user %v: %v", shareWithID, err)
 			}
 
 			if err := srv.filesystem.ShareFile(fromUser, toUser, fullPath); err != nil {
-				return nil, status.Errorf(codes.Internal, "Failed to share %v with %v", fullPath, shareWithID)
+				return nil, status.Errorf(codes.Internal, "Failed to share %v with %v: %v", fullPath, shareWithID, err)
 			}
 		}
 	}

@@ -35,7 +35,7 @@ func Start(webPort, natPort int, hostname string, vfs *fs.VirtualFilesystem, sta
 
 	// Start server in a goroutine so the method exits and all interrupts can be handled correctly
 	go func() {
-		log.Trace("gRPC listening on %s", webGrpcServer.Addr)
+		log.Trace("web gRPC listening on %s", webGrpcServer.Addr)
 		err := webGrpcServer.ListenAndServe()
 		if err != nil {
 			log.Fatal(0, "Server error: %v", err)
@@ -52,6 +52,7 @@ func Start(webPort, natPort int, hostname string, vfs *fs.VirtualFilesystem, sta
 
 		// Start server in a goroutine so the method exits and all interrupts can be handled correctly
 		go func() {
+			log.Trace("pure gRPC listening on %s", lis.Addr().String())
 			err := grpcServer.Serve(lis)
 			if err != nil {
 				log.Fatal(0, "Server error: %v", err)

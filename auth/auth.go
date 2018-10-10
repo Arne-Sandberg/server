@@ -7,8 +7,8 @@ import (
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	log "gopkg.in/clog.v1"
+	"github.com/jinzhu/gorm"
 )
 
 const SessionTokenLength = 32
@@ -73,33 +73,36 @@ func NewSession(email string, password string) (*models.Session, error) {
 		return &models.Session{}, err
 	}
 	if valid {
-		return newUnverifiedSession(user.ID), nil
+		return newUnverifiedSession(user.ID)
 	}
 	return &models.Session{}, ErrInvalidCredentials
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(userID uint32) *models.Session {
-	sess := &models.Session{
+func newUnverifiedSession(userID uint32) (sess *models.Session, err error) {
+	sess = &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
-		ExpiresAt: utils.GetTimestampFromTime(time.Now().UTC().Add(sessionExpiry)),
+		ExpiresAt: time.Now().UTC().Add(sessionExpiry).Unix(),
 	}
-	err := sProvider.StoreSession(sess)
+	err = sProvider.StoreSession(sess)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
+		return
 	}
 
 	err = UpdateLastSession(userID)
 	if err != nil {
 		log.Error(0, "Could not update user with lastSession %v", err)
+		return
 	}
 
-	return sess
+	return
 }
 
 func TotalSessionCount() uint32 {
-	return sProvider.TotalSessionCount()
+	count, _ := sProvider.TotalSessionCount()
+	return count
 }
 
 // NewUser hashes the user's password, saves it to the database and then creates a new session, so he doesn't have to login again.
@@ -109,14 +112,12 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 		return
 	}
 
-	existingUser, err := cProvider.GetUserByEmail(user.Email)
-	if existingUser.Email == user.Email {
+	_, err = cProvider.GetUserByEmail(user.Email)
+	if !gorm.IsRecordNotFoundError(err) {
 		err = ErrUserAlreadyExists
 		return
 	}
 
-	user.CreatedAt = utils.GetTimestampNow()
-	user.UpdatedAt = utils.GetTimestampNow()
 	user.Password, err = HashPassword(user.Password)
 	if err != nil {
 		log.Error(0, "Password hashing failed: %v", err)
@@ -137,7 +138,7 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	}
 
 	// Now, create a session for the user
-	return newUnverifiedSession(user.ID), nil
+	return newUnverifiedSession(user.ID)
 }
 
 func DeleteUser(userID uint32) (err error) {
@@ -163,9 +164,9 @@ func GetAllUsers(isAdmin bool) ([]*models.User, error) {
 
 		// For normal users also mask out created, updated and lastSession
 		if !isAdmin {
-			user.CreatedAt = &timestamp.Timestamp{}
-			user.UpdatedAt = &timestamp.Timestamp{}
-			user.LastSessionAt = &timestamp.Timestamp{}
+			user.CreatedAt = 0
+			user.UpdatedAt = 0
+			user.LastSessionAt = 0
 		}
 	}
 	return users, nil
