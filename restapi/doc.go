@@ -7,7 +7,6 @@ This is the API for the freecloud server.
 
     Schemes:
       http
-      https
     Host: freecloud.glidingthrough.space
     BasePath: /api/v1
     Version: 1.0.0

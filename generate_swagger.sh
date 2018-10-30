@@ -28,6 +28,8 @@ else
 	echo "Cloned proto into ${GIT_DIR} and checked out ${GIT_BRANCH}"
 fi
 
+echo "$(pwd)"
+
 swagger validate ./api/freecloud.yml
 swagger generate server -A freecloud -f ./api/freecloud.yml
 
