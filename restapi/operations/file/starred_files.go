@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // StarredFilesHandlerFunc turns a function with the right signature into a starred files handler
-type StarredFilesHandlerFunc func(StarredFilesParams, interface{}) middleware.Responder
+type StarredFilesHandlerFunc func(StarredFilesParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn StarredFilesHandlerFunc) Handle(params StarredFilesParams, principal interface{}) middleware.Responder {
+func (fn StarredFilesHandlerFunc) Handle(params StarredFilesParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // StarredFilesHandler interface for that can handle valid starred files params
 type StarredFilesHandler interface {
-	Handle(StarredFilesParams, interface{}) middleware.Responder
+	Handle(StarredFilesParams, *models.User) middleware.Responder
 }
 
 // NewStarredFiles creates a new http.Handler for the starred files operation
@@ -54,9 +56,9 @@ func (o *StarredFiles) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -24,6 +24,8 @@ import (
 	"github.com/freecloudio/freecloud/restapi/operations/file"
 	"github.com/freecloudio/freecloud/restapi/operations/system"
 	"github.com/freecloudio/freecloud/restapi/operations/user"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // NewFreecloudAPI creates a new Freecloud instance
@@ -47,75 +49,75 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 			return errors.NotImplemented("gzip producer has not yet been implemented")
 		}),
 		JSONProducer: runtime.JSONProducer(),
-		FileCreateFileHandler: file.CreateFileHandlerFunc(func(params file.CreateFileParams, principal interface{}) middleware.Responder {
+		FileCreateFileHandler: file.CreateFileHandlerFunc(func(params file.CreateFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileCreateFile has not yet been implemented")
 		}),
-		UserDeleteCurrentUserHandler: user.DeleteCurrentUserHandlerFunc(func(params user.DeleteCurrentUserParams, principal interface{}) middleware.Responder {
+		UserDeleteCurrentUserHandler: user.DeleteCurrentUserHandlerFunc(func(params user.DeleteCurrentUserParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation UserDeleteCurrentUser has not yet been implemented")
 		}),
-		FileDeleteFileHandler: file.DeleteFileHandlerFunc(func(params file.DeleteFileParams, principal interface{}) middleware.Responder {
+		FileDeleteFileHandler: file.DeleteFileHandlerFunc(func(params file.DeleteFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileDeleteFile has not yet been implemented")
 		}),
-		UserDeleteUserByIDHandler: user.DeleteUserByIDHandlerFunc(func(params user.DeleteUserByIDParams, principal interface{}) middleware.Responder {
+		UserDeleteUserByIDHandler: user.DeleteUserByIDHandlerFunc(func(params user.DeleteUserByIDParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation UserDeleteUserByID has not yet been implemented")
 		}),
-		FileDownloadFileHandler: file.DownloadFileHandlerFunc(func(params file.DownloadFileParams, principal interface{}) middleware.Responder {
+		FileDownloadFileHandler: file.DownloadFileHandlerFunc(func(params file.DownloadFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileDownloadFile has not yet been implemented")
 		}),
-		UserGetCurrentUserHandler: user.GetCurrentUserHandlerFunc(func(params user.GetCurrentUserParams, principal interface{}) middleware.Responder {
+		UserGetCurrentUserHandler: user.GetCurrentUserHandlerFunc(func(params user.GetCurrentUserParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation UserGetCurrentUser has not yet been implemented")
 		}),
-		FileGetFileInfoHandler: file.GetFileInfoHandlerFunc(func(params file.GetFileInfoParams, principal interface{}) middleware.Responder {
+		FileGetFileInfoHandler: file.GetFileInfoHandlerFunc(func(params file.GetFileInfoParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileGetFileInfo has not yet been implemented")
 		}),
-		SystemGetSystemStatsHandler: system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal interface{}) middleware.Responder {
+		SystemGetSystemStatsHandler: system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation SystemGetSystemStats has not yet been implemented")
 		}),
-		UserGetUserByIDHandler: user.GetUserByIDHandlerFunc(func(params user.GetUserByIDParams, principal interface{}) middleware.Responder {
+		UserGetUserByIDHandler: user.GetUserByIDHandlerFunc(func(params user.GetUserByIDParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation UserGetUserByID has not yet been implemented")
 		}),
 		AuthLoginHandler: auth.LoginHandlerFunc(func(params auth.LoginParams) middleware.Responder {
 			return middleware.NotImplemented("operation AuthLogin has not yet been implemented")
 		}),
-		AuthLogoutHandler: auth.LogoutHandlerFunc(func(params auth.LogoutParams, principal interface{}) middleware.Responder {
+		AuthLogoutHandler: auth.LogoutHandlerFunc(func(params auth.LogoutParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation AuthLogout has not yet been implemented")
 		}),
-		FileRescanCurrentUserHandler: file.RescanCurrentUserHandlerFunc(func(params file.RescanCurrentUserParams, principal interface{}) middleware.Responder {
+		FileRescanCurrentUserHandler: file.RescanCurrentUserHandlerFunc(func(params file.RescanCurrentUserParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileRescanCurrentUser has not yet been implemented")
 		}),
-		FileRescanUserByIDHandler: file.RescanUserByIDHandlerFunc(func(params file.RescanUserByIDParams, principal interface{}) middleware.Responder {
+		FileRescanUserByIDHandler: file.RescanUserByIDHandlerFunc(func(params file.RescanUserByIDParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileRescanUserByID has not yet been implemented")
 		}),
-		FileSearchFileHandler: file.SearchFileHandlerFunc(func(params file.SearchFileParams, principal interface{}) middleware.Responder {
+		FileSearchFileHandler: file.SearchFileHandlerFunc(func(params file.SearchFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileSearchFile has not yet been implemented")
 		}),
-		FileShareFileHandler: file.ShareFileHandlerFunc(func(params file.ShareFileParams, principal interface{}) middleware.Responder {
+		FileShareFileHandler: file.ShareFileHandlerFunc(func(params file.ShareFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileShareFile has not yet been implemented")
 		}),
 		AuthSignupHandler: auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
 			return middleware.NotImplemented("operation AuthSignup has not yet been implemented")
 		}),
-		FileStarredFilesHandler: file.StarredFilesHandlerFunc(func(params file.StarredFilesParams, principal interface{}) middleware.Responder {
+		FileStarredFilesHandler: file.StarredFilesHandlerFunc(func(params file.StarredFilesParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileStarredFiles has not yet been implemented")
 		}),
-		UserUpdateCurrentUserHandler: user.UpdateCurrentUserHandlerFunc(func(params user.UpdateCurrentUserParams, principal interface{}) middleware.Responder {
+		UserUpdateCurrentUserHandler: user.UpdateCurrentUserHandlerFunc(func(params user.UpdateCurrentUserParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation UserUpdateCurrentUser has not yet been implemented")
 		}),
-		FileUpdateFileHandler: file.UpdateFileHandlerFunc(func(params file.UpdateFileParams, principal interface{}) middleware.Responder {
+		FileUpdateFileHandler: file.UpdateFileHandlerFunc(func(params file.UpdateFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileUpdateFile has not yet been implemented")
 		}),
-		UserUpdateUserByIDHandler: user.UpdateUserByIDHandlerFunc(func(params user.UpdateUserByIDParams, principal interface{}) middleware.Responder {
+		UserUpdateUserByIDHandler: user.UpdateUserByIDHandlerFunc(func(params user.UpdateUserByIDParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation UserUpdateUserByID has not yet been implemented")
 		}),
-		FileUploadFileHandler: file.UploadFileHandlerFunc(func(params file.UploadFileParams, principal interface{}) middleware.Responder {
+		FileUploadFileHandler: file.UploadFileHandlerFunc(func(params file.UploadFileParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileUploadFile has not yet been implemented")
 		}),
-		FileZipFilesHandler: file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal interface{}) middleware.Responder {
+		FileZipFilesHandler: file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal *models.User) middleware.Responder {
 			return middleware.NotImplemented("operation FileZipFiles has not yet been implemented")
 		}),
 
 		// Applies when the "Authorization" header is set
-		TokenAuthAuth: func(token string) (interface{}, error) {
+		TokenAuthAuth: func(token string) (*models.User, error) {
 			return nil, errors.NotImplemented("api key auth (TokenAuth) Authorization from header param [Authorization] has not yet been implemented")
 		},
 
@@ -158,7 +160,7 @@ type FreecloudAPI struct {
 
 	// TokenAuthAuth registers a function that takes a token and returns a principal
 	// it performs authentication based on an api key Authorization provided in the header
-	TokenAuthAuth func(string) (interface{}, error)
+	TokenAuthAuth func(string) (*models.User, error)
 
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
@@ -391,7 +393,9 @@ func (o *FreecloudAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme)
 
 		case "TokenAuth":
 
-			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, o.TokenAuthAuth)
+			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, func(token string) (interface{}, error) {
+				return o.TokenAuthAuth(token)
+			})
 
 		}
 	}

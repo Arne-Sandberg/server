@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // ZipFilesHandlerFunc turns a function with the right signature into a zip files handler
-type ZipFilesHandlerFunc func(ZipFilesParams, interface{}) middleware.Responder
+type ZipFilesHandlerFunc func(ZipFilesParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ZipFilesHandlerFunc) Handle(params ZipFilesParams, principal interface{}) middleware.Responder {
+func (fn ZipFilesHandlerFunc) Handle(params ZipFilesParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // ZipFilesHandler interface for that can handle valid zip files params
 type ZipFilesHandler interface {
-	Handle(ZipFilesParams, interface{}) middleware.Responder
+	Handle(ZipFilesParams, *models.User) middleware.Responder
 }
 
 // NewZipFiles creates a new http.Handler for the zip files operation
@@ -54,9 +56,9 @@ func (o *ZipFiles) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

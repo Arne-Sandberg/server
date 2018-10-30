@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // ShareFileHandlerFunc turns a function with the right signature into a share file handler
-type ShareFileHandlerFunc func(ShareFileParams, interface{}) middleware.Responder
+type ShareFileHandlerFunc func(ShareFileParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ShareFileHandlerFunc) Handle(params ShareFileParams, principal interface{}) middleware.Responder {
+func (fn ShareFileHandlerFunc) Handle(params ShareFileParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // ShareFileHandler interface for that can handle valid share file params
 type ShareFileHandler interface {
-	Handle(ShareFileParams, interface{}) middleware.Responder
+	Handle(ShareFileParams, *models.User) middleware.Responder
 }
 
 // NewShareFile creates a new http.Handler for the share file operation
@@ -54,9 +56,9 @@ func (o *ShareFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // UpdateFileHandlerFunc turns a function with the right signature into a update file handler
-type UpdateFileHandlerFunc func(UpdateFileParams, interface{}) middleware.Responder
+type UpdateFileHandlerFunc func(UpdateFileParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn UpdateFileHandlerFunc) Handle(params UpdateFileParams, principal interface{}) middleware.Responder {
+func (fn UpdateFileHandlerFunc) Handle(params UpdateFileParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // UpdateFileHandler interface for that can handle valid update file params
 type UpdateFileHandler interface {
-	Handle(UpdateFileParams, interface{}) middleware.Responder
+	Handle(UpdateFileParams, *models.User) middleware.Responder
 }
 
 // NewUpdateFile creates a new http.Handler for the update file operation
@@ -54,9 +56,9 @@ func (o *UpdateFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // SearchFileHandlerFunc turns a function with the right signature into a search file handler
-type SearchFileHandlerFunc func(SearchFileParams, interface{}) middleware.Responder
+type SearchFileHandlerFunc func(SearchFileParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn SearchFileHandlerFunc) Handle(params SearchFileParams, principal interface{}) middleware.Responder {
+func (fn SearchFileHandlerFunc) Handle(params SearchFileParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // SearchFileHandler interface for that can handle valid search file params
 type SearchFileHandler interface {
-	Handle(SearchFileParams, interface{}) middleware.Responder
+	Handle(SearchFileParams, *models.User) middleware.Responder
 }
 
 // NewSearchFile creates a new http.Handler for the search file operation
@@ -54,9 +56,9 @@ func (o *SearchFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

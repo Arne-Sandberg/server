@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // UpdateCurrentUserHandlerFunc turns a function with the right signature into a update current user handler
-type UpdateCurrentUserHandlerFunc func(UpdateCurrentUserParams, interface{}) middleware.Responder
+type UpdateCurrentUserHandlerFunc func(UpdateCurrentUserParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn UpdateCurrentUserHandlerFunc) Handle(params UpdateCurrentUserParams, principal interface{}) middleware.Responder {
+func (fn UpdateCurrentUserHandlerFunc) Handle(params UpdateCurrentUserParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // UpdateCurrentUserHandler interface for that can handle valid update current user params
 type UpdateCurrentUserHandler interface {
-	Handle(UpdateCurrentUserParams, interface{}) middleware.Responder
+	Handle(UpdateCurrentUserParams, *models.User) middleware.Responder
 }
 
 // NewUpdateCurrentUser creates a new http.Handler for the update current user operation
@@ -54,9 +56,9 @@ func (o *UpdateCurrentUser) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

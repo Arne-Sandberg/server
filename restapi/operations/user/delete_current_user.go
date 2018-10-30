@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // DeleteCurrentUserHandlerFunc turns a function with the right signature into a delete current user handler
-type DeleteCurrentUserHandlerFunc func(DeleteCurrentUserParams, interface{}) middleware.Responder
+type DeleteCurrentUserHandlerFunc func(DeleteCurrentUserParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCurrentUserHandlerFunc) Handle(params DeleteCurrentUserParams, principal interface{}) middleware.Responder {
+func (fn DeleteCurrentUserHandlerFunc) Handle(params DeleteCurrentUserParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // DeleteCurrentUserHandler interface for that can handle valid delete current user params
 type DeleteCurrentUserHandler interface {
-	Handle(DeleteCurrentUserParams, interface{}) middleware.Responder
+	Handle(DeleteCurrentUserParams, *models.User) middleware.Responder
 }
 
 // NewDeleteCurrentUser creates a new http.Handler for the delete current user operation
@@ -54,9 +56,9 @@ func (o *DeleteCurrentUser) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

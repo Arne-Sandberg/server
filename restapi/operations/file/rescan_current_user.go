@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // RescanCurrentUserHandlerFunc turns a function with the right signature into a rescan current user handler
-type RescanCurrentUserHandlerFunc func(RescanCurrentUserParams, interface{}) middleware.Responder
+type RescanCurrentUserHandlerFunc func(RescanCurrentUserParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn RescanCurrentUserHandlerFunc) Handle(params RescanCurrentUserParams, principal interface{}) middleware.Responder {
+func (fn RescanCurrentUserHandlerFunc) Handle(params RescanCurrentUserParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // RescanCurrentUserHandler interface for that can handle valid rescan current user params
 type RescanCurrentUserHandler interface {
-	Handle(RescanCurrentUserParams, interface{}) middleware.Responder
+	Handle(RescanCurrentUserParams, *models.User) middleware.Responder
 }
 
 // NewRescanCurrentUser creates a new http.Handler for the rescan current user operation
@@ -54,9 +56,9 @@ func (o *RescanCurrentUser) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

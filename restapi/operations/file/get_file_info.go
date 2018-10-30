@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // GetFileInfoHandlerFunc turns a function with the right signature into a get file info handler
-type GetFileInfoHandlerFunc func(GetFileInfoParams, interface{}) middleware.Responder
+type GetFileInfoHandlerFunc func(GetFileInfoParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetFileInfoHandlerFunc) Handle(params GetFileInfoParams, principal interface{}) middleware.Responder {
+func (fn GetFileInfoHandlerFunc) Handle(params GetFileInfoParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // GetFileInfoHandler interface for that can handle valid get file info params
 type GetFileInfoHandler interface {
-	Handle(GetFileInfoParams, interface{}) middleware.Responder
+	Handle(GetFileInfoParams, *models.User) middleware.Responder
 }
 
 // NewGetFileInfo creates a new http.Handler for the get file info operation
@@ -54,9 +56,9 @@ func (o *GetFileInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

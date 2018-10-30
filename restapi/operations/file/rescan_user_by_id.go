@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // RescanUserByIDHandlerFunc turns a function with the right signature into a rescan user by ID handler
-type RescanUserByIDHandlerFunc func(RescanUserByIDParams, interface{}) middleware.Responder
+type RescanUserByIDHandlerFunc func(RescanUserByIDParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn RescanUserByIDHandlerFunc) Handle(params RescanUserByIDParams, principal interface{}) middleware.Responder {
+func (fn RescanUserByIDHandlerFunc) Handle(params RescanUserByIDParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // RescanUserByIDHandler interface for that can handle valid rescan user by ID params
 type RescanUserByIDHandler interface {
-	Handle(RescanUserByIDParams, interface{}) middleware.Responder
+	Handle(RescanUserByIDParams, *models.User) middleware.Responder
 }
 
 // NewRescanUserByID creates a new http.Handler for the rescan user by ID operation
@@ -54,9 +56,9 @@ func (o *RescanUserByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -30,6 +30,6 @@ fi
 
 echo "$(pwd)"
 
-swagger validate ./api/freecloud.yml
-swagger generate server -A freecloud -f ./api/freecloud.yml
+swagger validate ./api/freecloud.yml > /dev/null
+swagger generate server -A freecloud -P models.User -f ./api/freecloud.yml > /dev/null
 

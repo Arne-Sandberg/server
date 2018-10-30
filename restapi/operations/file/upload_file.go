@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/freecloudio/freecloud/models"
 )
 
 // UploadFileHandlerFunc turns a function with the right signature into a upload file handler
-type UploadFileHandlerFunc func(UploadFileParams, interface{}) middleware.Responder
+type UploadFileHandlerFunc func(UploadFileParams, *models.User) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn UploadFileHandlerFunc) Handle(params UploadFileParams, principal interface{}) middleware.Responder {
+func (fn UploadFileHandlerFunc) Handle(params UploadFileParams, principal *models.User) middleware.Responder {
 	return fn(params, principal)
 }
 
 // UploadFileHandler interface for that can handle valid upload file params
 type UploadFileHandler interface {
-	Handle(UploadFileParams, interface{}) middleware.Responder
+	Handle(UploadFileParams, *models.User) middleware.Responder
 }
 
 // NewUploadFile creates a new http.Handler for the upload file operation
@@ -54,9 +56,9 @@ func (o *UploadFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal interface{}
+	var principal *models.User
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.User) // this is really a models.User, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
