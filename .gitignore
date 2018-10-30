@@ -1,6 +1,7 @@
 # Built binaries & files
-./freecloud-server.exe
-./freecloud-server
+freecloud-server.exe
+freecloud-server
+!cmd/freecloud-server
 
 # Uploaded data
 data/
