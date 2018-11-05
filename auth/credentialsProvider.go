@@ -4,7 +4,7 @@ import "github.com/freecloudio/freecloud/models"
 
 // CredentialsProvider is an interface for various credential sources like Databases or alike
 type CredentialsProvider interface {
-	GetUserByID(userID uint32) (*models.User, error)
+	GetUserByID(userID int64) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	CreateUser(user *models.User) error
 	UpdateUser(user *models.User) error

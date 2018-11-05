@@ -21,6 +21,11 @@ const SignupOKCode int = 200
 swagger:response signupOK
 */
 type SignupOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Token `json:"body,omitempty"`
 }
 
 // NewSignupOK creates SignupOK with default headers values
@@ -29,12 +34,27 @@ func NewSignupOK() *SignupOK {
 	return &SignupOK{}
 }
 
+// WithPayload adds the payload to the signup o k response
+func (o *SignupOK) WithPayload(payload *models.Token) *SignupOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the signup o k response
+func (o *SignupOK) SetPayload(payload *models.Token) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *SignupOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*SignupDefault Unexpected error

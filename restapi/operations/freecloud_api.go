@@ -116,9 +116,8 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 			return middleware.NotImplemented("operation FileZipFiles has not yet been implemented")
 		}),
 
-		// Applies when the "Authorization" header is set
-		TokenAuthAuth: func(token string) (*models.User, error) {
-			return nil, errors.NotImplemented("api key auth (TokenAuth) Authorization from header param [Authorization] has not yet been implemented")
+		TokenAuthAuth: func(token string, scopes []string) (*models.User, error) {
+			return nil, errors.NotImplemented("oauth2 bearer auth (TokenAuth) has not yet been implemented")
 		},
 
 		// default authorizer is authorized meaning no requests are blocked
@@ -158,9 +157,9 @@ type FreecloudAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
-	// TokenAuthAuth registers a function that takes a token and returns a principal
-	// it performs authentication based on an api key Authorization provided in the header
-	TokenAuthAuth func(string) (*models.User, error)
+	// TokenAuthAuth registers a function that takes an access token and a collection of required scopes and returns a principal
+	// it performs authentication based on an oauth2 bearer token provided in the request
+	TokenAuthAuth func(string, []string) (*models.User, error)
 
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
@@ -281,7 +280,7 @@ func (o *FreecloudAPI) Validate() error {
 	}
 
 	if o.TokenAuthAuth == nil {
-		unregistered = append(unregistered, "AuthorizationAuth")
+		unregistered = append(unregistered, "TokenAuthAuth")
 	}
 
 	if o.FileCreateFileHandler == nil {
@@ -393,8 +392,8 @@ func (o *FreecloudAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme)
 
 		case "TokenAuth":
 
-			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, func(token string) (interface{}, error) {
-				return o.TokenAuthAuth(token)
+			result[name] = o.BearerAuthenticator(scheme.Name, func(token string, scopes []string) (interface{}, error) {
+				return o.TokenAuthAuth(token, scopes)
 			})
 
 		}

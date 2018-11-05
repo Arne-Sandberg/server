@@ -60,7 +60,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Token"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -75,7 +78,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -116,7 +121,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Token"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -131,7 +139,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "produces": [
@@ -171,7 +181,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -206,7 +218,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -239,7 +253,9 @@ func init() {
       "delete": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -271,7 +287,9 @@ func init() {
       "patch": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -288,11 +306,11 @@ func init() {
             "required": true
           },
           {
-            "name": "fileInfo",
+            "name": "fileInfoUpdate",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/FileInfo"
+              "$ref": "#/definitions/FileInfoUpdate"
             }
           }
         ],
@@ -313,7 +331,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -338,7 +358,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -373,7 +395,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -411,7 +435,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -446,7 +472,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -474,7 +502,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -502,7 +532,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "consumes": [
@@ -545,7 +577,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -571,7 +605,9 @@ func init() {
       "delete": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -597,7 +633,9 @@ func init() {
       "patch": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -633,7 +671,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -669,7 +709,9 @@ func init() {
       "delete": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -705,7 +747,9 @@ func init() {
       "patch": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -724,11 +768,11 @@ func init() {
           },
           {
             "description": "Updated user info",
-            "name": "body",
+            "name": "userUpdate",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/User"
+              "$ref": "#/definitions/UserUpdate"
             }
           }
         ],
@@ -749,7 +793,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -814,8 +860,7 @@ func init() {
           "x-go-custom-tag": "gorm:\"index:fullPath\""
         },
         "ownerID": {
-          "type": "integer",
-          "format": "int64"
+          "type": "integer"
         },
         "parentID": {
           "type": "integer",
@@ -836,6 +881,61 @@ func init() {
         "starred": {
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "FileInfoUpdate": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "isDir": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "lastChanged": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "mimeType": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "name": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "ownerID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "parentID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "path": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "shareID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "starred": {
+          "type": "boolean",
+          "x-nullable": true
         }
       }
     },
@@ -934,6 +1034,14 @@ func init() {
         }
       }
     },
+    "Token": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
+    },
     "User": {
       "type": "object",
       "properties": {
@@ -954,12 +1062,10 @@ func init() {
           "type": "string"
         },
         "hasAvatar": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "isAdmin": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "lastName": {
           "type": "string"
@@ -976,13 +1082,67 @@ func init() {
           "format": "int64"
         }
       }
+    },
+    "UserUpdate": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "createdAt": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "email": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "firstName": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "hasAvatar": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "lastName": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "lastSessionAt": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "password": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "updatedAt": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        }
+      }
     }
   },
   "securityDefinitions": {
     "TokenAuth": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header"
+      "type": "oauth2",
+      "flow": "accessCode",
+      "authorizationUrl": "https://dummy.oauth.net/auth",
+      "tokenUrl": "https://dumy.oauth.net/token",
+      "scopes": {
+        "admin": "admin with all privileges",
+        "user": "normal user"
+      }
     }
   },
   "tags": [
@@ -1047,7 +1207,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Token"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -1062,7 +1225,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1103,7 +1268,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Token"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -1118,7 +1286,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "produces": [
@@ -1158,7 +1328,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1193,7 +1365,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1226,7 +1400,9 @@ func init() {
       "delete": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1258,7 +1434,9 @@ func init() {
       "patch": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1275,11 +1453,11 @@ func init() {
             "required": true
           },
           {
-            "name": "fileInfo",
+            "name": "fileInfoUpdate",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/FileInfo"
+              "$ref": "#/definitions/FileInfoUpdate"
             }
           }
         ],
@@ -1300,7 +1478,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1325,7 +1505,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -1360,7 +1542,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1398,7 +1582,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1433,7 +1619,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1461,7 +1649,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -1489,7 +1679,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "consumes": [
@@ -1532,7 +1724,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1558,7 +1752,9 @@ func init() {
       "delete": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1584,7 +1780,9 @@ func init() {
       "patch": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1620,7 +1818,9 @@ func init() {
       "get": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -1656,7 +1856,9 @@ func init() {
       "delete": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -1692,7 +1894,9 @@ func init() {
       "patch": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "admin"
+            ]
           }
         ],
         "tags": [
@@ -1711,11 +1915,11 @@ func init() {
           },
           {
             "description": "Updated user info",
-            "name": "body",
+            "name": "userUpdate",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/User"
+              "$ref": "#/definitions/UserUpdate"
             }
           }
         ],
@@ -1736,7 +1940,9 @@ func init() {
       "post": {
         "security": [
           {
-            "TokenAuth": []
+            "TokenAuth": [
+              "user"
+            ]
           }
         ],
         "tags": [
@@ -1801,8 +2007,7 @@ func init() {
           "x-go-custom-tag": "gorm:\"index:fullPath\""
         },
         "ownerID": {
-          "type": "integer",
-          "format": "int64"
+          "type": "integer"
         },
         "parentID": {
           "type": "integer",
@@ -1823,6 +2028,61 @@ func init() {
         "starred": {
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "FileInfoUpdate": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "isDir": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "lastChanged": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "mimeType": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "name": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "ownerID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "parentID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "path": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "shareID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "starred": {
+          "type": "boolean",
+          "x-nullable": true
         }
       }
     },
@@ -1921,6 +2181,14 @@ func init() {
         }
       }
     },
+    "Token": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
+    },
     "User": {
       "type": "object",
       "properties": {
@@ -1941,12 +2209,10 @@ func init() {
           "type": "string"
         },
         "hasAvatar": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "isAdmin": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "lastName": {
           "type": "string"
@@ -1963,13 +2229,67 @@ func init() {
           "format": "int64"
         }
       }
+    },
+    "UserUpdate": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "createdAt": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "email": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "firstName": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "hasAvatar": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "lastName": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "lastSessionAt": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        },
+        "password": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "updatedAt": {
+          "type": "integer",
+          "format": "int64",
+          "x-nullable": true
+        }
+      }
     }
   },
   "securityDefinitions": {
     "TokenAuth": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header"
+      "type": "oauth2",
+      "flow": "accessCode",
+      "authorizationUrl": "https://dummy.oauth.net/auth",
+      "tokenUrl": "https://dumy.oauth.net/token",
+      "scopes": {
+        "admin": "admin with all privileges",
+        "user": "normal user"
+      }
     }
   },
   "tags": [

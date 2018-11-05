@@ -39,7 +39,7 @@ type UpdateFileParams struct {
 	  Required: true
 	  In: body
 	*/
-	FileInfo *models.FileInfo
+	FileInfoUpdate *models.FileInfoUpdate
 	/*Path to fileInfo to update
 	  Required: true
 	  In: query
@@ -60,12 +60,12 @@ func (o *UpdateFileParams) BindRequest(r *http.Request, route *middleware.Matche
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.FileInfo
+		var body models.FileInfoUpdate
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("fileInfo", "body"))
+				res = append(res, errors.Required("fileInfoUpdate", "body"))
 			} else {
-				res = append(res, errors.NewParseError("fileInfo", "body", "", err))
+				res = append(res, errors.NewParseError("fileInfoUpdate", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -74,11 +74,11 @@ func (o *UpdateFileParams) BindRequest(r *http.Request, route *middleware.Matche
 			}
 
 			if len(res) == 0 {
-				o.FileInfo = &body
+				o.FileInfoUpdate = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("fileInfo", "body"))
+		res = append(res, errors.Required("fileInfoUpdate", "body"))
 	}
 	qPath, qhkPath, _ := qs.GetOK("path")
 	if err := o.bindPath(qPath, qhkPath, route.Formats); err != nil {

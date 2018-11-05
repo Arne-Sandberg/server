@@ -7,16 +7,16 @@ import (
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/utils"
 
-	log "gopkg.in/clog.v1"
 	"github.com/jinzhu/gorm"
+	log "gopkg.in/clog.v1"
 )
 
 const SessionTokenLength = 32
 
 var (
-	cProvider CredentialsProvider
-	sProvider SessionProvider
-	done      chan struct{}
+	cProvider     CredentialsProvider
+	sProvider     SessionProvider
+	done          chan struct{}
 	sessionExpiry time.Duration
 
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
@@ -79,7 +79,7 @@ func NewSession(email string, password string) (*models.Session, error) {
 }
 
 // newUnverifiedSession issues a session token but does not verify the user's password
-func newUnverifiedSession(userID uint32) (sess *models.Session, err error) {
+func newUnverifiedSession(userID int64) (sess *models.Session, err error) {
 	sess = &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
@@ -177,7 +177,7 @@ func ValidateSession(sess *models.Session) (valid bool) {
 	return sProvider.SessionIsValid(sess)
 }
 
-func GetUserByID(userID uint32) (*models.User, error) {
+func GetUserByID(userID int64) (*models.User, error) {
 	return cProvider.GetUserByID(userID)
 }
 
@@ -190,7 +190,7 @@ func RemoveSession(sess *models.Session) (err error) {
 	return sProvider.RemoveSession(sess)
 }
 
-func UpdateLastSession(userID uint32) (err error) {
+func UpdateLastSession(userID int64) (err error) {
 	user, err := GetUserByID(userID)
 	if err != nil {
 		return
@@ -202,57 +202,58 @@ func UpdateLastSession(userID uint32) (err error) {
 	return
 }
 
-func UpdateUser(userID uint32, updatedUser *models.UserUpdate) (user *models.User, err error) {
-	user, err = GetUserByID(userID)
-	if err != nil {
-		return
-	}
-
-	if email, ok := updatedUser.EmailOO.(*models.UserUpdate_Email); ok == true {
-		user.Email = email.Email
-		if !utils.ValidateEmail(user.Email) {
-			err = ErrInvalidUserData
-			return
-		}
-	}
-
-	if firstName, ok := updatedUser.FirstNameOO.(*models.UserUpdate_FirstName); ok == true {
-		user.FirstName = firstName.FirstName
-		if !utils.ValidateFirstName(user.FirstName) {
-			err = ErrInvalidUserData
-			return
-		}
-	}
-
-	if lastName, ok := updatedUser.LastNameOO.(*models.UserUpdate_LastName); ok == true {
-		user.LastName = lastName.LastName
-		if !utils.ValidateLastName(user.LastName) {
-			err = ErrInvalidUserData
-			return
-		}
-	}
-
-	if isAdmin, ok := updatedUser.IsAdminOO.(*models.UserUpdate_IsAdmin); ok == true {
-		user.IsAdmin = isAdmin.IsAdmin
-	}
-
-	if password, ok := updatedUser.PasswordOO.(*models.UserUpdate_Password); ok == true {
-		if ok != true || !utils.ValidatePassword(password.Password) {
-			err = ErrInvalidUserData
-			return
-		}
-		user.Password, err = HashPassword(password.Password)
+func UpdateUser(userID int64, updatedUser *models.UserUpdate) (user *models.User, err error) {
+	/*
+		user, err = GetUserByID(userID)
 		if err != nil {
-			err = ErrInvalidUserData
 			return
 		}
-	}
 
-	user.UpdatedAt = utils.GetTimestampNow()
+		if email, ok := updatedUser.EmailOO.(*models.UserUpdate_Email); ok == true {
+			user.Email = email.Email
+			if !utils.ValidateEmail(user.Email) {
+				err = ErrInvalidUserData
+				return
+			}
+		}
 
-	err = cProvider.UpdateUser(user)
-	user.Password = ""
+		if firstName, ok := updatedUser.FirstNameOO.(*models.UserUpdate_FirstName); ok == true {
+			user.FirstName = firstName.FirstName
+			if !utils.ValidateFirstName(user.FirstName) {
+				err = ErrInvalidUserData
+				return
+			}
+		}
 
+		if lastName, ok := updatedUser.LastNameOO.(*models.UserUpdate_LastName); ok == true {
+			user.LastName = lastName.LastName
+			if !utils.ValidateLastName(user.LastName) {
+				err = ErrInvalidUserData
+				return
+			}
+		}
+
+		if isAdmin, ok := updatedUser.IsAdminOO.(*models.UserUpdate_IsAdmin); ok == true {
+			user.IsAdmin = isAdmin.IsAdmin
+		}
+
+		if password, ok := updatedUser.PasswordOO.(*models.UserUpdate_Password); ok == true {
+			if ok != true || !utils.ValidatePassword(password.Password) {
+				err = ErrInvalidUserData
+				return
+			}
+			user.Password, err = HashPassword(password.Password)
+			if err != nil {
+				err = ErrInvalidUserData
+				return
+			}
+		}
+
+		user.UpdatedAt = utils.GetTimestampNow()
+
+		err = cProvider.UpdateUser(user)
+		user.Password = ""
+	*/
 	return
 }
 

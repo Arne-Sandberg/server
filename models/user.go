@@ -28,10 +28,10 @@ type User struct {
 	FirstName string `json:"firstName,omitempty"`
 
 	// has avatar
-	HasAvatar *bool `json:"hasAvatar,omitempty"`
+	HasAvatar bool `json:"hasAvatar,omitempty"`
 
 	// is admin
-	IsAdmin *bool `json:"isAdmin,omitempty"`
+	IsAdmin bool `json:"isAdmin,omitempty"`
 
 	// last name
 	LastName string `json:"lastName,omitempty"`

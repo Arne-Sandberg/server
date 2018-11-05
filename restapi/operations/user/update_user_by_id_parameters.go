@@ -36,17 +36,17 @@ type UpdateUserByIDParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Updated user info
-	  Required: true
-	  In: body
-	*/
-	Body *models.User
 	/*The user id
 	  Required: true
 	  Minimum: 1
 	  In: path
 	*/
 	ID int64
+	/*Updated user info
+	  Required: true
+	  In: body
+	*/
+	UserUpdate *models.UserUpdate
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -58,14 +58,19 @@ func (o *UpdateUserByIDParams) BindRequest(r *http.Request, route *middleware.Ma
 
 	o.HTTPRequest = r
 
+	rID, rhkID, _ := route.Params.GetOK("id")
+	if err := o.bindID(rID, rhkID, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.User
+		var body models.UserUpdate
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("userUpdate", "body"))
 			} else {
-				res = append(res, errors.NewParseError("body", "body", "", err))
+				res = append(res, errors.NewParseError("userUpdate", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -74,17 +79,12 @@ func (o *UpdateUserByIDParams) BindRequest(r *http.Request, route *middleware.Ma
 			}
 
 			if len(res) == 0 {
-				o.Body = &body
+				o.UserUpdate = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("userUpdate", "body"))
 	}
-	rID, rhkID, _ := route.Params.GetOK("id")
-	if err := o.bindID(rID, rhkID, route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}

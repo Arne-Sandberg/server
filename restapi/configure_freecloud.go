@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"io"
 	"net/http"
-	"strings"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -18,7 +17,8 @@ import (
 	"github.com/freecloudio/freecloud/restapi/operations/system"
 	"github.com/freecloudio/freecloud/restapi/operations/user"
 
-	models "github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/controller"
+	"github.com/freecloudio/freecloud/models"
 )
 
 //go:generate swagger generate server --target .. --name Freecloud --spec ../api/freecloud.yml --principal models.User
@@ -47,15 +47,10 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	api.JSONProducer = runtime.JSONProducer()
 
 	// Applies when the "Authorization" header is set
-	api.TokenAuthAuth = func(token string) (*models.User, error) {
-		return nil, errors.NotImplemented("api key auth (TokenAuth) Authorization from header param [Authorization] has not yet been implemented")
+	api.TokenAuthAuth = func(token string, scopes []string) (*models.User, error) {
+		return controller.ValidateSession(token, scopes)
 	}
 
-	// Set your custom authorizer if needed. Default one is security.Authorized()
-	// Expected interface runtime.Authorizer
-	//
-	// Example:
-	// api.APIAuthorizer = security.Authorized()
 	api.FileCreateFileHandler = file.CreateFileHandlerFunc(func(params file.CreateFileParams, principal *models.User) middleware.Responder {
 		return middleware.NotImplemented("operation file.CreateFile has not yet been implemented")
 	})
@@ -102,7 +97,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ShareFile has not yet been implemented")
 	})
 	api.AuthSignupHandler = auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
-		return middleware.NotImplemented("operation auth.Signup has not yet been implemented")
+		return controller.AuthSignupHandler(params.Body)
 	})
 	api.FileStarredFilesHandler = file.StarredFilesHandlerFunc(func(params file.StarredFilesParams, principal *models.User) middleware.Responder {
 		return middleware.NotImplemented("operation file.StarredFiles has not yet been implemented")
@@ -150,15 +145,5 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	return fileServerMiddleware(handler)
-}
-
-func fileServerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api") {
-			next.ServeHTTP(w, r)
-		} else {
-			http.FileServer(http.Dir("./client/build")).ServeHTTP(w, r)
-		}
-	})
+	return controller.FileServerMiddleware(handler)
 }
