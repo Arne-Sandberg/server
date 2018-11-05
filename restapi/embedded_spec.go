@@ -50,7 +50,7 @@ func init() {
         "parameters": [
           {
             "description": "Credentials for login",
-            "name": "body",
+            "name": "credentials",
             "in": "body",
             "required": true,
             "schema": {
@@ -111,7 +111,7 @@ func init() {
         "parameters": [
           {
             "description": "User that should be registered",
-            "name": "body",
+            "name": "user",
             "in": "body",
             "required": true,
             "schema": {
@@ -646,7 +646,7 @@ func init() {
         "parameters": [
           {
             "description": "Updated user info",
-            "name": "body",
+            "name": "userInfo",
             "in": "body",
             "required": true,
             "schema": {
@@ -1195,7 +1195,7 @@ func init() {
         "parameters": [
           {
             "description": "Credentials for login",
-            "name": "body",
+            "name": "credentials",
             "in": "body",
             "required": true,
             "schema": {
@@ -1256,7 +1256,7 @@ func init() {
         "parameters": [
           {
             "description": "User that should be registered",
-            "name": "body",
+            "name": "user",
             "in": "body",
             "required": true,
             "schema": {
@@ -1791,7 +1791,7 @@ func init() {
         "parameters": [
           {
             "description": "Updated user info",
-            "name": "body",
+            "name": "userInfo",
             "in": "body",
             "required": true,
             "schema": {

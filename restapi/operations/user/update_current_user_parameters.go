@@ -36,7 +36,7 @@ type UpdateCurrentUserParams struct {
 	  Required: true
 	  In: body
 	*/
-	Body *models.User
+	UserInfo *models.User
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -53,9 +53,9 @@ func (o *UpdateCurrentUserParams) BindRequest(r *http.Request, route *middleware
 		var body models.User
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("userInfo", "body"))
 			} else {
-				res = append(res, errors.NewParseError("body", "body", "", err))
+				res = append(res, errors.NewParseError("userInfo", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -64,11 +64,11 @@ func (o *UpdateCurrentUserParams) BindRequest(r *http.Request, route *middleware
 			}
 
 			if len(res) == 0 {
-				o.Body = &body
+				o.UserInfo = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("userInfo", "body"))
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

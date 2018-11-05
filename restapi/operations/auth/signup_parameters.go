@@ -36,7 +36,7 @@ type SignupParams struct {
 	  Required: true
 	  In: body
 	*/
-	Body *models.User
+	User *models.User
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -53,9 +53,9 @@ func (o *SignupParams) BindRequest(r *http.Request, route *middleware.MatchedRou
 		var body models.User
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("user", "body"))
 			} else {
-				res = append(res, errors.NewParseError("body", "body", "", err))
+				res = append(res, errors.NewParseError("user", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -64,11 +64,11 @@ func (o *SignupParams) BindRequest(r *http.Request, route *middleware.MatchedRou
 			}
 
 			if len(res) == 0 {
-				o.Body = &body
+				o.User = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("user", "body"))
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

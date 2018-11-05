@@ -76,7 +76,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation user.GetUserByID has not yet been implemented")
 	})
 	api.AuthLoginHandler = auth.LoginHandlerFunc(func(params auth.LoginParams) middleware.Responder {
-		return middleware.NotImplemented("operation auth.Login has not yet been implemented")
+		return controller.AuthLoginHandler(params.Credentials.Email, params.Credentials.Password)
 	})
 	api.AuthLogoutHandler = auth.LogoutHandlerFunc(func(params auth.LogoutParams, principal *models.User) middleware.Responder {
 		return middleware.NotImplemented("operation auth.Logout has not yet been implemented")
@@ -94,7 +94,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ShareFile has not yet been implemented")
 	})
 	api.AuthSignupHandler = auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
-		return controller.AuthSignupHandler(params.Body)
+		return controller.AuthSignupHandler(params.User)
 	})
 	api.FileStarredFilesHandler = file.StarredFilesHandlerFunc(func(params file.StarredFilesParams, principal *models.User) middleware.Responder {
 		return middleware.NotImplemented("operation file.StarredFiles has not yet been implemented")
