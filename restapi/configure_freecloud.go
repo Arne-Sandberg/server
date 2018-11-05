@@ -7,9 +7,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/freecloudio/freecloud/utils"
+
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
+	clog "gopkg.in/clog.v1"
 
 	"github.com/freecloudio/freecloud/restapi/operations"
 	"github.com/freecloudio/freecloud/restapi/operations/auth"
@@ -28,14 +31,9 @@ func configureFlags(api *operations.FreecloudAPI) {
 }
 
 func configureAPI(api *operations.FreecloudAPI) http.Handler {
-	// configure the api here
 	api.ServeError = errors.ServeError
 
-	// Set your custom logger if needed. Default one is log.Printf
-	// Expected interface func(string, ...interface{})
-	//
-	// Example:
-	// api.Logger = log.Printf
+	api.Logger = clog.Trace
 
 	api.JSONConsumer = runtime.JSONConsumer()
 
@@ -118,7 +116,11 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
 	})
 
-	api.ServerShutdown = func() {}
+	utils.SetupLogger()
+
+	api.ServerShutdown = func() {
+		utils.CloseLogger()
+	}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
 }
