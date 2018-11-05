@@ -6,7 +6,6 @@ import (
 
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
-	"github.com/golang/protobuf/ptypes/duration"
 )
 
 var (
@@ -26,13 +25,13 @@ func GetSystemStats() *models.SystemStats {
 
 	return &models.SystemStats{
 		Version:       Version,
-		AllocMem:      m.Alloc,
-		TotalAllocMem: m.TotalAlloc,
-		SystemMem:     m.Sys,
-		NumGC:         m.NumGC,
+		AllocMem:      int64(m.Alloc),
+		TotalAllocMem: int64(m.TotalAlloc),
+		SystemMem:     int64(m.Sys),
+		NumGC:         int64(m.NumGC),
 		GoVersion:     runtime.Version(),
-		NumGoroutines: uint32(runtime.NumGoroutine()),
+		NumGoroutines: int64(runtime.NumGoroutine()),
 		NumSessions:   auth.TotalSessionCount(),
-		Uptime:        &duration.Duration{Seconds: int64(uptime.Seconds())},
+		Uptime:        int64(uptime.Seconds()),
 	}
 }

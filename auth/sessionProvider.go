@@ -7,6 +7,6 @@ type SessionProvider interface {
 	StoreSession(*models.Session) error
 	RemoveSession(*models.Session) error
 	SessionIsValid(session *models.Session) bool
-	TotalSessionCount() (uint32, error)
-	RemoveUserSessions(userID uint32) error
+	TotalSessionCount() (int64, error)
+	RemoveUserSessions(userID int64) error
 }

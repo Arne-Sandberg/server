@@ -9,6 +9,6 @@ type CredentialsProvider interface {
 	CreateUser(user *models.User) error
 	UpdateUser(user *models.User) error
 	GetAllUsers() ([]*models.User, error)
-	DeleteUser(userID uint32) error
+	DeleteUser(userID int64) error
 	GetAdminCount() (int, error)
 }

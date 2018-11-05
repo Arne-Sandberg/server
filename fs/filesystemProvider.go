@@ -13,9 +13,9 @@ var (
 	ErrFileNotExist      = errors.New("file does not exist")
 )
 
-// Filesystem is an interface for implementing various filesystem layers, such as a disk
+// FilesystemProvider is an interface for implementing various filesystem layers, such as a disk
 // filesystem and a memory filesystem.
-type Filesystem interface {
+type FilesystemProvider interface {
 	Close()
 	NewFileHandle(path string) (*os.File, error)
 	CreateDirectory(path string) error

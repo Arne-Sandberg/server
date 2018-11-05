@@ -845,8 +845,7 @@ func init() {
           "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
         },
         "isDir": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "lastChanged": {
           "type": "integer",
@@ -879,8 +878,7 @@ func init() {
           "format": "int64"
         },
         "starred": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         }
       }
     },
@@ -1992,8 +1990,7 @@ func init() {
           "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
         },
         "isDir": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "lastChanged": {
           "type": "integer",
@@ -2026,8 +2023,7 @@ func init() {
           "format": "int64"
         },
         "starred": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         }
       }
     },

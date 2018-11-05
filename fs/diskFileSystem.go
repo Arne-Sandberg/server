@@ -17,10 +17,12 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+const TmpName = ".tmp"
+
 // DiskFilesystem implements the Filesystem interface, writing actual files to the disk
 type DiskFilesystem struct {
-	base    string
-	done    chan struct{}
+	base string
+	done chan struct{}
 }
 
 // NewDiskFilesystem sets up a disk filesystem and returns it

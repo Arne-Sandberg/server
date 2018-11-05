@@ -7,13 +7,12 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/freecloudio/freecloud/utils"
-
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
 	clog "gopkg.in/clog.v1"
 
+	"github.com/freecloudio/freecloud/packageInit"
 	"github.com/freecloudio/freecloud/restapi/operations"
 	"github.com/freecloudio/freecloud/restapi/operations/auth"
 	"github.com/freecloudio/freecloud/restapi/operations/file"
@@ -116,10 +115,10 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
 	})
 
-	utils.SetupLogger()
+	packageInit.Init()
 
 	api.ServerShutdown = func() {
-		utils.CloseLogger()
+		packageInit.Deinit()
 	}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))

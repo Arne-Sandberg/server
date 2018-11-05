@@ -1,4 +1,4 @@
-package fs
+package vfs
 
 import (
 	"testing"
@@ -7,14 +7,14 @@ import (
 )
 
 func TestGetUserPath(t *testing.T) {
-	var l = map[uint32]string{
+	var l = map[int64]string{
 		0: "/0",
 		1: "/1",
 	}
 
 	vfs := VirtualFilesystem{}
 	for input, expOutput := range l {
-		if output := vfs.getUserPath(&models.User{ ID: input }); output != expOutput {
+		if output := getUserPath(&models.User{ID: input}); output != expOutput {
 			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
 		}
 	}
@@ -40,7 +40,7 @@ func TestSplitPath(t *testing.T) {
 
 	vfs := VirtualFilesystem{}
 	for input, expOutput := range l {
-		if path, name := vfs.splitPath(input); path != expOutput[0] || name != expOutput[1] {
+		if path, name := splitPath(input); path != expOutput[0] || name != expOutput[1] {
 			t.Errorf("Expected result %v for input %s but got: %v and %v", expOutput, input, path, name)
 		}
 	}

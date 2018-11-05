@@ -14,42 +14,47 @@ import (
 const SessionTokenLength = 32
 
 var (
-	cProvider     CredentialsProvider
-	sProvider     SessionProvider
-	done          chan struct{}
-	sessionExpiry time.Duration
-
+	authInst              *auth
 	ErrMissingCredentials = errors.New("auth: Missing credentials")
 	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
 	ErrInvalidUserData    = errors.New("auth: Invalid user data")
 	ErrUserAlreadyExists  = errors.New("auth: User already exists")
 )
 
+type auth struct {
+	cProvider     CredentialsProvider
+	sProvider     SessionProvider
+	sessionExpiry time.Duration
+	done          chan struct{}
+}
+
 // Init intializes the auth package. You must call this before using any auth function.
 func Init(credentialsProvider CredentialsProvider, sessionProvider SessionProvider, sessionExp int) {
-	cProvider = credentialsProvider
-	sProvider = sessionProvider
-	sessionExpiry = time.Hour * time.Duration(sessionExp)
+	authInst = &auth{
+		cProvider:     credentialsProvider,
+		sProvider:     sessionProvider,
+		sessionExpiry: time.Hour * time.Duration(sessionExp),
+		done:          make(chan struct{}),
+	}
 
-	done = make(chan struct{})
-	go cleanupExpiredSessionsRoutine(sessionExpiry)
+	go cleanupExpiredSessionsRoutine(authInst.sessionExpiry)
 }
 
 func Close() {
-	done <- struct{}{}
+	authInst.done <- struct{}{}
 }
 
 func cleanupExpiredSessionsRoutine(interval time.Duration) {
 	log.Trace("Starting old session cleaner, running now and every %v", interval)
-	sProvider.CleanupExpiredSessions()
+	authInst.sProvider.CleanupExpiredSessions()
 
 	ticker := time.NewTicker(interval)
 	for {
 		select {
-		case <-done:
+		case <-authInst.done:
 			return
 		case <-ticker.C:
-			sProvider.CleanupExpiredSessions()
+			authInst.sProvider.CleanupExpiredSessions()
 		}
 	}
 }
@@ -61,7 +66,7 @@ func NewSession(email string, password string) (*models.Session, error) {
 		return &models.Session{}, ErrMissingCredentials
 	}
 	// Get the user
-	user, err := cProvider.GetUserByEmail(email)
+	user, err := authInst.cProvider.GetUserByEmail(email)
 	if err != nil {
 		log.Error(0, "Could not get user with email %s: %v", email, err)
 		return &models.Session{}, err
@@ -83,9 +88,9 @@ func newUnverifiedSession(userID int64) (sess *models.Session, err error) {
 	sess = &models.Session{
 		UserID:    userID,
 		Token:     utils.RandomString(SessionTokenLength),
-		ExpiresAt: time.Now().UTC().Add(sessionExpiry).Unix(),
+		ExpiresAt: time.Now().UTC().Add(authInst.sessionExpiry).Unix(),
 	}
-	err = sProvider.StoreSession(sess)
+	err = authInst.sProvider.StoreSession(sess)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
 		return
@@ -100,8 +105,8 @@ func newUnverifiedSession(userID int64) (sess *models.Session, err error) {
 	return
 }
 
-func TotalSessionCount() uint32 {
-	count, _ := sProvider.TotalSessionCount()
+func TotalSessionCount() int64 {
+	count, _ := authInst.sProvider.TotalSessionCount()
 	return count
 }
 
@@ -112,7 +117,7 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 		return
 	}
 
-	_, err = cProvider.GetUserByEmail(user.Email)
+	_, err = authInst.cProvider.GetUserByEmail(user.Email)
 	if !gorm.IsRecordNotFoundError(err) {
 		err = ErrUserAlreadyExists
 		return
@@ -125,7 +130,7 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	}
 
 	// Save the user. This also fills its ID
-	err = cProvider.CreateUser(user)
+	err = authInst.cProvider.CreateUser(user)
 	if err != nil {
 		return
 	}
@@ -134,26 +139,26 @@ func NewUser(user *models.User) (session *models.Session, err error) {
 	if user.ID == 1 {
 		log.Trace("Make first user an admin")
 		user.IsAdmin = true
-		err = cProvider.UpdateUser(user)
+		err = authInst.cProvider.UpdateUser(user)
 	}
 
 	// Now, create a session for the user
 	return newUnverifiedSession(user.ID)
 }
 
-func DeleteUser(userID uint32) (err error) {
-	if err = sProvider.RemoveUserSessions(userID); err != nil {
+func DeleteUser(userID int64) (err error) {
+	if err = authInst.sProvider.RemoveUserSessions(userID); err != nil {
 		return
 	}
 
-	if err = cProvider.DeleteUser(userID); err != nil {
+	if err = authInst.cProvider.DeleteUser(userID); err != nil {
 		return
 	}
 	return
 }
 
 func GetAllUsers(isAdmin bool) ([]*models.User, error) {
-	users, err := cProvider.GetAllUsers()
+	users, err := authInst.cProvider.GetAllUsers()
 	if err != nil {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, err
@@ -174,20 +179,20 @@ func GetAllUsers(isAdmin bool) ([]*models.User, error) {
 
 // ValidateSession checks if the session is valid.
 func ValidateSession(sess *models.Session) (valid bool) {
-	return sProvider.SessionIsValid(sess)
+	return authInst.sProvider.SessionIsValid(sess)
 }
 
 func GetUserByID(userID int64) (*models.User, error) {
-	return cProvider.GetUserByID(userID)
+	return authInst.cProvider.GetUserByID(userID)
 }
 
 func GetUserByEmail(email string) (*models.User, error) {
-	return cProvider.GetUserByEmail(email)
+	return authInst.cProvider.GetUserByEmail(email)
 }
 
 //RemoveSession removes the session from the session provider
 func RemoveSession(sess *models.Session) (err error) {
-	return sProvider.RemoveSession(sess)
+	return authInst.sProvider.RemoveSession(sess)
 }
 
 func UpdateLastSession(userID int64) (err error) {
@@ -197,7 +202,7 @@ func UpdateLastSession(userID int64) (err error) {
 	}
 
 	user.LastSessionAt = utils.GetTimestampNow()
-	err = cProvider.UpdateUser(user)
+	err = authInst.cProvider.UpdateUser(user)
 
 	return
 }
@@ -258,5 +263,5 @@ func UpdateUser(userID int64, updatedUser *models.UserUpdate) (user *models.User
 }
 
 func GetAdminCount() (int, error) {
-	return cProvider.GetAdminCount()
+	return authInst.cProvider.GetAdminCount()
 }

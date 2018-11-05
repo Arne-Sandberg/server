@@ -1,8 +1,8 @@
 package models
 
 type ShareEntry struct {
-	ID    				uint32 `gorm:"primary_key;auto_increment"`
-	OwnerID     	uint32
-	FileID 				uint32 `gorm:"index"`
-	SharedWithID	uint32
+	ID           int64 `gorm:"primary_key;auto_increment"`
+	OwnerID      int64
+	FileID       int64 `gorm:"index"`
+	SharedWithID int64
 }

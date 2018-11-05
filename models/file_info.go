@@ -19,7 +19,7 @@ type FileInfo struct {
 	ID int64 `json:"ID,omitempty" gorm:"primary_key;auto_increment"`
 
 	// is dir
-	IsDir *bool `json:"isDir,omitempty"`
+	IsDir bool `json:"isDir,omitempty"`
 
 	// last changed
 	LastChanged int64 `json:"lastChanged,omitempty"`
@@ -46,7 +46,7 @@ type FileInfo struct {
 	Size int64 `json:"size,omitempty"`
 
 	// starred
-	Starred *bool `json:"starred,omitempty"`
+	Starred bool `json:"starred,omitempty"`
 }
 
 // Validate validates this file info
