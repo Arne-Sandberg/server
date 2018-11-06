@@ -14,16 +14,16 @@ import (
 )
 
 // ZipFilesHandlerFunc turns a function with the right signature into a zip files handler
-type ZipFilesHandlerFunc func(ZipFilesParams, *models.User) middleware.Responder
+type ZipFilesHandlerFunc func(ZipFilesParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ZipFilesHandlerFunc) Handle(params ZipFilesParams, principal *models.User) middleware.Responder {
+func (fn ZipFilesHandlerFunc) Handle(params ZipFilesParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // ZipFilesHandler interface for that can handle valid zip files params
 type ZipFilesHandler interface {
-	Handle(ZipFilesParams, *models.User) middleware.Responder
+	Handle(ZipFilesParams, *models.Principal) middleware.Responder
 }
 
 // NewZipFiles creates a new http.Handler for the zip files operation
@@ -56,9 +56,9 @@ func (o *ZipFiles) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

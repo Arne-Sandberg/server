@@ -14,16 +14,16 @@ import (
 )
 
 // DeleteUserByIDHandlerFunc turns a function with the right signature into a delete user by ID handler
-type DeleteUserByIDHandlerFunc func(DeleteUserByIDParams, *models.User) middleware.Responder
+type DeleteUserByIDHandlerFunc func(DeleteUserByIDParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteUserByIDHandlerFunc) Handle(params DeleteUserByIDParams, principal *models.User) middleware.Responder {
+func (fn DeleteUserByIDHandlerFunc) Handle(params DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // DeleteUserByIDHandler interface for that can handle valid delete user by ID params
 type DeleteUserByIDHandler interface {
-	Handle(DeleteUserByIDParams, *models.User) middleware.Responder
+	Handle(DeleteUserByIDParams, *models.Principal) middleware.Responder
 }
 
 // NewDeleteUserByID creates a new http.Handler for the delete user by ID operation
@@ -56,9 +56,9 @@ func (o *DeleteUserByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

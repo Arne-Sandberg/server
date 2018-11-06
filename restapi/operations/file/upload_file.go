@@ -14,16 +14,16 @@ import (
 )
 
 // UploadFileHandlerFunc turns a function with the right signature into a upload file handler
-type UploadFileHandlerFunc func(UploadFileParams, *models.User) middleware.Responder
+type UploadFileHandlerFunc func(UploadFileParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn UploadFileHandlerFunc) Handle(params UploadFileParams, principal *models.User) middleware.Responder {
+func (fn UploadFileHandlerFunc) Handle(params UploadFileParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // UploadFileHandler interface for that can handle valid upload file params
 type UploadFileHandler interface {
-	Handle(UploadFileParams, *models.User) middleware.Responder
+	Handle(UploadFileParams, *models.Principal) middleware.Responder
 }
 
 // NewUploadFile creates a new http.Handler for the upload file operation
@@ -56,9 +56,9 @@ func (o *UploadFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

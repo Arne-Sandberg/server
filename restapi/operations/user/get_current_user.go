@@ -14,16 +14,16 @@ import (
 )
 
 // GetCurrentUserHandlerFunc turns a function with the right signature into a get current user handler
-type GetCurrentUserHandlerFunc func(GetCurrentUserParams, *models.User) middleware.Responder
+type GetCurrentUserHandlerFunc func(GetCurrentUserParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetCurrentUserHandlerFunc) Handle(params GetCurrentUserParams, principal *models.User) middleware.Responder {
+func (fn GetCurrentUserHandlerFunc) Handle(params GetCurrentUserParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // GetCurrentUserHandler interface for that can handle valid get current user params
 type GetCurrentUserHandler interface {
-	Handle(GetCurrentUserParams, *models.User) middleware.Responder
+	Handle(GetCurrentUserParams, *models.Principal) middleware.Responder
 }
 
 // NewGetCurrentUser creates a new http.Handler for the get current user operation
@@ -56,9 +56,9 @@ func (o *GetCurrentUser) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -14,16 +14,16 @@ import (
 )
 
 // UpdateUserByIDHandlerFunc turns a function with the right signature into a update user by ID handler
-type UpdateUserByIDHandlerFunc func(UpdateUserByIDParams, *models.User) middleware.Responder
+type UpdateUserByIDHandlerFunc func(UpdateUserByIDParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn UpdateUserByIDHandlerFunc) Handle(params UpdateUserByIDParams, principal *models.User) middleware.Responder {
+func (fn UpdateUserByIDHandlerFunc) Handle(params UpdateUserByIDParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // UpdateUserByIDHandler interface for that can handle valid update user by ID params
 type UpdateUserByIDHandler interface {
-	Handle(UpdateUserByIDParams, *models.User) middleware.Responder
+	Handle(UpdateUserByIDParams, *models.Principal) middleware.Responder
 }
 
 // NewUpdateUserByID creates a new http.Handler for the update user by ID operation
@@ -56,9 +56,9 @@ func (o *UpdateUserByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

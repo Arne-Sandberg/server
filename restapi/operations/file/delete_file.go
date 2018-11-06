@@ -14,16 +14,16 @@ import (
 )
 
 // DeleteFileHandlerFunc turns a function with the right signature into a delete file handler
-type DeleteFileHandlerFunc func(DeleteFileParams, *models.User) middleware.Responder
+type DeleteFileHandlerFunc func(DeleteFileParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteFileHandlerFunc) Handle(params DeleteFileParams, principal *models.User) middleware.Responder {
+func (fn DeleteFileHandlerFunc) Handle(params DeleteFileParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // DeleteFileHandler interface for that can handle valid delete file params
 type DeleteFileHandler interface {
-	Handle(DeleteFileParams, *models.User) middleware.Responder
+	Handle(DeleteFileParams, *models.Principal) middleware.Responder
 }
 
 // NewDeleteFile creates a new http.Handler for the delete file operation
@@ -56,9 +56,9 @@ func (o *DeleteFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

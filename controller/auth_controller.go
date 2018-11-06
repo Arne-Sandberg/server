@@ -41,3 +41,14 @@ func AuthLoginHandler(email, password string) middleware.Responder {
 
 	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetTokenString()})
 }
+
+func AuthLogoutHandler(principal *models.Principal) middleware.Responder {
+	session, _ := models.ParseSessionTokenString(principal.Token.Token)
+	err := auth.RemoveSession(session)
+	if err != nil {
+		log.Error(0, "Failed to remove session during logout: %v", err)
+		return authAPI.NewLogoutDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: "Failed to delete session"})
+	}
+
+	return authAPI.NewLogoutOK()
+}

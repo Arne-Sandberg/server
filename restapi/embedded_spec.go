@@ -970,6 +970,17 @@ func init() {
         }
       }
     },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/Token"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
     "SearchRequest": {
       "type": "object",
       "properties": {
@@ -2112,6 +2123,17 @@ func init() {
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/Token"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
         }
       }
     },

@@ -227,6 +227,9 @@ func (db *GormDB) SessionIsValid(session *models.Session) bool {
 		log.Info("Session has expired")
 		return false
 	}
+
+	*session = s
+
 	return true
 }
 

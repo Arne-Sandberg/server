@@ -14,16 +14,16 @@ import (
 )
 
 // GetSystemStatsHandlerFunc turns a function with the right signature into a get system stats handler
-type GetSystemStatsHandlerFunc func(GetSystemStatsParams, *models.User) middleware.Responder
+type GetSystemStatsHandlerFunc func(GetSystemStatsParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetSystemStatsHandlerFunc) Handle(params GetSystemStatsParams, principal *models.User) middleware.Responder {
+func (fn GetSystemStatsHandlerFunc) Handle(params GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // GetSystemStatsHandler interface for that can handle valid get system stats params
 type GetSystemStatsHandler interface {
-	Handle(GetSystemStatsParams, *models.User) middleware.Responder
+	Handle(GetSystemStatsParams, *models.Principal) middleware.Responder
 }
 
 // NewGetSystemStats creates a new http.Handler for the get system stats operation
@@ -56,9 +56,9 @@ func (o *GetSystemStats) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -20,20 +20,27 @@ func FileServerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func ValidateSession(token string, scopes []string) (user *models.User, err error) {
+func ValidateToken(token string, scopes []string) (principal *models.Principal, err error) {
+	principal = &models.Principal{Token: &models.Token{Token: token}}
+
 	if len(scopes) > 0 {
-		session := &models.Session{Token: token}
+		var session *models.Session
+		session, err = models.ParseSessionTokenString(token)
+		if err != nil {
+			return nil, errors.New(http.StatusUnauthorized, "Token could not be parsed")
+		}
+
 		valid := auth.ValidateSession(session)
 		if !valid {
 			return nil, errors.New(http.StatusUnauthorized, "No valid session")
 		}
 
-		user, err = auth.GetUserByID(session.UserID)
+		principal.User, err = auth.GetUserByID(session.UserID)
 		if err != nil {
 			return nil, errors.New(http.StatusInternalServerError, err.Error())
 		}
 
-		if isUserScope(scopes) || (isAdminScope(scopes) && user.IsAdmin) {
+		if isUserScope(scopes) || (isAdminScope(scopes) && principal.User.IsAdmin) {
 			return
 		} else {
 			return nil, errors.New(http.StatusForbidden, "Insufficient privileges")

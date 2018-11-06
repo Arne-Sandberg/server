@@ -14,16 +14,16 @@ import (
 )
 
 // DownloadFileHandlerFunc turns a function with the right signature into a download file handler
-type DownloadFileHandlerFunc func(DownloadFileParams, *models.User) middleware.Responder
+type DownloadFileHandlerFunc func(DownloadFileParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DownloadFileHandlerFunc) Handle(params DownloadFileParams, principal *models.User) middleware.Responder {
+func (fn DownloadFileHandlerFunc) Handle(params DownloadFileParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // DownloadFileHandler interface for that can handle valid download file params
 type DownloadFileHandler interface {
-	Handle(DownloadFileParams, *models.User) middleware.Responder
+	Handle(DownloadFileParams, *models.Principal) middleware.Responder
 }
 
 // NewDownloadFile creates a new http.Handler for the download file operation
@@ -56,9 +56,9 @@ func (o *DownloadFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

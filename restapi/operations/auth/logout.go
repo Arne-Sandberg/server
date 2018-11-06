@@ -14,16 +14,16 @@ import (
 )
 
 // LogoutHandlerFunc turns a function with the right signature into a logout handler
-type LogoutHandlerFunc func(LogoutParams, *models.User) middleware.Responder
+type LogoutHandlerFunc func(LogoutParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn LogoutHandlerFunc) Handle(params LogoutParams, principal *models.User) middleware.Responder {
+func (fn LogoutHandlerFunc) Handle(params LogoutParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // LogoutHandler interface for that can handle valid logout params
 type LogoutHandler interface {
-	Handle(LogoutParams, *models.User) middleware.Responder
+	Handle(LogoutParams, *models.Principal) middleware.Responder
 }
 
 // NewLogout creates a new http.Handler for the logout operation
@@ -56,9 +56,9 @@ func (o *Logout) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -14,16 +14,16 @@ import (
 )
 
 // UpdateFileHandlerFunc turns a function with the right signature into a update file handler
-type UpdateFileHandlerFunc func(UpdateFileParams, *models.User) middleware.Responder
+type UpdateFileHandlerFunc func(UpdateFileParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn UpdateFileHandlerFunc) Handle(params UpdateFileParams, principal *models.User) middleware.Responder {
+func (fn UpdateFileHandlerFunc) Handle(params UpdateFileParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // UpdateFileHandler interface for that can handle valid update file params
 type UpdateFileHandler interface {
-	Handle(UpdateFileParams, *models.User) middleware.Responder
+	Handle(UpdateFileParams, *models.Principal) middleware.Responder
 }
 
 // NewUpdateFile creates a new http.Handler for the update file operation
@@ -56,9 +56,9 @@ func (o *UpdateFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

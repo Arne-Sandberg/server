@@ -14,16 +14,16 @@ import (
 )
 
 // ShareFileHandlerFunc turns a function with the right signature into a share file handler
-type ShareFileHandlerFunc func(ShareFileParams, *models.User) middleware.Responder
+type ShareFileHandlerFunc func(ShareFileParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ShareFileHandlerFunc) Handle(params ShareFileParams, principal *models.User) middleware.Responder {
+func (fn ShareFileHandlerFunc) Handle(params ShareFileParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // ShareFileHandler interface for that can handle valid share file params
 type ShareFileHandler interface {
-	Handle(ShareFileParams, *models.User) middleware.Responder
+	Handle(ShareFileParams, *models.Principal) middleware.Responder
 }
 
 // NewShareFile creates a new http.Handler for the share file operation
@@ -56,9 +56,9 @@ func (o *ShareFile) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if aCtx != nil {
 		r = aCtx
 	}
-	var principal *models.User
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc.(*models.User) // this is really a models.User, I promise
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
