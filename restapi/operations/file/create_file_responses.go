@@ -21,6 +21,11 @@ const CreateFileOKCode int = 200
 swagger:response createFileOK
 */
 type CreateFileOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.FileInfo `json:"body,omitempty"`
 }
 
 // NewCreateFileOK creates CreateFileOK with default headers values
@@ -29,12 +34,27 @@ func NewCreateFileOK() *CreateFileOK {
 	return &CreateFileOK{}
 }
 
+// WithPayload adds the payload to the create file o k response
+func (o *CreateFileOK) WithPayload(payload *models.FileInfo) *CreateFileOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the create file o k response
+func (o *CreateFileOK) SetPayload(payload *models.FileInfo) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *CreateFileOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*CreateFileDefault Unexpected error

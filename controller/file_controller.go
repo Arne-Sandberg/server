@@ -17,3 +17,12 @@ func PathInfoHandler(fullPath string, user *models.User) middleware.Responder {
 
 	return fileAPI.NewGetPathInfoOK().WithPayload(pathInfo)
 }
+
+func CreateFileHandler(fullPath string, isDir bool, user *models.User) middleware.Responder {
+	fileInfo, err := vfs.CreateFile(user, fullPath, isDir)
+	if err != nil {
+		return fileAPI.NewCreateFileDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewCreateFileOK().WithPayload(fileInfo)
+}

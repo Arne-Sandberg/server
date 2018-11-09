@@ -36,7 +36,7 @@ type CreateFileParams struct {
 	  Required: true
 	  In: body
 	*/
-	FileInfo *models.FileInfo
+	CreateFileRequest *models.CreateFileRequest
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -50,12 +50,12 @@ func (o *CreateFileParams) BindRequest(r *http.Request, route *middleware.Matche
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.FileInfo
+		var body models.CreateFileRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("fileInfo", "body"))
+				res = append(res, errors.Required("createFileRequest", "body"))
 			} else {
-				res = append(res, errors.NewParseError("fileInfo", "body", "", err))
+				res = append(res, errors.NewParseError("createFileRequest", "body", "", err))
 			}
 		} else {
 			// validate body object
@@ -64,11 +64,11 @@ func (o *CreateFileParams) BindRequest(r *http.Request, route *middleware.Matche
 			}
 
 			if len(res) == 0 {
-				o.FileInfo = &body
+				o.CreateFileRequest = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("fileInfo", "body"))
+		res = append(res, errors.Required("createFileRequest", "body"))
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

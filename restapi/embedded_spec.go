@@ -230,17 +230,20 @@ func init() {
         "operationId": "createFile",
         "parameters": [
           {
-            "name": "fileInfo",
+            "name": "createFileRequest",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/FileInfo"
+              "$ref": "#/definitions/CreateFileRequest"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/FileInfo"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -828,6 +831,17 @@ func init() {
     }
   },
   "definitions": {
+    "CreateFileRequest": {
+      "type": "object",
+      "properties": {
+        "fullPath": {
+          "type": "string"
+        },
+        "isDir": {
+          "type": "boolean"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
@@ -1400,17 +1414,20 @@ func init() {
         "operationId": "createFile",
         "parameters": [
           {
-            "name": "fileInfo",
+            "name": "createFileRequest",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/FileInfo"
+              "$ref": "#/definitions/CreateFileRequest"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/FileInfo"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -1998,6 +2015,17 @@ func init() {
     }
   },
   "definitions": {
+    "CreateFileRequest": {
+      "type": "object",
+      "properties": {
+        "fullPath": {
+          "type": "string"
+        },
+        "isDir": {
+          "type": "boolean"
+        }
+      }
+    },
     "Error": {
       "type": "object",
       "properties": {
