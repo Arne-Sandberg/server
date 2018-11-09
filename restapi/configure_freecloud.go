@@ -18,7 +18,6 @@ import (
 	"github.com/freecloudio/freecloud/restapi/operations/file"
 	"github.com/freecloudio/freecloud/restapi/operations/system"
 	"github.com/freecloudio/freecloud/restapi/operations/user"
-	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/controller"
 	"github.com/freecloudio/freecloud/models"
@@ -148,5 +147,5 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	fileServer := controller.FileServerMiddleware(handler)
-	return utils.LoggingMiddleware(fileServer)
+	return controller.LoggingMiddleware(fileServer)
 }
