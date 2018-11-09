@@ -14,3 +14,6 @@ testunit:
 
 generateserver:
 	./generate_swagger.sh
+
+cleardb:
+	rm freecloud.db

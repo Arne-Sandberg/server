@@ -44,5 +44,4 @@ func Deinit() {
 	vfs.Close()
 	filesystem.Close()
 	database.Close()
-	utils.CloseLogger()
 }

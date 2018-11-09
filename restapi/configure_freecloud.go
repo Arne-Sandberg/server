@@ -66,8 +66,8 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	api.UserGetCurrentUserHandler = user.GetCurrentUserHandlerFunc(func(params user.GetCurrentUserParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation user.GetCurrentUser has not yet been implemented")
 	})
-	api.FileGetFileInfoHandler = file.GetFileInfoHandlerFunc(func(params file.GetFileInfoParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.GetFileInfo has not yet been implemented")
+	api.FileGetPathInfoHandler = file.GetPathInfoHandlerFunc(func(params file.GetPathInfoParams, principal *models.Principal) middleware.Responder {
+		return controller.PathInfoHandler(params.Path, principal.User)
 	})
 	api.SystemGetSystemStatsHandler = system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 		return controller.SystemStatsHandler()

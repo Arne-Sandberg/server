@@ -356,16 +356,17 @@ func CreateDirectoryForUser(user *models.User, path string) (err error) {
 	return
 }
 
-func GetDirInfo(user *models.User, path string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
-	dirInfo, err = GetFileInfo(user, path)
+func GetPathInfo(user *models.User, path string) (*models.PathInfo, error) {
+	dirInfo, err := GetFileInfo(user, path)
 	if err != nil {
-		return
+		return nil, err
 	}
 
+	var content []*models.FileInfo
 	if dirInfo.IsDir {
 		content, err = vfs.db.GetDirectoryContentWithID(dirInfo.ID)
 		if err != nil {
-			return
+			return nil, err
 		}
 
 		if dirInfo.ShareID > 0 || dirInfo.OwnerID != user.ID {
@@ -376,7 +377,7 @@ func GetDirInfo(user *models.User, path string) (dirInfo *models.FileInfo, conte
 		}
 	}
 
-	return
+	return &models.PathInfo{FileInfo: dirInfo, Content: content}, nil
 }
 
 func ListStarredFilesForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {

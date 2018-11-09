@@ -67,8 +67,8 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		UserGetCurrentUserHandler: user.GetCurrentUserHandlerFunc(func(params user.GetCurrentUserParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation UserGetCurrentUser has not yet been implemented")
 		}),
-		FileGetFileInfoHandler: file.GetFileInfoHandlerFunc(func(params file.GetFileInfoParams, principal *models.Principal) middleware.Responder {
-			return middleware.NotImplemented("operation FileGetFileInfo has not yet been implemented")
+		FileGetPathInfoHandler: file.GetPathInfoHandlerFunc(func(params file.GetPathInfoParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation FileGetPathInfo has not yet been implemented")
 		}),
 		SystemGetSystemStatsHandler: system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SystemGetSystemStats has not yet been implemented")
@@ -176,8 +176,8 @@ type FreecloudAPI struct {
 	FileDownloadFileHandler file.DownloadFileHandler
 	// UserGetCurrentUserHandler sets the operation handler for the get current user operation
 	UserGetCurrentUserHandler user.GetCurrentUserHandler
-	// FileGetFileInfoHandler sets the operation handler for the get file info operation
-	FileGetFileInfoHandler file.GetFileInfoHandler
+	// FileGetPathInfoHandler sets the operation handler for the get path info operation
+	FileGetPathInfoHandler file.GetPathInfoHandler
 	// SystemGetSystemStatsHandler sets the operation handler for the get system stats operation
 	SystemGetSystemStatsHandler system.GetSystemStatsHandler
 	// UserGetUserByIDHandler sets the operation handler for the get user by ID operation
@@ -307,8 +307,8 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "user.GetCurrentUserHandler")
 	}
 
-	if o.FileGetFileInfoHandler == nil {
-		unregistered = append(unregistered, "file.GetFileInfoHandler")
+	if o.FileGetPathInfoHandler == nil {
+		unregistered = append(unregistered, "file.GetPathInfoHandler")
 	}
 
 	if o.SystemGetSystemStatsHandler == nil {
@@ -520,7 +520,7 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/file"] = file.NewGetFileInfo(o.context, o.FileGetFileInfoHandler)
+	o.handlers["GET"]["/file"] = file.NewGetPathInfo(o.context, o.FileGetPathInfoHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

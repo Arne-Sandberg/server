@@ -189,12 +189,12 @@ func init() {
         "tags": [
           "file"
         ],
-        "summary": "Get fileInfo of requested path",
-        "operationId": "getFileInfo",
+        "summary": "Get pathInfo of requested path",
+        "operationId": "getPathInfo",
         "parameters": [
           {
             "type": "string",
-            "description": "Path to requested fileInfo",
+            "description": "Requested path",
             "name": "path",
             "in": "query",
             "required": true
@@ -202,9 +202,9 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Requested fileInfo",
+            "description": "Requested pathInfo",
             "schema": {
-              "$ref": "#/definitions/FileInfo"
+              "$ref": "#/definitions/PathInfo"
             }
           },
           "default": {
@@ -956,6 +956,20 @@ func init() {
         },
         "password": {
           "type": "string"
+        }
+      }
+    },
+    "PathInfo": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FileInfo"
+          }
+        },
+        "fileInfo": {
+          "$ref": "#/definitions/FileInfo"
         }
       }
     },
@@ -1345,12 +1359,12 @@ func init() {
         "tags": [
           "file"
         ],
-        "summary": "Get fileInfo of requested path",
-        "operationId": "getFileInfo",
+        "summary": "Get pathInfo of requested path",
+        "operationId": "getPathInfo",
         "parameters": [
           {
             "type": "string",
-            "description": "Path to requested fileInfo",
+            "description": "Requested path",
             "name": "path",
             "in": "query",
             "required": true
@@ -1358,9 +1372,9 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Requested fileInfo",
+            "description": "Requested pathInfo",
             "schema": {
-              "$ref": "#/definitions/FileInfo"
+              "$ref": "#/definitions/PathInfo"
             }
           },
           "default": {
@@ -2112,6 +2126,20 @@ func init() {
         },
         "password": {
           "type": "string"
+        }
+      }
+    },
+    "PathInfo": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FileInfo"
+          }
+        },
+        "fileInfo": {
+          "$ref": "#/definitions/FileInfo"
         }
       }
     },
