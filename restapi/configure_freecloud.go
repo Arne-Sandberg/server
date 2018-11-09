@@ -18,6 +18,7 @@ import (
 	"github.com/freecloudio/freecloud/restapi/operations/file"
 	"github.com/freecloudio/freecloud/restapi/operations/system"
 	"github.com/freecloudio/freecloud/restapi/operations/user"
+	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/controller"
 	"github.com/freecloudio/freecloud/models"
@@ -146,5 +147,6 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	return controller.FileServerMiddleware(handler)
+	fileServer := controller.FileServerMiddleware(handler)
+	return utils.LoggingMiddleware(fileServer)
 }
