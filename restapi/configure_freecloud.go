@@ -70,7 +70,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.GetFileInfo has not yet been implemented")
 	})
 	api.SystemGetSystemStatsHandler = system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation system.GetSystemStats has not yet been implemented")
+		return controller.SystemStatsHandler()
 	})
 	api.UserGetUserByIDHandler = user.GetUserByIDHandlerFunc(func(params user.GetUserByIDParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation user.GetUserByID has not yet been implemented")
