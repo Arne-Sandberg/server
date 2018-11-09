@@ -5,7 +5,6 @@ import (
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/db"
 	"github.com/freecloudio/freecloud/fs"
-	"github.com/freecloudio/freecloud/utils"
 	"github.com/freecloudio/freecloud/vfs"
 	log "gopkg.in/clog.v1"
 )
@@ -17,7 +16,6 @@ var (
 
 // Init initialize all modules/components
 func Init() {
-	utils.SetupLogger()
 	config.Init()
 
 	var err error

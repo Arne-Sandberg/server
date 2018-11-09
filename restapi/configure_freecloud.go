@@ -7,10 +7,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/freecloudio/freecloud/utils"
+
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
-	clog "gopkg.in/clog.v1"
+	log "gopkg.in/clog.v1"
 
 	"github.com/freecloudio/freecloud/packageInit"
 	"github.com/freecloudio/freecloud/restapi/operations"
@@ -30,9 +32,11 @@ func configureFlags(api *operations.FreecloudAPI) {
 }
 
 func configureAPI(api *operations.FreecloudAPI) http.Handler {
+	utils.SetupLogger()
+
 	api.ServeError = errors.ServeError
 
-	api.Logger = clog.Trace
+	api.Logger = log.Trace
 
 	api.JSONConsumer = runtime.JSONConsumer()
 
