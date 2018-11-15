@@ -7,8 +7,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/freecloudio/freecloud/utils"
-
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
@@ -20,6 +18,7 @@ import (
 	"github.com/freecloudio/freecloud/restapi/operations/file"
 	"github.com/freecloudio/freecloud/restapi/operations/system"
 	"github.com/freecloudio/freecloud/restapi/operations/user"
+	"github.com/freecloudio/freecloud/utils"
 
 	"github.com/freecloudio/freecloud/controller"
 	"github.com/freecloudio/freecloud/models"
@@ -40,7 +39,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 
 	api.JSONConsumer = runtime.JSONConsumer()
 
-	api.MultipartformConsumer = runtime.DiscardConsumer
+	api.MultipartformConsumer = MultipartformConsumer()
 
 	api.GzipProducer = runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
 		return errors.NotImplemented("gzip producer has not yet been implemented")
@@ -113,7 +112,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation user.UpdateUserByID has not yet been implemented")
 	})
 	api.FileUploadFileHandler = file.UploadFileHandlerFunc(func(params file.UploadFileParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.UploadFile has not yet been implemented")
+		return controller.FileUploadHandler(params.Path, params.Upfile, principal.User)
 	})
 	api.FileZipFilesHandler = file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
