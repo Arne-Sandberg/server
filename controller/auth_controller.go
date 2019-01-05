@@ -9,7 +9,6 @@ import (
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
 	authAPI "github.com/freecloudio/freecloud/restapi/operations/auth"
-	"github.com/freecloudio/freecloud/vfs"
 )
 
 func AuthSignupHandler(user *models.User) middleware.Responder {
@@ -19,11 +18,6 @@ func AuthSignupHandler(user *models.User) middleware.Responder {
 	} else if err == auth.ErrUserAlreadyExists {
 		return authAPI.NewSignupDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: "User already exists"})
 	} else if err != nil {
-		return authAPI.NewSignupDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
-	}
-
-	err = vfs.ScanUserFolderForChanges(user)
-	if err != nil {
 		return authAPI.NewSignupDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
 	}
 

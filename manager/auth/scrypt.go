@@ -1,4 +1,4 @@
-package hashers
+package auth
 
 import (
 	"encoding/base64"
@@ -13,6 +13,8 @@ import (
 )
 
 const (
+	saltLength = 16
+
 	recommendedN = 16384
 	recommendedr = 8
 	recommendedp = 1
@@ -37,7 +39,6 @@ func HashScrypt(plaintext string) (hash string, err error) {
 	salts := base64.StdEncoding.EncodeToString(saltb)
 
 	return fmt.Sprintf("$%s$%d$%d$%d$%s$%s", ScryptHashID, recommendedN, recommendedr, recommendedp, salts, hashs), nil
-
 }
 
 func ValidateScryptPassword(plaintext, hashed string) (valid bool, err error) {

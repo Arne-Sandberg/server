@@ -1,4 +1,4 @@
-package hashers
+package auth
 
 import (
 	"testing"
