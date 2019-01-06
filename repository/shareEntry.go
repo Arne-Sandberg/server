@@ -12,23 +12,12 @@ func init() {
 
 type ShareEntryRepository struct{}
 
-var shareEntryRepository *ShareEntryRepository
-
 func CreateShareEntryRepository() (*ShareEntryRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
 
-	if shareEntryRepository != nil {
-		return shareEntryRepository, nil
-	}
-
-	shareEntryRepository = &ShareEntryRepository{}
-	return shareEntryRepository, nil
-}
-
-func GetShareEntryRepository() *ShareEntryRepository {
-	return shareEntryRepository
+	return &ShareEntryRepository{}, nil
 }
 
 func (rep *ShareEntryRepository) Create(shareEntry *models.ShareEntry) (err error) {

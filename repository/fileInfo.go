@@ -16,23 +16,11 @@ const fileListOrder = "is_dir, name"
 
 type FileInfoRepository struct{}
 
-var fileInfoRepository *FileInfoRepository
-
 func CreateFileInfoRepository() (*FileInfoRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-
-	if fileInfoRepository != nil {
-		return fileInfoRepository, nil
-	}
-
-	fileInfoRepository = &FileInfoRepository{}
-	return fileInfoRepository, nil
-}
-
-func GetFileInfoRepository() *FileInfoRepository {
-	return fileInfoRepository
+	return &FileInfoRepository{}, nil
 }
 
 func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {

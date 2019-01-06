@@ -17,7 +17,7 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
-const TmpName = ".tmp"
+const tmpName = ".tmp"
 
 // DiskFilesystem implements the Filesystem interface, writing actual files to the disk
 type DiskFilesystem struct {
@@ -90,7 +90,7 @@ func (dfs *DiskFilesystem) cleanupTempFolder() {
 			continue
 		}
 
-		tmpFolderPath := filepath.Join(dfs.base, info.Name(), TmpName)
+		tmpFolderPath := filepath.Join(dfs.base, info.Name(), tmpName)
 		tmpInfoList, err := ioutil.ReadDir(tmpFolderPath)
 		if err != nil {
 			log.Warn("Error reading temp folder in %v during temp cleanup: %v", tmpFolderPath, err)

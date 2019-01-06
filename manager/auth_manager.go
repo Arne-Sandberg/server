@@ -26,15 +26,15 @@ var (
 
 // AuthManager has methods for authenticating users.
 type AuthManager struct {
-	sessionRep repository.SessionRepository
-	userRep    repository.UserRepository
+	sessionRep *repository.SessionRepository
+	userRep    *repository.UserRepository
 	done       chan struct{}
 }
 
 var authManager *AuthManager
 
 // CreateAuthManager creates a new singleton AuthManager which can be used immediately
-func CreateAuthManager(sessionRep repository.SessionRepository, userRep repository.UserRepository) *AuthManager {
+func CreateAuthManager(sessionRep *repository.SessionRepository, userRep *repository.UserRepository) *AuthManager {
 	if authManager != nil {
 		return authManager
 	}

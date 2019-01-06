@@ -18,23 +18,11 @@ func init() {
 // check if it needs to initialize the connection upon creation.
 type SessionRepository struct{}
 
-var sessionRepository *SessionRepository
-
 func CreateSessionRepository() (*SessionRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-
-	if sessionRepository != nil {
-		return sessionRepository, nil
-	}
-
-	sessionRepository = &SessionRepository{}
-	return sessionRepository, nil
-}
-
-func GetSessionRepository() *SessionRepository {
-	return sessionRepository
+	return &SessionRepository{}, nil
 }
 
 func (rep *SessionRepository) Create(session *models.Session) (err error) {

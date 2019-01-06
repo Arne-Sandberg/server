@@ -13,23 +13,11 @@ func init() {
 
 type UserRepository struct{}
 
-var userRepository *UserRepository
-
 func CreateUserRepository() (*UserRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-
-	if userRepository != nil {
-		return userRepository, nil
-	}
-
-	userRepository = &UserRepository{}
-	return userRepository, nil
-}
-
-func GetUserRepository() *UserRepository {
-	return userRepository
+	return &UserRepository{}, nil
 }
 
 func (rep *UserRepository) Create(user *models.User) (err error) {
@@ -70,14 +58,6 @@ func (rep *UserRepository) GetByID(userID int64) (user *models.User, err error) 
 
 func (rep *UserRepository) GetByEmail(email string) (user *models.User, err error) {
 	user = &models.User{}
-	func (rep *SessionRepository) TotalCount() (count int64, err error) {
-		err = databaseConnection.Model(&models.Session{}).Count(&count).Error
-		if err != nil {
-			log.Error(0, "Error counting total sessions: %v", err)
-			return
-		}
-		return
-	}
 	err = databaseConnection.First(user, &models.User{Email: email}).Error
 	return
 }
@@ -96,5 +76,14 @@ func (rep *UserRepository) AdminCount() (count int, err error) {
 		return
 	}
 	count = len(admins)
+	return
+}
+
+func (rep *SessionRepository) TotalCount() (count int64, err error) {
+	err = databaseConnection.Model(&models.Session{}).Count(&count).Error
+	if err != nil {
+		log.Error(0, "Error counting total sessions: %v", err)
+		return
+	}
 	return
 }

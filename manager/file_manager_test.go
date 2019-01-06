@@ -1,4 +1,4 @@
-package vfs
+package manager
 
 import (
 	"testing"
@@ -12,9 +12,9 @@ func TestGetUserPath(t *testing.T) {
 		1: "/1",
 	}
 
-	vfs := VirtualFilesystem{}
+	mgr := FileManager{}
 	for input, expOutput := range l {
-		if output := getUserPath(&models.User{ID: input}); output != expOutput {
+		if output := mgr.getUserPath(&models.User{ID: input}); output != expOutput {
 			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
 		}
 	}
@@ -38,9 +38,9 @@ func TestSplitPath(t *testing.T) {
 		".tmp":                 {"/", ".tmp"},
 	}
 
-	vfs := VirtualFilesystem{}
+	mgr := FileManager{}
 	for input, expOutput := range l {
-		if path, name := splitPath(input); path != expOutput[0] || name != expOutput[1] {
+		if path, name := mgr.splitPath(input); path != expOutput[0] || name != expOutput[1] {
 			t.Errorf("Expected result %v for input %s but got: %v and %v", expOutput, input, path, name)
 		}
 	}

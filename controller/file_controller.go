@@ -6,7 +6,6 @@ import (
 
 	"github.com/freecloudio/freecloud/models"
 	fileAPI "github.com/freecloudio/freecloud/restapi/operations/file"
-	"github.com/freecloudio/freecloud/vfs"
 	"github.com/go-openapi/runtime/middleware"
 	log "gopkg.in/clog.v1"
 )

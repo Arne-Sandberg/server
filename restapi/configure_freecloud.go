@@ -14,7 +14,6 @@ import (
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/manager"
-	"github.com/freecloudio/freecloud/packageInit"
 	"github.com/freecloudio/freecloud/restapi/operations"
 	"github.com/freecloudio/freecloud/restapi/operations/auth"
 	"github.com/freecloudio/freecloud/restapi/operations/file"
@@ -121,21 +120,9 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
 	})
 
-	config.Init()
-
-	err := repository.InitDatabaseConnection(config.GetString("db.type"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.name"))
-	if err != nil {
-		log.Fatal(0, "Database setup failed, bailing out!")
-	}
-
-	userRep := repository.CreateUserRepository()
-	sessionRep := repository.CreateSessionRepository()
-
-	authManager := manager.CreateAuthManager(userRep, sessionRep)
-	controller.InitManagerContext(authManager)
-
+	initializeServer()
 	api.ServerShutdown = func() {
-		packageInit.Deinit()
+		shutdownServer()
 	}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
@@ -165,4 +152,24 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	fileServer := controller.FileServerMiddleware(handler)
 	return controller.LoggingMiddleware(fileServer)
+}
+
+func initializeServer() {
+	config.Init()
+
+	err := repository.InitDatabaseConnection(config.GetString("db.type"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.name"))
+	if err != nil {
+		log.Fatal(0, "Database setup failed, bailing out!")
+	}
+
+	userRep := repository.CreateUserRepository()
+	sessionRep := repository.CreateSessionRepository()
+
+	manager.CreateAuthManager(userRep, sessionRep)
+}
+
+func shutdownServer() {
+	manager.GetAuthManager().Close()
+	repository.CloseDatabaseConnection()
+	utils.CloseLogger()
 }
