@@ -185,6 +185,7 @@ func initializeServer() {
 
 	manager.CreateAuthManager(sessionRep, userRep)
 	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep)
+	manager.CreateStatsManager("0.0.1") // TODO: Better place to save version
 }
 
 func shutdownServer() {
