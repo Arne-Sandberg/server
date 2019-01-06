@@ -8,6 +8,7 @@ import (
 	errors "github.com/go-openapi/errors"
 	log "gopkg.in/clog.v1"
 
+	"github.com/freecloudio/freecloud/manager"
 	"github.com/freecloudio/freecloud/models"
 )
 
@@ -31,12 +32,12 @@ func ValidateToken(token string, scopes []string) (principal *models.Principal, 
 			return nil, errors.New(http.StatusUnauthorized, "Token could not be parsed")
 		}
 
-		valid := cm.AuthManager.ValidateSession(session)
+		valid := manager.GetAuthManager().ValidateSession(session)
 		if !valid {
 			return nil, errors.New(http.StatusUnauthorized, "No valid session")
 		}
 
-		principal.User, err = cm.AuthManager.GetUserByID(session.UserID)
+		principal.User, err = manager.GetAuthManager().GetUserByID(session.UserID)
 		if err != nil {
 			return nil, errors.New(http.StatusInternalServerError, err.Error())
 		}

@@ -12,7 +12,7 @@ import (
 )
 
 func AuthSignupHandler(user *models.User) middleware.Responder {
-	session, err := manager.GetAuthManager().NewUser(user)
+	session, err := manager.GetAuthManager().CreateUser(user)
 	if err == manager.ErrInvalidUserData {
 		return authAPI.NewSignupDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: "Invalid user data"})
 	} else if err == manager.ErrUserAlreadyExists {
@@ -38,7 +38,7 @@ func AuthLoginHandler(email, password string) middleware.Responder {
 
 func AuthLogoutHandler(principal *models.Principal) middleware.Responder {
 	session, _ := models.ParseSessionTokenString(principal.Token.Token)
-	err := manager.GetAuthManager().RemoveSession(session)
+	err := manager.GetAuthManager().DeleteSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
 		return authAPI.NewLogoutDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: "Failed to delete session"})

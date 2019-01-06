@@ -128,24 +128,22 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		return nil, ErrInvalidUserData
 	}
 
-	userExists, err := mgr.userRep.ReadUserExistsByEmail(user.Email)
-	if err != nil {
-		// Don't bail out here, since this will be checked again when creating the
-		// user in the credentialsProvider.
+	existingUser, err := mgr.userRep.GetByEmail(user.Email)
+	if err != nil && !repository.IsRecordNotFoundError(err) {
+		// Don't bail out here, since this will be checked again when creating the user in repository
 		log.Warn("Could not validate whether user with email %s already exists", user.Email)
-	}
-	if userExists {
+	} else if err == nil && existingUser != nil && existingUser.ID > 0 {
 		return nil, ErrUserAlreadyExists
 	}
 
-	user.Password, err = auth.HashScrypt(user.Password)
+	user.Password, err = crypt.HashScrypt(user.Password)
 	if err != nil {
 		log.Error(0, "Password hashing failed: %v", err)
 		return nil, err
 	}
 
 	// Save the user. This also fills their ID
-	err = mgr.userRep.CreateUser(user)
+	err = mgr.userRep.Create(user)
 	if err != nil {
 		log.Error(0, "Creating user failed: %v", err)
 		return nil, err
@@ -155,7 +153,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 	if user.ID == 1 {
 		log.Trace("Making first user an admin")
 		user.IsAdmin = true
-		err = mgr.userRep.UpdateUser(user)
+		err = mgr.userRep.Update(user)
 		if err != nil {
 			log.Error(0, "Could not make first user an admin: %v", err)
 			// Since a system without an admin won't properly work, bail out
@@ -169,20 +167,23 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 }
 
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
-	if err = mgr.sessionRep.DeleteSessionsByUser(userID); err != nil {
+	if err = mgr.sessionRep.DeleteForUser(userID); err != nil {
 		// TODO: log me
 		return
 	}
 
-	if err = mgr.userRep.DeleteUser(userID); err != nil {
+	if err = mgr.userRep.Delete(userID); err != nil {
 		// TODO: log me
 		return
 	}
+
+	// Delete data?!
+
 	return
 }
 
 func (mgr *AuthManager) GetAllUsers(isAdmin bool) ([]*models.User, error) {
-	users, err := mgr.userRep.ReadAllUsers()
+	users, err := mgr.userRep.GetAll()
 	if err != nil {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, err
@@ -203,35 +204,47 @@ func (mgr *AuthManager) GetAllUsers(isAdmin bool) ([]*models.User, error) {
 
 // ValidateSession checks if the session is valid.
 func (mgr *AuthManager) ValidateSession(sess *models.Session) (valid bool) {
-	return mgr.sessionRep.SessionIsValid(sess)
+	storedSession, err := mgr.sessionRep.GetByToken(sess.Token)
+	if err != nil {
+		log.Warn("Could not read session via token, assuming invalid session")
+		return false
+	}
+	if storedSession.UserID == sess.UserID && storedSession.ExpiresAt > time.Now().UTC().Unix() {
+		return true
+	}
+	return false
 }
 
-func (mgr *AuthManager) ReadUserByID(userID int64) (*models.User, error) {
-	return mgr.userRep.ReadUserByID(userID)
+func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
+	return mgr.userRep.GetByID(userID)
 }
 
-func (mgr *AuthManager) ReadUserByEmail(email string) (*models.User, error) {
-	return mgr.userRep.ReadUserByEmail(email)
+func (mgr *AuthManager) GetUserByEmail(email string) (*models.User, error) {
+	return mgr.userRep.GetByEmail(email)
 }
 
 // RemoveSession removes the session from the session provider
 func (mgr *AuthManager) DeleteSession(session *models.Session) (err error) {
-	return mgr.sessionRep.DeleteSession(session)
+	return mgr.sessionRep.Delete(session)
 }
 
 func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
-	user, err := mgr.ReadUserByID(userID)
+	user, err := mgr.GetUserByID(userID)
 	if err != nil {
 		return
 	}
 
 	user.LastSessionAt = time.Now().UTC().Unix()
-	err = mgr.userRep.UpdateUser(user)
+	err = mgr.userRep.Update(user)
 
 	return
 }
 
-// ReadAdminCount returns the count of admin users
-func (mgr *AuthManager) ReadAdminCount() (int, error) {
-	return mgr.userRep.ReadAdminCount()
+// GetAdminCount returns the count of admin users
+func (mgr *AuthManager) GetAdminCount() (int, error) {
+	return mgr.userRep.AdminCount()
+}
+
+func (mgr *AuthManager) GetSessionCount() (int, error) {
+	return mgr.sessionRep.Count()
 }

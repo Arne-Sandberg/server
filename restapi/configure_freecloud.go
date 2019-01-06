@@ -157,15 +157,34 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 func initializeServer() {
 	config.Init()
 
-	err := repository.InitDatabaseConnection(config.GetString("db.type"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.name"))
+	err := repository.InitDatabaseConnection(config.GetString("db.type"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.name"))
 	if err != nil {
-		log.Fatal(0, "Database setup failed, bailing out!")
+		log.Fatal(0, "Database setup failed, bailing out!: %v", err)
 	}
 
-	userRep := repository.CreateUserRepository()
-	sessionRep := repository.CreateSessionRepository()
+	userRep, err := repository.CreateUserRepository()
+	if err != nil {
+		log.Fatal(0, "UserRepository setup failed, bailing out!: %v", err)
+	}
+	sessionRep, err := repository.CreateSessionRepository()
+	if err != nil {
+		log.Fatal(0, "SessionRepository setup failed, bailing out!: %v", err)
+	}
+	fileInfoRep, err := repository.CreateFileInfoRepository()
+	if err != nil {
+		log.Fatal(0, "FileInfoRepository setup failed, bailing out!: %v", err)
+	}
+	shareEntryRep, err := repository.CreateShareEntryRepository()
+	if err != nil {
+		log.Fatal(0, "ShareEntryRepository setup failed, bailing out!: %v", err)
+	}
+	fileSystemRep, err := repository.CreateFileSystemRepository(config.GetString("fs.base_directory"), config.GetInt("fs.tmp_data_expiry"))
+	if err != nil {
+		log.Fatal(0, "FileSystemRepository setup failed, bailing out!: %v", err)
+	}
 
-	manager.CreateAuthManager(userRep, sessionRep)
+	manager.CreateAuthManager(sessionRep, userRep)
+	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep)
 }
 
 func shutdownServer() {

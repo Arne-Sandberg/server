@@ -22,6 +22,10 @@ func GetSystemStats() *models.SystemStats {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	uptime := time.Since(StartTime)
+	sessionCount, err := manager.GetAuthManager().GetSessionCount()
+	if err != nil {
+		sessionCount = -1
+	}
 
 	return &models.SystemStats{
 		Version:       Version,
@@ -31,7 +35,7 @@ func GetSystemStats() *models.SystemStats {
 		NumGC:         int64(m.NumGC),
 		GoVersion:     runtime.Version(),
 		NumGoroutines: int64(runtime.NumGoroutine()),
-		NumSessions:   manager.GetSessionManager().Count(),
+		NumSessions:   int64(sessionCount),
 		Uptime:        int64(uptime.Seconds()),
 	}
 }

@@ -20,6 +20,7 @@ var (
 	databaseModels     []interface{} // Contains pointers to all models that should be automigrated by gorm initialization
 )
 
+// TODO: Create struct for args
 func InitDatabaseConnection(databaseType, user, password, host string, port int, name string) error {
 	var args string
 

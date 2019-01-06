@@ -52,7 +52,7 @@ func (rep *UserRepository) Update(user *models.User) (err error) {
 
 func (rep *UserRepository) GetByID(userID int64) (user *models.User, err error) {
 	user = &models.User{}
-	err = databaseConnection.First(&user, "id = ?", userID).Error
+	err = databaseConnection.First(user, "id = ?", userID).Error
 	return
 }
 

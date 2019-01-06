@@ -57,10 +57,20 @@ func (rep *SessionRepository) DeleteForUser(userID int64) (err error) {
 	return
 }
 
-func (rep *SessionRepository) DeleteExpired() {
+func (rep *SessionRepository) DeleteExpired() (err error) {
 	log.Trace("Cleaning old sessions")
-	err := databaseConnection.Where("expires_at < ?", time.Now().UTC().Unix()).Delete(&models.Session{}).Error
+	err = databaseConnection.Where("expires_at < ?", time.Now().UTC().Unix()).Delete(&models.Session{}).Error
 	if err != nil {
 		log.Error(0, "Deleting expired sessions failed: %v", err)
 	}
+	return
+}
+
+func (rep *SessionRepository) GetByToken(token string) (session *models.Session, err error) {
+	session = &models.Session{}
+	err = databaseConnection.First(session, "token = ?", token).Error
+	if err != nil {
+		log.Error(0, "Could not get session by token %s: %v", token, err)
+	}
+	return
 }
