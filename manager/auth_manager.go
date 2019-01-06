@@ -141,6 +141,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		log.Error(0, "Password hashing failed: %v", err)
 		return nil, err
 	}
+	user.IsAdmin = false
 
 	// Save the user. This also fills their ID
 	err = mgr.userRep.Create(user)

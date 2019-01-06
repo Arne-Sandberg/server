@@ -26,7 +26,7 @@ import (
 	"github.com/freecloudio/freecloud/repository"
 )
 
-//go:generate swagger generate server --target .. --name Freecloud --spec ../api/freecloud.yml --principal models.Principal
+//go:generate swagger generate server --name Freecloud --spec ./api/freecloud.yml --principal models.Principal
 
 func configureFlags(api *operations.FreecloudAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
