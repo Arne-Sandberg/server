@@ -70,6 +70,14 @@ func (rep *UserRepository) GetByID(userID int64) (user *models.User, err error) 
 
 func (rep *UserRepository) GetByEmail(email string) (user *models.User, err error) {
 	user = &models.User{}
+	func (rep *SessionRepository) TotalCount() (count int64, err error) {
+		err = databaseConnection.Model(&models.Session{}).Count(&count).Error
+		if err != nil {
+			log.Error(0, "Error counting total sessions: %v", err)
+			return
+		}
+		return
+	}
 	err = databaseConnection.First(user, &models.User{Email: email}).Error
 	return
 }

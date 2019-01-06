@@ -6,13 +6,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "gopkg.in/clog.v1"
 
-	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
 	authAPI "github.com/freecloudio/freecloud/restapi/operations/auth"
 )
 
 func AuthSignupHandler(user *models.User) middleware.Responder {
-	session, err := auth.NewUser(user)
+	session, err := cm.AuthManager.NewUser(user)
 	if err == auth.ErrInvalidUserData {
 		return authAPI.NewSignupDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: "Invalid user data"})
 	} else if err == auth.ErrUserAlreadyExists {
@@ -25,7 +24,7 @@ func AuthSignupHandler(user *models.User) middleware.Responder {
 }
 
 func AuthLoginHandler(email, password string) middleware.Responder {
-	session, err := auth.NewSession(email, password)
+	session, err := cm.AuthManager.NewSession(email, password)
 	if err != nil {
 		if err != auth.ErrInvalidCredentials {
 			log.Warn("Login failed without wrong credentials for user %v: %v", email, err)

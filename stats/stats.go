@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/freecloudio/freecloud/auth"
+	"github.com/freecloudio/freecloud/manager"
 	"github.com/freecloudio/freecloud/models"
 )
 
@@ -31,7 +31,7 @@ func GetSystemStats() *models.SystemStats {
 		NumGC:         int64(m.NumGC),
 		GoVersion:     runtime.Version(),
 		NumGoroutines: int64(runtime.NumGoroutine()),
-		NumSessions:   auth.TotalSessionCount(),
+		NumSessions:   manager.GetSessionManager().Count(),
 		Uptime:        int64(uptime.Seconds()),
 	}
 }

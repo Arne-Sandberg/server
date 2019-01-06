@@ -76,12 +76,3 @@ func (rep *SessionRepository) DeleteExpired() {
 		log.Error(0, "Deleting expired sessions failed: %v", err)
 	}
 }
-
-func (rep *SessionRepository) TotalCount() (count int64, err error) {
-	err = databaseConnection.Model(&models.Session{}).Count(&count).Error
-	if err != nil {
-		log.Error(0, "Error counting total sessions: %v", err)
-		return
-	}
-	return
-}

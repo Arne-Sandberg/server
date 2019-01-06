@@ -12,6 +12,8 @@ import (
 	middleware "github.com/go-openapi/runtime/middleware"
 	log "gopkg.in/clog.v1"
 
+	"github.com/freecloudio/freecloud/config"
+	"github.com/freecloudio/freecloud/manager"
 	"github.com/freecloudio/freecloud/packageInit"
 	"github.com/freecloudio/freecloud/restapi/operations"
 	"github.com/freecloudio/freecloud/restapi/operations/auth"
@@ -22,6 +24,7 @@ import (
 
 	"github.com/freecloudio/freecloud/controller"
 	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/repository"
 )
 
 //go:generate swagger generate server --target .. --name Freecloud --spec ../api/freecloud.yml --principal models.Principal
@@ -118,7 +121,18 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
 	})
 
-	packageInit.Init()
+	config.Init()
+
+	err := repository.InitDatabaseConnection(config.GetString("db.type"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.name"))
+	if err != nil {
+		log.Fatal(0, "Database setup failed, bailing out!")
+	}
+
+	userRep := repository.CreateUserRepository()
+	sessionRep := repository.CreateSessionRepository()
+
+	authManager := manager.CreateAuthManager(userRep, sessionRep)
+	controller.InitManagerContext(authManager)
 
 	api.ServerShutdown = func() {
 		packageInit.Deinit()

@@ -8,6 +8,7 @@ import (
 
 	"github.com/freecloudio/freecloud/manager/auth"
 	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/repository"
 	"github.com/freecloudio/freecloud/utils"
 )
 
@@ -23,50 +24,25 @@ var (
 	ErrUserAlreadyExists  = errors.New("auth: User already exists")
 )
 
-// SessionProvider defines a (mostly) CRUD interface for Sessions.
-// This should be implemented by some sort of persistant storage like a database
-type SessionProvider interface {
-	CreateSession(session *models.Session) error
-	ReadSessionByToken(token string) (*models.Session, error)
-	ReadSessionCount() (int, error)
-	DeleteSession(session *models.Session) error
-	DeleteSessionsByUser(userID int64) error
-	DeleteExpiredSessions() error
-	SessionIsValid(session *models.Session) bool
-}
-
-// CredentialsProvider defines a (mostly) CRUD interface for credentials and user accounts.
-// This is to be implemented by a persistent storage like a database.
-type CredentialsProvider interface {
-	CreateUser(user *models.User) error
-	ReadAdminCount() (int, error)
-	ReadAllUsers() ([]*models.User, error)
-	ReadUserByID(userID int64) (*models.User, error)
-	ReadUserByEmail(email string) (*models.User, error)
-	ReadUserExistsByEmail(email string) (bool, error)
-	UpdateUser(user *models.User) error
-	DeleteUser(userID int64) error
-}
-
 // AuthManager has methods for authenticating users.
 type AuthManager struct {
-	sessionProvider     SessionProvider
-	credentialsProvider CredentialsProvider
-	done                chan struct{}
+	sessionRep repository.SessionRepository
+	userRep    repository.UserRepository
+	done       chan struct{}
 }
 
 var authManager *AuthManager
 
 // CreateAuthManager creates a new singleton AuthManager which can be used immediately
-func CreateAuthManager(sessionProvider SessionProvider, credentialsProvider CredentialsProvider) *AuthManager {
+func CreateAuthManager(sessionRep repository.SessionRepository, userRep repository.UserRepository) *AuthManager {
 	if authManager != nil {
 		return authManager
 	}
 
 	authManager = &AuthManager{
-		sessionProvider:     sessionProvider,
-		credentialsProvider: credentialsProvider,
-		done:                make(chan struct{}),
+		sessionRep: sessionRep,
+		userRep:    userRep,
+		done:       make(chan struct{}),
 	}
 	go authManager.cleanupExpiredSessionsRoutine(1 * time.Hour)
 	return authManager
@@ -84,7 +60,7 @@ func (mgr *AuthManager) Close() {
 
 func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 	log.Trace("Session cleaner will run every %v", interval)
-	mgr.sessionProvider.DeleteExpiredSessions()
+	mgr.sessionProvider.DeleteExpired()
 	ticker := time.NewTicker(interval)
 	for {
 		select {
@@ -92,7 +68,7 @@ func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 			return
 		case <-ticker.C:
 			log.Trace("Cleaning expired sessions")
-			mgr.sessionProvider.DeleteExpiredSessions()
+			mgr.sessionProvider.DeleteExpired()
 		}
 	}
 }
@@ -104,7 +80,7 @@ func (mgr *AuthManager) NewSession(email string, password string) (*models.Sessi
 		return nil, ErrMissingCredentials
 	}
 
-	user, err := mgr.credentialsProvider.ReadUserByEmail(email)
+	user, err := mgr.credentialsProvider.GetByEmail(email)
 	if err != nil {
 		log.Error(0, "Could not get user via email %s: %v", email, err)
 		return nil, err
