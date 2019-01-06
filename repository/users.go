@@ -6,13 +6,30 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+// Add used models to enable auto migration for them
+func init() {
+	databaseModels = append(databaseModels, &models.User{})
+}
+
 type UserRepository struct{}
 
-func NewUserRepository() (*UserRepository, error) {
+var userRepository *UserRepository
+
+func CreateUserRepository() (*UserRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-	return &UserRepository{}, nil
+
+	if userRepository != nil {
+		return userRepository, nil
+	}
+
+	userRepository = &UserRepository{}
+	return userRepository, nil
+}
+
+func GetUserRepository() *UserRepository {
+	return userRepository
 }
 
 func (rep *UserRepository) Create(user *models.User) (err error) {

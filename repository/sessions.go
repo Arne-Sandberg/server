@@ -7,19 +7,34 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+// Add used models to enable auto migration for them
+func init() {
+	databaseModels = append(databaseModels, &models.Session{})
+}
+
 // SessionRepository provides CRUD methods for managing sessions.
 // Note: This is not exported on purpose! Reason being that all repositories
 // share a common database connection. This means that each repository must
 // check if it needs to initialize the connection upon creation.
 type SessionRepository struct{}
 
-// NewSessionRepository creates a new SessionRepository, which can be used to
-// create, read, update and delete sessions.
-func NewSessionRepository() (*SessionRepository, error) {
+var sessionRepository *SessionRepository
+
+func CreateSessionRepository() (*SessionRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-	return &SessionRepository{}, nil
+
+	if sessionRepository != nil {
+		return sessionRepository, nil
+	}
+
+	sessionRepository = &SessionRepository{}
+	return sessionRepository, nil
+}
+
+func GetSessionRepository() *SessionRepository {
+	return sessionRepository
 }
 
 func (rep *SessionRepository) Create(session *models.Session) (err error) {

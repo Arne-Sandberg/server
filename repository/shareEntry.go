@@ -5,13 +5,30 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+// Add used models to enable auto migration for them
+func init() {
+	databaseModels = append(databaseModels, &models.ShareEntry{})
+}
+
 type ShareEntryRepository struct{}
 
-func NewShareEntryRepository() (*ShareEntryRepository, error) {
+var shareEntryRepository *ShareEntryRepository
+
+func CreateShareEntryRepository() (*ShareEntryRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-	return &ShareEntryRepository{}, nil
+
+	if shareEntryRepository != nil {
+		return shareEntryRepository, nil
+	}
+
+	shareEntryRepository = &ShareEntryRepository{}
+	return shareEntryRepository, nil
+}
+
+func GetShareEntryRepository() *ShareEntryRepository {
+	return shareEntryRepository
 }
 
 func (rep *ShareEntryRepository) Create(shareEntry *models.ShareEntry) (err error) {

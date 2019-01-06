@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/freecloudio/freecloud/models"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mssql"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -13,16 +12,15 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
-// fileListOrder is the order in which to sort file and directory lists.
-// Directories first, otherwise sorted by name.
-const fileListOrder = "is_dir, name"
-
 var ErrGormNotInitialized = errors.New("db repository: gorm repository must be initialized first")
 
 // databaseConnection is shared between most repositories (session, user, ...)
-var databaseConnection *gorm.DB
+var (
+	databaseConnection *gorm.DB
+	databaseModels     []interface{} // Contains pointers to all models that should be automigrated by gorm initialization
+)
 
-func InitGorm(databaseType, user, password, host string, port int, name string) error {
+func InitDatabaseConnection(databaseType, user, password, host string, port int, name string) error {
 	var args string
 
 	switch databaseType {
@@ -49,7 +47,7 @@ func InitGorm(databaseType, user, password, host string, port int, name string) 
 	}
 	log.Info("Initialized database connection")
 
-	err = db.AutoMigrate(&models.FileInfo{}, &models.User{}, &models.Session{}, &models.ShareEntry{}).Error
+	err = db.AutoMigrate(databaseModels...).Error
 	if err != nil {
 		log.Error(0, "Failed to auto migrate db structs: %v", err)
 		return err
@@ -59,11 +57,15 @@ func InitGorm(databaseType, user, password, host string, port int, name string) 
 	return nil
 }
 
-func CloseGorm() {
+func CloseDatabaseConnection() {
 	if err := databaseConnection.Close(); err != nil {
 		log.Fatal(0, "Error shutting down gorm: %v", err)
 		return
 	}
 
 	databaseConnection = nil
+}
+
+func IsRecordNotFoundError(err error) bool {
+	return gorm.IsRecordNotFoundError(err)
 }

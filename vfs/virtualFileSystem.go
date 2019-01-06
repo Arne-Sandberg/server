@@ -9,6 +9,7 @@ import (
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/fs"
+	"github.com/freecloudio/freecloud/repository"
 	"github.com/freecloudio/freecloud/utils"
 
 	"errors"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/freecloudio/freecloud/auth"
 	"github.com/freecloudio/freecloud/models"
-	"github.com/jinzhu/gorm"
 	log "gopkg.in/clog.v1"
 )
 
@@ -212,7 +212,7 @@ func CreateUserFolders(userID int64) error {
 		return fmt.Errorf("failed to create folder for user id %v: %v", userID, err)
 	}
 	_, err = vfs.db.GetFileInfo(userID, "/", "")
-	if created || gorm.IsRecordNotFoundError(err) {
+	if created || repository.IsRecordNotFoundError(err) {
 		err = vfs.db.InsertFile(&models.FileInfo{
 			Path:        "/",
 			Name:        "",
@@ -231,7 +231,7 @@ func CreateUserFolders(userID int64) error {
 		return fmt.Errorf("failed creating tmp folder for user id %v: %v", userID, err)
 	}
 	_, err = vfs.db.GetFileInfo(userID, "/", TmpName)
-	if created || gorm.IsRecordNotFoundError(err) {
+	if created || repository.IsRecordNotFoundError(err) {
 		err = vfs.db.InsertFile(&models.FileInfo{
 			Path:        "/",
 			Name:        TmpName,

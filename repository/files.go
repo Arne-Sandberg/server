@@ -2,17 +2,37 @@ package repository
 
 import (
 	"github.com/freecloudio/freecloud/models"
-	"github.com/jinzhu/gorm"
 	log "gopkg.in/clog.v1"
 )
 
+// Add used models to enable auto migration for them
+func init() {
+	databaseModels = append(databaseModels, &models.FileInfo{})
+}
+
+// fileListOrder is the order in which to sort file and directory lists.
+// Directories first, otherwise sorted by name.
+const fileListOrder = "is_dir, name"
+
 type FileInfoRepository struct{}
 
-func NewFileInfoRepository() (*FileInfoRepository, error) {
+var fileInfoRepository *FileInfoRepository
+
+func CreateFileInfoRepository() (*FileInfoRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
-	return &FileInfoRepository{}, nil
+
+	if fileInfoRepository != nil {
+		return fileInfoRepository, nil
+	}
+
+	fileInfoRepository = &FileInfoRepository{}
+	return fileInfoRepository, nil
+}
+
+func GetFileInfoRepository() *FileInfoRepository {
+	return fileInfoRepository
 }
 
 func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {
@@ -44,7 +64,7 @@ func (rep *FileInfoRepository) Update(fileInfo *models.FileInfo) (err error) {
 
 func (rep *FileInfoRepository) GetStarredFileInfosForUser(userID int64) (starredFileInfosForUser []*models.FileInfo, err error) {
 	err = databaseConnection.Where(&models.FileInfo{OwnerID: userID, Starred: true}).Order(fileListOrder).Find(&starredFileInfosForUser).Error
-	if err != nil && gorm.IsRecordNotFoundError(err) {
+	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 		starredFileInfosForUser = make([]*models.FileInfo, 0)
 	} else if err != nil {
@@ -71,7 +91,7 @@ func (rep *FileInfoRepository) GetDirectoryContentByPath(userID int64, path, dir
 
 func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID int64) (content []*models.FileInfo, err error) {
 	err = databaseConnection.Where(&models.FileInfo{ParentID: directoryID}).Order(fileListOrder).Find(&content).Error
-	if err != nil && gorm.IsRecordNotFoundError(err) {
+	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
@@ -106,7 +126,7 @@ func (rep *FileInfoRepository) SearchForFileInfo(userID int64, path, fileName st
 	fileNameSearch := "%" + fileName + "%"
 	err = databaseConnection.Where("owner_id = ? AND path LIKE ? AND name LIKE ?", userID, pathSearch, fileNameSearch).Order(fileListOrder).Find(&results).Error
 
-	if err != nil && gorm.IsRecordNotFoundError(err) {
+	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
 		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", fileName, path, userID, err)

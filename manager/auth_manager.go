@@ -55,15 +55,26 @@ type AuthManager struct {
 	done                chan struct{}
 }
 
-// NewAuthManager creates a new AuthManager which can be used immediately
-func NewAuthManager(sessionProvider SessionProvider, credentialsProvider CredentialsProvider) *AuthManager {
-	mgr := &AuthManager{
+var authManager *AuthManager
+
+// CreateAuthManager creates a new singleton AuthManager which can be used immediately
+func CreateAuthManager(sessionProvider SessionProvider, credentialsProvider CredentialsProvider) *AuthManager {
+	if authManager != nil {
+		return authManager
+	}
+
+	authManager = &AuthManager{
 		sessionProvider:     sessionProvider,
 		credentialsProvider: credentialsProvider,
 		done:                make(chan struct{}),
 	}
-	go mgr.cleanupExpiredSessionsRoutine(1 * time.Hour)
-	return mgr
+	go authManager.cleanupExpiredSessionsRoutine(1 * time.Hour)
+	return authManager
+}
+
+// GetAuthManager returns the singleton instance of the AuthManager
+func GetAuthManager() *AuthManager {
+	return authManager
 }
 
 // Close is used to end running tasks
