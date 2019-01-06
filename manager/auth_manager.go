@@ -6,7 +6,7 @@ import (
 
 	log "gopkg.in/clog.v1"
 
-	"github.com/freecloudio/freecloud/manager/auth"
+	"github.com/freecloudio/freecloud/crypt"
 	"github.com/freecloudio/freecloud/models"
 	"github.com/freecloudio/freecloud/repository"
 	"github.com/freecloudio/freecloud/utils"
@@ -60,7 +60,7 @@ func (mgr *AuthManager) Close() {
 
 func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 	log.Trace("Session cleaner will run every %v", interval)
-	mgr.sessionProvider.DeleteExpired()
+	mgr.sessionRep.DeleteExpired()
 	ticker := time.NewTicker(interval)
 	for {
 		select {
@@ -68,7 +68,7 @@ func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 			return
 		case <-ticker.C:
 			log.Trace("Cleaning expired sessions")
-			mgr.sessionProvider.DeleteExpired()
+			mgr.sessionRep.DeleteExpired()
 		}
 	}
 }
@@ -80,12 +80,12 @@ func (mgr *AuthManager) NewSession(email string, password string) (*models.Sessi
 		return nil, ErrMissingCredentials
 	}
 
-	user, err := mgr.credentialsProvider.GetByEmail(email)
+	user, err := mgr.userRep.GetByEmail(email)
 	if err != nil {
 		log.Error(0, "Could not get user via email %s: %v", email, err)
 		return nil, err
 	}
-	valid, err := auth.ValidateScryptPassword(password, user.Password)
+	valid, err := crypt.ValidateScryptPassword(password, user.Password)
 	if err != nil {
 		log.Error(0, "Password verification failed for user %s: %v", user.Email, err)
 		return nil, err
@@ -103,7 +103,7 @@ func (mgr *AuthManager) newUnverifiedSession(userID int64) (*models.Session, err
 		ExpiresAt: time.Now().UTC().Add(sessionExpiry).Unix(),
 	}
 
-	err := mgr.sessionProvider.CreateSession(session)
+	err := mgr.sessionRep.Create(session)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
 		return nil, err
@@ -128,7 +128,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		return nil, ErrInvalidUserData
 	}
 
-	userExists, err := mgr.credentialsProvider.ReadUserExistsByEmail(user.Email)
+	userExists, err := mgr.userRep.ReadUserExistsByEmail(user.Email)
 	if err != nil {
 		// Don't bail out here, since this will be checked again when creating the
 		// user in the credentialsProvider.
@@ -145,7 +145,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 	}
 
 	// Save the user. This also fills their ID
-	err = mgr.credentialsProvider.CreateUser(user)
+	err = mgr.userRep.CreateUser(user)
 	if err != nil {
 		log.Error(0, "Creating user failed: %v", err)
 		return nil, err
@@ -155,7 +155,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 	if user.ID == 1 {
 		log.Trace("Making first user an admin")
 		user.IsAdmin = true
-		err = mgr.credentialsProvider.UpdateUser(user)
+		err = mgr.userRep.UpdateUser(user)
 		if err != nil {
 			log.Error(0, "Could not make first user an admin: %v", err)
 			// Since a system without an admin won't properly work, bail out
@@ -169,12 +169,12 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 }
 
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
-	if err = mgr.sessionProvider.DeleteSessionsByUser(userID); err != nil {
+	if err = mgr.sessionRep.DeleteSessionsByUser(userID); err != nil {
 		// TODO: log me
 		return
 	}
 
-	if err = mgr.credentialsProvider.DeleteUser(userID); err != nil {
+	if err = mgr.userRep.DeleteUser(userID); err != nil {
 		// TODO: log me
 		return
 	}
@@ -182,7 +182,7 @@ func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 }
 
 func (mgr *AuthManager) GetAllUsers(isAdmin bool) ([]*models.User, error) {
-	users, err := mgr.credentialsProvider.ReadAllUsers()
+	users, err := mgr.userRep.ReadAllUsers()
 	if err != nil {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, err
@@ -203,20 +203,20 @@ func (mgr *AuthManager) GetAllUsers(isAdmin bool) ([]*models.User, error) {
 
 // ValidateSession checks if the session is valid.
 func (mgr *AuthManager) ValidateSession(sess *models.Session) (valid bool) {
-	return mgr.sessionProvider.SessionIsValid(sess)
+	return mgr.sessionRep.SessionIsValid(sess)
 }
 
 func (mgr *AuthManager) ReadUserByID(userID int64) (*models.User, error) {
-	return mgr.credentialsProvider.ReadUserByID(userID)
+	return mgr.userRep.ReadUserByID(userID)
 }
 
 func (mgr *AuthManager) ReadUserByEmail(email string) (*models.User, error) {
-	return mgr.credentialsProvider.ReadUserByEmail(email)
+	return mgr.userRep.ReadUserByEmail(email)
 }
 
 // RemoveSession removes the session from the session provider
 func (mgr *AuthManager) DeleteSession(session *models.Session) (err error) {
-	return mgr.sessionProvider.DeleteSession(session)
+	return mgr.sessionRep.DeleteSession(session)
 }
 
 func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
@@ -226,12 +226,12 @@ func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
 	}
 
 	user.LastSessionAt = time.Now().UTC().Unix()
-	err = mgr.credentialsProvider.UpdateUser(user)
+	err = mgr.userRep.UpdateUser(user)
 
 	return
 }
 
 // ReadAdminCount returns the count of admin users
 func (mgr *AuthManager) ReadAdminCount() (int, error) {
-	return mgr.credentialsProvider.ReadAdminCount()
+	return mgr.userRep.ReadAdminCount()
 }

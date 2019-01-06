@@ -1,6 +1,7 @@
-package fs
+package repository
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,23 +11,26 @@ import (
 	"time"
 
 	"github.com/freecloudio/freecloud/config"
-	"github.com/freecloudio/freecloud/utils"
-
 	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/freecloud/utils"
 	"github.com/mholt/archiver"
 	log "gopkg.in/clog.v1"
 )
 
 const tmpName = ".tmp"
 
-// DiskFilesystem implements the Filesystem interface, writing actual files to the disk
-type DiskFilesystem struct {
+var (
+	// ErrForbiddenPathName indicates a path having weird characters that nobody should use, also these characters are forbidden on Windows
+	ErrForbiddenPathName = errors.New("paths cannot contain the following characters: <>:\"\\|?*")
+	ErrFileNotExist      = errors.New("file does not exist")
+)
+
+type FileSystemRepository struct {
 	base string
 	done chan struct{}
 }
 
-// NewDiskFilesystem sets up a disk filesystem and returns it
-func NewDiskFilesystem(baseDir string, tmpDataExpiry int) (dfs *DiskFilesystem, err error) {
+func CreateFileSystemRepository(baseDir string, tmpDataExpiry int) (*FileSystemRepository, error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -40,29 +44,32 @@ func NewDiskFilesystem(baseDir string, tmpDataExpiry int) (dfs *DiskFilesystem, 
 		err = os.Mkdir(base, 0755)
 		if err != nil {
 			log.Error(0, "Could not create base directory: %v", err)
-			return
+			return nil, err
 		}
 	} else if !baseInfo.IsDir() {
 		log.Fatal(0, "Base directory does exist but is not a directory")
-		return
+		return nil, err
 	} else if err != nil {
 		log.Fatal(0, "Could not check if base directory exists: %v", err)
-		return
+		return nil, err
 	}
 
 	log.Info("Initialized filesystem at base directory %s", base)
-	dfs = &DiskFilesystem{base: base, done: make(chan struct{})}
+	fileSystemRepository := &FileSystemRepository{
+		base: base,
+		done: make(chan struct{}),
+	}
 
-	go dfs.cleanupTempFolderRoutine(time.Hour * time.Duration(tmpDataExpiry))
+	go fileSystemRepository.cleanupTempFolderRoutine(time.Hour * time.Duration(tmpDataExpiry))
 
-	return
+	return fileSystemRepository, nil
 }
 
-func (dfs *DiskFilesystem) Close() {
+func (dfs *FileSystemRepository) Close() {
 	dfs.done <- struct{}{}
 }
 
-func (dfs *DiskFilesystem) cleanupTempFolderRoutine(interval time.Duration) {
+func (dfs *FileSystemRepository) cleanupTempFolderRoutine(interval time.Duration) {
 	log.Trace("Starting temp folder cleaner, running now and every %v", interval)
 	dfs.cleanupTempFolder()
 
@@ -77,7 +84,7 @@ func (dfs *DiskFilesystem) cleanupTempFolderRoutine(interval time.Duration) {
 	}
 }
 
-func (dfs *DiskFilesystem) cleanupTempFolder() {
+func (dfs *FileSystemRepository) cleanupTempFolder() {
 	log.Trace("Cleaning temp folder")
 
 	infoList, err := ioutil.ReadDir(dfs.base)
@@ -108,9 +115,9 @@ func (dfs *DiskFilesystem) cleanupTempFolder() {
 	}
 }
 
-// NewFileHandle opens an *os.File handle for writing to.
+// NewHandle opens an *os.File handle for writing to.
 // Before opening the file, it check the path for sanity.
-func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
+func (dfs *FileSystemRepository) NewHandle(path string) (*os.File, error) {
 	if !utils.ValidatePath(path) {
 		return nil, ErrForbiddenPathName
 	}
@@ -124,7 +131,7 @@ func (dfs *DiskFilesystem) NewFileHandle(path string) (*os.File, error) {
 
 // CreateDirectory creates a new directory at "path".
 // Before doing so, it check the path for sanity.
-func (dfs *DiskFilesystem) CreateDirectory(path string) error {
+func (dfs *FileSystemRepository) CreateDirectory(path string) error {
 	log.Trace("Path for new directory is '%s'", path)
 	if !utils.ValidatePath(path) {
 		return ErrForbiddenPathName
@@ -137,7 +144,7 @@ func (dfs *DiskFilesystem) CreateDirectory(path string) error {
 }
 
 // CreateDirIfNotExist checks whether directory exists and creates it otherwise
-func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) (created bool, err error) {
+func (dfs *FileSystemRepository) CreateDirIfNotExist(path string) (created bool, err error) {
 	_, fileErr := os.Stat(filepath.Join(dfs.base, path))
 	if os.IsNotExist(fileErr) {
 		log.Info("Directory does not exist, creating it now")
@@ -153,7 +160,7 @@ func (dfs *DiskFilesystem) CreateDirIfNotExist(path string) (created bool, err e
 
 // GetDirectoryContent returns a list of all files and folders in the given "path" (relative to the user's directory).
 // Before doing so, it checks the path for sanity.
-func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
+func (dfs *FileSystemRepository) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
 	if !utils.ValidatePath(path) {
 		return nil, ErrForbiddenPathName
 	}
@@ -171,12 +178,12 @@ func (dfs *DiskFilesystem) GetDirectoryContent(userPath, path string) ([]*models
 
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {
-		fileInfos[i] = dfs.generateFileInfo(f, path)
+		fileInfos[i] = dfs.generateInfo(f, path)
 	}
 	return fileInfos, nil
 }
 
-func (dfs *DiskFilesystem) GetFileInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
+func (dfs *FileSystemRepository) GetInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
 	osFileInfo, err := os.Stat(filepath.Join(dfs.base, userPath, path, name))
 	if os.IsNotExist(err) {
 		err = ErrFileNotExist
@@ -186,11 +193,11 @@ func (dfs *DiskFilesystem) GetFileInfo(userPath, path, name string) (fileInfo *m
 		return
 	}
 
-	fileInfo = dfs.generateFileInfo(osFileInfo, path)
+	fileInfo = dfs.generateInfo(osFileInfo, path)
 	return
 }
 
-func (dfs *DiskFilesystem) generateFileInfo(osFileInfo os.FileInfo, path string) *models.FileInfo {
+func (dfs *FileSystemRepository) generateInfo(osFileInfo os.FileInfo, path string) *models.FileInfo {
 	return &models.FileInfo{
 		Path:        utils.ConvertToSlash(path, true),
 		Name:        osFileInfo.Name(),
@@ -201,12 +208,12 @@ func (dfs *DiskFilesystem) generateFileInfo(osFileInfo os.FileInfo, path string)
 	}
 }
 
-func (dfs *DiskFilesystem) GetDownloadPath(path string) string {
+func (dfs *FileSystemRepository) GetDownloadPath(path string) string {
 	return filepath.Join(dfs.base, path)
 }
 
-// ZipFiles zips all given absolute paths to a zip archive with the given path
-func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (err error) {
+// Zip zips all given absolute paths to a zip archive with the given path
+func (dfs *FileSystemRepository) Zip(paths []string, outputPath string) (err error) {
 	for it := 0; it < len(paths); it++ {
 		paths[it] = filepath.Join(dfs.base, paths[it])
 	}
@@ -224,7 +231,7 @@ func (dfs *DiskFilesystem) ZipFiles(paths []string, outputPath string) (err erro
 	return
 }
 
-func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (err error) {
+func (dfs *FileSystemRepository) Move(oldPath, newPath string) (err error) {
 	if !utils.ValidatePath(oldPath) {
 		err = ErrForbiddenPathName
 		return
@@ -243,7 +250,7 @@ func (dfs *DiskFilesystem) MoveFile(oldPath, newPath string) (err error) {
 	return
 }
 
-func (dfs *DiskFilesystem) DeleteFile(path string) (err error) {
+func (dfs *FileSystemRepository) Delete(path string) (err error) {
 	if !utils.ValidatePath(path) {
 		err = ErrForbiddenPathName
 		return
@@ -257,7 +264,7 @@ func (dfs *DiskFilesystem) DeleteFile(path string) (err error) {
 	return
 }
 
-func (dfs *DiskFilesystem) CopyFile(oldPath, newPath string) (err error) {
+func (dfs *FileSystemRepository) Copy(oldPath, newPath string) (err error) {
 	oldFullPath := filepath.Join(dfs.base, oldPath)
 	newFullPath := filepath.Join(dfs.base, newPath)
 
