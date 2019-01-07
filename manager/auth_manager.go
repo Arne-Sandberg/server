@@ -162,6 +162,12 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		}
 	}
 
+	err = GetFileManager().ScanUserFolderForChanges(user)
+	if err != nil {
+		log.Error(0, "Failed to scan folder for new user: %v", err)
+		return nil, err
+	}
+
 	// Now, create a session for the user
 	return mgr.newUnverifiedSession(user.ID)
 
