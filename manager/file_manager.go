@@ -58,7 +58,6 @@ func GetFileManager() *FileManager {
 func (mgr *FileManager) Close() {}
 
 func (mgr *FileManager) ScanFSForChanges() (err error) {
-	log.Trace("Get existing users")
 	existingUsers, err := GetAuthManager().GetAllUsers(true)
 	if err != nil {
 		log.Error(0, "Could not get exising users: %v", err)
@@ -264,10 +263,15 @@ func (mgr *FileManager) NewFileHandleForUser(user *models.User, path string) (*o
 		return nil, ErrForbiddenPathName
 	}
 
-	return mgr.fileSystemRep.NewHandle(filepath.Join(mgr.getUserPath(user), path))
+	filePath, fileName := mgr.splitPath(path)
+	folderInfo, err := mgr.GetFileInfo(user, filePath, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return mgr.fileSystemRep.NewHandle(filepath.Join(mgr.getUserPathWithID(folderInfo.OwnerID), folderInfo.Path, folderInfo.Name, fileName))
 }
 
-// TODO: CheckedFileInfo
 func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error) {
 	if !utils.ValidatePath(path) {
 		err = ErrForbiddenPathName
@@ -275,19 +279,18 @@ func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error
 	}
 
 	filePath, fileName := mgr.splitPath(path)
-	userPath := mgr.getUserPath(user)
-	fileInfo, err := mgr.fileSystemRep.GetInfo(userPath, filePath, fileName)
+	folderInfo, err := mgr.GetFileInfo(user, filePath, false)
 	if err != nil {
 		return
 	}
 
-	folderPath, folderName := mgr.splitPath(filePath)
-	folderInfo, err := mgr.fileInfoRep.GetByPath(user.ID, folderPath, folderName)
+	userPath := mgr.getUserPathWithID(folderInfo.OwnerID)
+	fileInfo, err := mgr.fileSystemRep.GetInfo(userPath, filepath.Join(folderInfo.Path, folderInfo.Name), fileName)
 	if err != nil {
 		return
 	}
 
-	fileInfo.OwnerID = user.ID
+	fileInfo.OwnerID = folderInfo.OwnerID
 	fileInfo.ParentID = folderInfo.ID
 	err = mgr.fileInfoRep.Create(fileInfo)
 	if err != nil {
@@ -300,7 +303,7 @@ func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error
 }
 
 func (mgr *FileManager) CreateFile(user *models.User, path string, isDir bool) (fileInfo *models.FileInfo, err error) {
-	if exisFileInfo, _ := mgr.GetFileInfo(user, path); exisFileInfo != nil && exisFileInfo.ID > 0 {
+	if exisFileInfo, _ := mgr.GetFileInfo(user, path, true); exisFileInfo != nil && exisFileInfo.ID > 0 {
 		return nil, fmt.Errorf("file %v already exists", path)
 	}
 
@@ -321,7 +324,7 @@ func (mgr *FileManager) CreateFile(user *models.User, path string, isDir bool) (
 		}
 	}
 
-	fileInfo, err = mgr.GetFileInfo(user, path)
+	fileInfo, err = mgr.GetFileInfo(user, path, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get fileInfo of created file '%s': %v", path, err)
 	}
@@ -338,9 +341,9 @@ func (mgr *FileManager) CreateDirectoryForUser(user *models.User, path string) (
 	folderPath, folderName := mgr.splitPath(path)
 	userPath := mgr.getUserPath(user)
 
-	parFolderInfo, err := mgr.GetFileInfo(user, folderPath)
+	parFolderInfo, err := mgr.GetFileInfo(user, folderPath, false)
 	if err != nil {
-		err = fmt.Errorf("could not find parent folder of folder in db: %v", err)
+		err = fmt.Errorf("could not find parent folder of creating folder in db: %v", err)
 		log.Error(0, "%v", err)
 		return
 	}
@@ -353,7 +356,7 @@ func (mgr *FileManager) CreateDirectoryForUser(user *models.User, path string) (
 	}
 
 	dirInfo := &models.FileInfo{
-		Path:        utils.ConvertToSlash(folderPath, true),
+		Path:        utils.ConvertToSlash(filepath.Join(parFolderInfo.Path, parFolderInfo.Name), true),
 		Name:        folderName,
 		IsDir:       true,
 		OwnerID:     parFolderInfo.OwnerID,
@@ -384,7 +387,6 @@ func (mgr *FileManager) GetPathInfo(user *models.User, path string) (*models.Pat
 		if dirInfo.ShareID > 0 || dirInfo.OwnerID != user.ID {
 			for _, file := range content {
 				file.Path = path
-				file.ParentID = dirInfo.ID
 			}
 		}
 	}
@@ -408,7 +410,10 @@ func (mgr *FileManager) ListSharedFilesForUser(user *models.User) (sharedFilesIn
 	return
 }
 
-func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string) (*models.FileInfo, error) {
+// GetFileInfo returns the stored fileInfo for a given path and user resolving shared folders
+// Set adaptSharePath to true if the returned path of the fileInfo should be from the root of the requesting user
+// Set adaptSharePath to false if it should stay the orig path of the sharing user
+func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string, adaptSharedPath bool) (*models.FileInfo, error) {
 	filePath, fileName := mgr.splitPath(requestedPath)
 	fileInfo, err := mgr.fileInfoRep.GetByPath(user.ID, filePath, fileName)
 
@@ -424,6 +429,10 @@ func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string) (*m
 		finalFileInfo, err = mgr.fileInfoRep.GetByID(shareEntry.FileID)
 		if err != nil {
 			return nil, err
+		}
+
+		if adaptSharedPath {
+			finalFileInfo.Path = filePath
 		}
 
 		return finalFileInfo, err
@@ -467,8 +476,9 @@ func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string) (*m
 			return nil, err
 		}
 
-		finalFileInfo.Path = filePath
-		finalFileInfo.ParentID = sharedParentInfo.ID
+		if adaptSharedPath {
+			finalFileInfo.Path = filePath
+		}
 
 		return finalFileInfo, nil
 	}
