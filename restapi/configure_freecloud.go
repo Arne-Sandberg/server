@@ -60,7 +60,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation user.DeleteCurrentUser has not yet been implemented")
 	})
 	api.FileDeleteFileHandler = file.DeleteFileHandlerFunc(func(params file.DeleteFileParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.DeleteFile has not yet been implemented")
+		return controller.DeleteFileHandler(params.Path, principal.User)
 	})
 	api.UserDeleteUserByIDHandler = user.DeleteUserByIDHandlerFunc(func(params user.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation user.DeleteUserByID has not yet been implemented")

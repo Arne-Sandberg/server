@@ -29,6 +29,15 @@ func (rep *ShareEntryRepository) Create(shareEntry *models.ShareEntry) (err erro
 	return
 }
 
+func (rep *ShareEntryRepository) Delete(shareID int64) (err error) {
+	err = databaseConnection.Delete(&models.ShareEntry{ID: shareID}).Error
+	if err != nil {
+		log.Error(0, "Could not delete share entry with ID %v: %v", shareID, err)
+		return
+	}
+	return
+}
+
 func (rep *ShareEntryRepository) GetByID(shareID int64) (shareEntry *models.ShareEntry, err error) {
 	shareEntry = &models.ShareEntry{}
 	err = databaseConnection.First(shareEntry, "id = ?", shareID).Error

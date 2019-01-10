@@ -724,6 +724,18 @@ func (mgr *FileManager) DeleteFile(user *models.User, path string) (err error) {
 		}
 	}
 
+	var shareEntries []*models.ShareEntry
+	shareEntries, err = mgr.shareEntryRep.GetByFileID(fileInfo.ID)
+	if err != nil {
+		return
+	}
+	for _, shareEntry := range shareEntries {
+		err = mgr.shareEntryRep.Delete(shareEntry.ID)
+		if err != nil {
+			return
+		}
+	}
+
 	//TODO: Make asynchronus scan call for dir sizes?!?
 
 	return

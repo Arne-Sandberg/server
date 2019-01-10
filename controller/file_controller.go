@@ -29,6 +29,15 @@ func CreateFileHandler(fullPath string, isDir bool, user *models.User) middlewar
 	return fileAPI.NewCreateFileOK().WithPayload(fileInfo)
 }
 
+func DeleteFileHandler(fullPath string, user *models.User) middleware.Responder {
+	err := manager.GetFileManager().DeleteFile(user, fullPath)
+	if err != nil {
+		return fileAPI.NewCreateFileDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewDeleteFileOK()
+}
+
 func FileUploadHandler(path string, upFile io.ReadCloser, user *models.User) middleware.Responder {
 	log.Trace("Uploading file to %s", path)
 
