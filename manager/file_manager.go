@@ -372,7 +372,7 @@ func (mgr *FileManager) CreateDirectoryForUser(user *models.User, path string) (
 }
 
 func (mgr *FileManager) GetPathInfo(user *models.User, path string) (*models.PathInfo, error) {
-	dirInfo, err := mgr.GetFileInfo(user, path)
+	dirInfo, err := mgr.GetFileInfo(user, path, true)
 	if err != nil {
 		return nil, err
 	}
@@ -485,7 +485,7 @@ func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string, ada
 }
 
 func (mgr *FileManager) GetDownloadPath(user *models.User, path string) (downloadURL, filename string, err error) {
-	fileInfo, err := mgr.GetFileInfo(user, path)
+	fileInfo, err := mgr.GetFileInfo(user, path, false)
 	if err != nil {
 		return
 	}
@@ -506,12 +506,12 @@ func (mgr *FileManager) ZipFiles(user *models.User, paths []string, outputName s
 
 	for it := 0; it < len(paths); it++ {
 		var fileInfo *models.FileInfo
-		fileInfo, err = mgr.GetFileInfo(user, paths[it])
+		fileInfo, err = mgr.GetFileInfo(user, paths[it], false)
 		if err != nil {
 			return
 		}
 
-		paths[it] = filepath.Join(mgr.getUserPathWithID(fileInfo.OwnerID), paths[it])
+		paths[it] = filepath.Join(mgr.getUserPathWithID(fileInfo.OwnerID), fileInfo.Path, fileInfo.Name)
 	}
 
 	zipPath = filepath.Join(tmpName, outputName)
@@ -665,7 +665,7 @@ func (mgr *FileManager) copyFile(user *models.User, fileInfo *models.FileInfo, n
 			}
 
 			var newFolderInfo *models.FileInfo
-			newFolderInfo, err = mgr.GetFileInfo(user, newPath)
+			newFolderInfo, err = mgr.GetFileInfo(user, newPath, false)
 			if err != nil {
 				return
 			}
@@ -707,7 +707,7 @@ func (mgr *FileManager) copyFile(user *models.User, fileInfo *models.FileInfo, n
 
 func (mgr *FileManager) DeleteFile(user *models.User, path string) (err error) {
 	var fileInfo *models.FileInfo
-	fileInfo, err = mgr.GetFileInfo(user, path)
+	fileInfo, err = mgr.GetFileInfo(user, path, false)
 	if err != nil {
 		return
 	}
@@ -718,7 +718,7 @@ func (mgr *FileManager) DeleteFile(user *models.User, path string) (err error) {
 	}
 
 	if fileInfo.ShareID <= 0 {
-		err = mgr.fileSystemRep.Delete(filepath.Join(mgr.getUserPathWithID(fileInfo.OwnerID), path))
+		err = mgr.fileSystemRep.Delete(filepath.Join(mgr.getUserPathWithID(fileInfo.OwnerID), fileInfo.Path, fileInfo.Name))
 		if err != nil {
 			return
 		}
