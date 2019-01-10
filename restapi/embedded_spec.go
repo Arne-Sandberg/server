@@ -620,10 +620,7 @@ func init() {
         "operationId": "deleteCurrentUser",
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
+            "description": "Success"
           },
           "default": {
             "description": "Unexpected error",
@@ -734,10 +731,7 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
+            "description": "Success"
           },
           "default": {
             "description": "Unexpected error",
@@ -1804,10 +1798,7 @@ func init() {
         "operationId": "deleteCurrentUser",
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
+            "description": "Success"
           },
           "default": {
             "description": "Unexpected error",
@@ -1918,10 +1909,7 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
+            "description": "Success"
           },
           "default": {
             "description": "Unexpected error",

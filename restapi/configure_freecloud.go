@@ -54,43 +54,43 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	}
 
 	api.FileCreateFileHandler = file.CreateFileHandlerFunc(func(params file.CreateFileParams, principal *models.Principal) middleware.Responder {
-		return controller.CreateFileHandler(params.CreateFileRequest.FullPath, params.CreateFileRequest.IsDir, principal.User)
+		return controller.FileCreateHandler(params, principal)
 	})
 	api.UserDeleteCurrentUserHandler = user.DeleteCurrentUserHandlerFunc(func(params user.DeleteCurrentUserParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation user.DeleteCurrentUser has not yet been implemented")
+		return controller.AuthDeleteCurrentUserHandler(params, principal)
 	})
 	api.FileDeleteFileHandler = file.DeleteFileHandlerFunc(func(params file.DeleteFileParams, principal *models.Principal) middleware.Responder {
-		return controller.DeleteFileHandler(params.Path, principal.User)
+		return controller.FileDeleteHandler(params, principal)
 	})
 	api.UserDeleteUserByIDHandler = user.DeleteUserByIDHandlerFunc(func(params user.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation user.DeleteUserByID has not yet been implemented")
+		return controller.AuthDeleteUserByIDHandler(params, principal)
 	})
 	api.FileDownloadFileHandler = file.DownloadFileHandlerFunc(func(params file.DownloadFileParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation file.DownloadFile has not yet been implemented")
 	})
 	api.UserGetCurrentUserHandler = user.GetCurrentUserHandlerFunc(func(params user.GetCurrentUserParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation user.GetCurrentUser has not yet been implemented")
+		return controller.AuthGetCurrentUserHandler(params, principal)
 	})
 	api.FileGetPathInfoHandler = file.GetPathInfoHandlerFunc(func(params file.GetPathInfoParams, principal *models.Principal) middleware.Responder {
-		return controller.PathInfoHandler(params.Path, principal.User)
+		return controller.FileGetPathInfoHandler(params, principal)
 	})
 	api.SystemGetSystemStatsHandler = system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 		return controller.SystemStatsHandler()
 	})
 	api.UserGetUserByIDHandler = user.GetUserByIDHandlerFunc(func(params user.GetUserByIDParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation user.GetUserByID has not yet been implemented")
+		return controller.AuthGetUserByIDHandler(params, principal)
 	})
 	api.AuthLoginHandler = auth.LoginHandlerFunc(func(params auth.LoginParams) middleware.Responder {
-		return controller.AuthLoginHandler(params.Credentials.Email, params.Credentials.Password)
+		return controller.AuthLoginHandler(params)
 	})
 	api.AuthLogoutHandler = auth.LogoutHandlerFunc(func(params auth.LogoutParams, principal *models.Principal) middleware.Responder {
-		return controller.AuthLogoutHandler(principal)
+		return controller.AuthLogoutHandler(params, principal)
 	})
 	api.FileRescanCurrentUserHandler = file.RescanCurrentUserHandlerFunc(func(params file.RescanCurrentUserParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.RescanCurrentUser has not yet been implemented")
+		return controller.FileRescanCurrentUserHandler(params, principal)
 	})
 	api.FileRescanUserByIDHandler = file.RescanUserByIDHandlerFunc(func(params file.RescanUserByIDParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.RescanUserByID has not yet been implemented")
+		return controller.FileRescanUserByIDHandler(params, principal)
 	})
 	api.FileSearchFileHandler = file.SearchFileHandlerFunc(func(params file.SearchFileParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation file.SearchFile has not yet been implemented")
@@ -99,7 +99,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.ShareFile has not yet been implemented")
 	})
 	api.AuthSignupHandler = auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
-		return controller.AuthSignupHandler(params.User)
+		return controller.AuthSignupHandler(params)
 	})
 	api.FileStarredFilesHandler = file.StarredFilesHandlerFunc(func(params file.StarredFilesParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation file.StarredFiles has not yet been implemented")
@@ -114,7 +114,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation user.UpdateUserByID has not yet been implemented")
 	})
 	api.FileUploadFileHandler = file.UploadFileHandlerFunc(func(params file.UploadFileParams, principal *models.Principal) middleware.Responder {
-		return controller.FileUploadHandler(params.Path, params.Upfile, principal.User)
+		return middleware.NotImplemented("operation file.UploadFile has not yet been implemented")
 	})
 	api.FileZipFilesHandler = file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")

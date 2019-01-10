@@ -1,18 +1,16 @@
 package controller
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/freecloudio/freecloud/manager"
 	"github.com/freecloudio/freecloud/models"
 	fileAPI "github.com/freecloudio/freecloud/restapi/operations/file"
 	"github.com/go-openapi/runtime/middleware"
-	log "gopkg.in/clog.v1"
 )
 
-func PathInfoHandler(fullPath string, user *models.User) middleware.Responder {
-	pathInfo, err := manager.GetFileManager().GetPathInfo(user, fullPath)
+func FileGetPathInfoHandler(params fileAPI.GetPathInfoParams, principal *models.Principal) middleware.Responder {
+	pathInfo, err := manager.GetFileManager().GetPathInfo(principal.User, params.Path)
 	if err != nil {
 		return fileAPI.NewGetPathInfoDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: err.Error()})
 	}
@@ -20,8 +18,8 @@ func PathInfoHandler(fullPath string, user *models.User) middleware.Responder {
 	return fileAPI.NewGetPathInfoOK().WithPayload(pathInfo)
 }
 
-func CreateFileHandler(fullPath string, isDir bool, user *models.User) middleware.Responder {
-	fileInfo, err := manager.GetFileManager().CreateFile(user, fullPath, isDir)
+func FileCreateHandler(params fileAPI.CreateFileParams, principal *models.Principal) middleware.Responder {
+	fileInfo, err := manager.GetFileManager().CreateFile(principal.User, params.CreateFileRequest.FullPath, params.CreateFileRequest.IsDir)
 	if err != nil {
 		return fileAPI.NewCreateFileDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
 	}
@@ -29,8 +27,8 @@ func CreateFileHandler(fullPath string, isDir bool, user *models.User) middlewar
 	return fileAPI.NewCreateFileOK().WithPayload(fileInfo)
 }
 
-func DeleteFileHandler(fullPath string, user *models.User) middleware.Responder {
-	err := manager.GetFileManager().DeleteFile(user, fullPath)
+func FileDeleteHandler(params fileAPI.DeleteFileParams, principal *models.Principal) middleware.Responder {
+	err := manager.GetFileManager().DeleteFile(principal.User, params.Path)
 	if err != nil {
 		return fileAPI.NewCreateFileDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
 	}
@@ -38,8 +36,25 @@ func DeleteFileHandler(fullPath string, user *models.User) middleware.Responder 
 	return fileAPI.NewDeleteFileOK()
 }
 
-func FileUploadHandler(path string, upFile io.ReadCloser, user *models.User) middleware.Responder {
-	log.Trace("Uploading file to %s", path)
+func FileRescanCurrentUserHandler(params fileAPI.RescanCurrentUserParams, principal *models.Principal) middleware.Responder {
+	err := manager.GetFileManager().ScanUserFolderForChanges(principal.User)
+	if err != nil {
+		return fileAPI.NewRescanCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
 
-	return fileAPI.NewUploadFileOK()
+	return fileAPI.NewRescanCurrentUserOK()
+}
+
+func FileRescanUserByIDHandler(params fileAPI.RescanUserByIDParams, principal *models.Principal) middleware.Responder {
+	user, err := manager.GetAuthManager().GetUserByID(params.ID)
+	if err != nil {
+		return fileAPI.NewRescanUserByIDDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	err = manager.GetFileManager().ScanUserFolderForChanges(user)
+	if err != nil {
+		return fileAPI.NewRescanUserByIDDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewRescanUserByIDOK()
 }

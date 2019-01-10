@@ -21,11 +21,6 @@ const DeleteUserByIDOKCode int = 200
 swagger:response deleteUserByIdOK
 */
 type DeleteUserByIDOK struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *models.User `json:"body,omitempty"`
 }
 
 // NewDeleteUserByIDOK creates DeleteUserByIDOK with default headers values
@@ -34,27 +29,12 @@ func NewDeleteUserByIDOK() *DeleteUserByIDOK {
 	return &DeleteUserByIDOK{}
 }
 
-// WithPayload adds the payload to the delete user by Id o k response
-func (o *DeleteUserByIDOK) WithPayload(payload *models.User) *DeleteUserByIDOK {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the delete user by Id o k response
-func (o *DeleteUserByIDOK) SetPayload(payload *models.User) {
-	o.Payload = payload
-}
-
 // WriteResponse to the client
 func (o *DeleteUserByIDOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
 }
 
 /*DeleteUserByIDDefault Unexpected error
