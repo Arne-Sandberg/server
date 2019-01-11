@@ -21,6 +21,11 @@ const ZipFilesOKCode int = 200
 swagger:response zipFilesOK
 */
 type ZipFilesOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Path `json:"body,omitempty"`
 }
 
 // NewZipFilesOK creates ZipFilesOK with default headers values
@@ -29,12 +34,27 @@ func NewZipFilesOK() *ZipFilesOK {
 	return &ZipFilesOK{}
 }
 
+// WithPayload adds the payload to the zip files o k response
+func (o *ZipFilesOK) WithPayload(payload *models.Path) *ZipFilesOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the zip files o k response
+func (o *ZipFilesOK) SetPayload(payload *models.Path) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *ZipFilesOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*ZipFilesDefault Unexpected error

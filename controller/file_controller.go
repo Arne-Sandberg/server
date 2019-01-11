@@ -59,11 +59,20 @@ func FileRescanUserByIDHandler(params fileAPI.RescanUserByIDParams, principal *m
 	return fileAPI.NewRescanUserByIDOK()
 }
 
-func FileGetStarredFileInfos(params fileAPI.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
+func FileGetStarredFileInfosHandler(params fileAPI.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
 	fileInfos, err := manager.GetFileManager().GetStarredFileInfosForUser(principal.User)
 	if err != nil {
 		return fileAPI.NewGetStarredFileInfosDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
 	}
 
 	return fileAPI.NewGetStarredFileInfosOK().WithPayload(&models.FileList{Files: fileInfos})
+}
+
+func FileZipFilesHandler(params fileAPI.ZipFilesParams, principal *models.Principal) middleware.Responder {
+	zipPath, err := manager.GetFileManager().ZipFiles(principal.User, params.Paths.Paths)
+	if err != nil {
+		return fileAPI.NewZipFilesDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewZipFilesOK().WithPayload(&models.Path{Path: zipPath})
 }

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/freecloudio/freecloud/config"
 	"github.com/freecloudio/freecloud/repository"
@@ -498,12 +499,7 @@ func (mgr *FileManager) GetDownloadPath(user *models.User, path string) (downloa
 }
 
 // ZipFiles zips all given files/directories of paths to a zip archive with the given name in the temp folder
-func (mgr *FileManager) ZipFiles(user *models.User, paths []string, outputName string) (zipPath string, err error) {
-	if !utils.ValidatePath(outputName) {
-		err = ErrForbiddenPathName
-		return
-	}
-
+func (mgr *FileManager) ZipFiles(user *models.User, paths []string) (zipPath string, err error) {
 	for it := 0; it < len(paths); it++ {
 		var fileInfo *models.FileInfo
 		fileInfo, err = mgr.GetFileInfo(user, paths[it], false)
@@ -514,6 +510,11 @@ func (mgr *FileManager) ZipFiles(user *models.User, paths []string, outputName s
 		paths[it] = filepath.Join(mgr.getUserPathWithID(fileInfo.OwnerID), fileInfo.Path, fileInfo.Name)
 	}
 
+	outputName := time.Now().Format("2006.01.02_15:04:05.zip")
+	if len(paths) == 1 {
+		_, name := mgr.splitPath(paths[0])
+		outputName = name + ".zip"
+	}
 	zipPath = filepath.Join(tmpName, outputName)
 	outputPath := filepath.Join(mgr.getUserPath(user), zipPath)
 

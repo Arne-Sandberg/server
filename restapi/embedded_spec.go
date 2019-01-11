@@ -812,7 +812,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Path"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -963,6 +966,14 @@ func init() {
           "type": "string"
         },
         "password": {
+          "type": "string"
+        }
+      }
+    },
+    "Path": {
+      "type": "object",
+      "properties": {
+        "path": {
           "type": "string"
         }
       }
@@ -1990,7 +2001,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Path"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -2141,6 +2155,14 @@ func init() {
           "type": "string"
         },
         "password": {
+          "type": "string"
+        }
+      }
+    },
+    "Path": {
+      "type": "object",
+      "properties": {
+        "path": {
           "type": "string"
         }
       }

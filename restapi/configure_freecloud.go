@@ -101,8 +101,8 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	api.AuthSignupHandler = auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
 		return controller.AuthSignupHandler(params)
 	})
-	api.GetStarredFileInfosHandler = file.GetStarredFileInfosHandlerFunc(func(params file.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
-		return controller.FileGetStarredFiles(params, principal)
+	api.FileGetStarredFileInfosHandler = file.GetStarredFileInfosHandlerFunc(func(params file.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
+		return controller.FileGetStarredFileInfosHandler(params, principal)
 	})
 	api.UserUpdateCurrentUserHandler = user.UpdateCurrentUserHandlerFunc(func(params user.UpdateCurrentUserParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation user.UpdateCurrentUser has not yet been implemented")
@@ -117,7 +117,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return middleware.NotImplemented("operation file.UploadFile has not yet been implemented")
 	})
 	api.FileZipFilesHandler = file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
+		return controller.FileZipFilesHandler(params, principal)
 	})
 
 	initializeServer()
