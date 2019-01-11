@@ -58,3 +58,12 @@ func FileRescanUserByIDHandler(params fileAPI.RescanUserByIDParams, principal *m
 
 	return fileAPI.NewRescanUserByIDOK()
 }
+
+func FileGetStarredFileInfos(params fileAPI.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
+	fileInfos, err := manager.GetFileManager().GetStarredFileInfosForUser(principal.User)
+	if err != nil {
+		return fileAPI.NewGetStarredFileInfosDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewGetStarredFileInfosOK().WithPayload(&models.FileList{Files: fileInfos})
+}

@@ -394,7 +394,7 @@ func (mgr *FileManager) GetPathInfo(user *models.User, path string) (*models.Pat
 	return &models.PathInfo{FileInfo: dirInfo, Content: content}, nil
 }
 
-func (mgr *FileManager) ListStarredFilesForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
+func (mgr *FileManager) GetStarredFileInfosForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
 	starredFilesInfo, err = mgr.fileInfoRep.GetStarredFileInfosForUser(user.ID)
 	if err != nil {
 		return

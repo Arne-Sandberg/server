@@ -483,11 +483,11 @@ func init() {
         "tags": [
           "file"
         ],
-        "summary": "Get starred files/folders",
-        "operationId": "starredFiles",
+        "summary": "Get starred files/folders infos",
+        "operationId": "getStarredFileInfos",
         "responses": {
           "200": {
-            "description": "Starred files",
+            "description": "Starred file infos",
             "schema": {
               "$ref": "#/definitions/FileList"
             }
@@ -1661,11 +1661,11 @@ func init() {
         "tags": [
           "file"
         ],
-        "summary": "Get starred files/folders",
-        "operationId": "starredFiles",
+        "summary": "Get starred files/folders infos",
+        "operationId": "getStarredFileInfos",
         "responses": {
           "200": {
-            "description": "Starred files",
+            "description": "Starred file infos",
             "schema": {
               "$ref": "#/definitions/FileList"
             }

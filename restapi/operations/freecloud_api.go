@@ -70,6 +70,9 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		FileGetPathInfoHandler: file.GetPathInfoHandlerFunc(func(params file.GetPathInfoParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileGetPathInfo has not yet been implemented")
 		}),
+		FileGetStarredFileInfosHandler: file.GetStarredFileInfosHandlerFunc(func(params file.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation FileGetStarredFileInfos has not yet been implemented")
+		}),
 		SystemGetSystemStatsHandler: system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SystemGetSystemStats has not yet been implemented")
 		}),
@@ -96,9 +99,6 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		}),
 		AuthSignupHandler: auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
 			return middleware.NotImplemented("operation AuthSignup has not yet been implemented")
-		}),
-		FileStarredFilesHandler: file.StarredFilesHandlerFunc(func(params file.StarredFilesParams, principal *models.Principal) middleware.Responder {
-			return middleware.NotImplemented("operation FileStarredFiles has not yet been implemented")
 		}),
 		UserUpdateCurrentUserHandler: user.UpdateCurrentUserHandlerFunc(func(params user.UpdateCurrentUserParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation UserUpdateCurrentUser has not yet been implemented")
@@ -178,6 +178,8 @@ type FreecloudAPI struct {
 	UserGetCurrentUserHandler user.GetCurrentUserHandler
 	// FileGetPathInfoHandler sets the operation handler for the get path info operation
 	FileGetPathInfoHandler file.GetPathInfoHandler
+	// FileGetStarredFileInfosHandler sets the operation handler for the get starred file infos operation
+	FileGetStarredFileInfosHandler file.GetStarredFileInfosHandler
 	// SystemGetSystemStatsHandler sets the operation handler for the get system stats operation
 	SystemGetSystemStatsHandler system.GetSystemStatsHandler
 	// UserGetUserByIDHandler sets the operation handler for the get user by ID operation
@@ -196,8 +198,6 @@ type FreecloudAPI struct {
 	FileShareFileHandler file.ShareFileHandler
 	// AuthSignupHandler sets the operation handler for the signup operation
 	AuthSignupHandler auth.SignupHandler
-	// FileStarredFilesHandler sets the operation handler for the starred files operation
-	FileStarredFilesHandler file.StarredFilesHandler
 	// UserUpdateCurrentUserHandler sets the operation handler for the update current user operation
 	UserUpdateCurrentUserHandler user.UpdateCurrentUserHandler
 	// FileUpdateFileHandler sets the operation handler for the update file operation
@@ -311,6 +311,10 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "file.GetPathInfoHandler")
 	}
 
+	if o.FileGetStarredFileInfosHandler == nil {
+		unregistered = append(unregistered, "file.GetStarredFileInfosHandler")
+	}
+
 	if o.SystemGetSystemStatsHandler == nil {
 		unregistered = append(unregistered, "system.GetSystemStatsHandler")
 	}
@@ -345,10 +349,6 @@ func (o *FreecloudAPI) Validate() error {
 
 	if o.AuthSignupHandler == nil {
 		unregistered = append(unregistered, "auth.SignupHandler")
-	}
-
-	if o.FileStarredFilesHandler == nil {
-		unregistered = append(unregistered, "file.StarredFilesHandler")
 	}
 
 	if o.UserUpdateCurrentUserHandler == nil {
@@ -525,6 +525,11 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/starred"] = file.NewGetStarredFileInfos(o.context, o.FileGetStarredFileInfosHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/system/stats"] = system.NewGetSystemStats(o.context, o.SystemGetSystemStatsHandler)
 
 	if o.handlers["GET"] == nil {
@@ -566,11 +571,6 @@ func (o *FreecloudAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/auth/signup"] = auth.NewSignup(o.context, o.AuthSignupHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/starred"] = file.NewStarredFiles(o.context, o.FileStarredFilesHandler)
 
 	if o.handlers["PATCH"] == nil {
 		o.handlers["PATCH"] = make(map[string]http.Handler)
