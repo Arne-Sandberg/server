@@ -12,8 +12,11 @@ depensure:
 testunit:
 	go test ./...
 
-generateserver:
-	./generate_swagger.sh
+validateswagger:
+	swagger validate ./api/freecloud.yml
+
+generateswagger: validateswagger
+	swagger generate server -A freecloud -P models.Principal -f ./api/freecloud.yml
 
 cleardb:
 	rm freecloud.db

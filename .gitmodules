@@ -1,3 +1,6 @@
 [submodule "client"]
 	path = client
 	url = ../web
+[submodule "api"]
+	path = api
+	url = ../api

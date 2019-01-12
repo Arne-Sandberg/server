@@ -24,7 +24,5 @@ data/
 *.vim
 *.swp
 
-api/
-
 testData/
 test.db
