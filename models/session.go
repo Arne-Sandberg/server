@@ -3,13 +3,12 @@ package models
 import (
 	"fmt"
 	"strconv"
-
 )
 
 const SessionTokenLength = 32
 
 type Session struct {
-	UserID    uint32 `gorm:"index"`
+	UserID    int64  `gorm:"index"`
 	Token     string `gorm:"primary_key"`
 	ExpiresAt int64
 }
@@ -29,5 +28,5 @@ func ParseSessionTokenString(token string) (*Session, error) {
 	if err != nil {
 		return &Session{}, err
 	}
-	return &Session{UserID: uint32(userID), Token: tok}, nil
+	return &Session{UserID: int64(userID), Token: tok}, nil
 }

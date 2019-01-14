@@ -17,26 +17,28 @@ Once you have grabbed a recent version of Go, just run the following:
 mkdir -p $GOPATH/src/github.com/freecloudio/
 cd $GOPATH/src/github.com/freecloudio/
 git clone --recursive https://github.com/freecloudio/freecloud
-go install github.com/freecloudio/freecloud
+cd freecloud
+dep ensure
+make run
 ```
 
-If you want to be sure to have the newest frontend-client then install yarn and run the following:
+If you want to be sure to have the newest web-client then install npm and run the following:
 
 ```
 cd $GOPATH/src/github.com/freecloudio/freecloud/client/
 git checkout master && git pull
-yarn
-yarn build
+npm install
+npm run build
 ```
 
-## GRPC build
+## Swagger build
 
-For building the grpc sources use the `build_grpc.sh` script.
-For it to use install `protoc` and `protoc-go-inject-tag`!
+For building the swagger sources use `make generateswagger`.
+For it to use install make sure `swagger` is installed!
 
 ## API reference
 
-The API reference is hosted on the github pages of this project: [https://freecloudio.github.io/freecloud/](https://freecloudio.github.io/freecloud/)
+The API reference can be accessed under `localhost:8080/api/v1/docs` after starting the server.
 
 ___
 

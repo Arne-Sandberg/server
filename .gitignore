@@ -1,6 +1,7 @@
 # Built binaries & files
-freecloud.exe
-freecloud
+freecloud-server.exe
+freecloud-server
+!cmd/freecloud-server
 
 # Uploaded data
 data/
@@ -22,8 +23,6 @@ data/
 # Vim
 *.vim
 *.swp
-
-grpc-services/
 
 testData/
 test.db
