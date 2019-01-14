@@ -3,9 +3,9 @@ package controller
 import (
 	"net/http"
 
-	"github.com/freecloudio/freecloud/manager"
-	"github.com/freecloudio/freecloud/models"
-	fileAPI "github.com/freecloudio/freecloud/restapi/operations/file"
+	"github.com/freecloudio/server/manager"
+	"github.com/freecloudio/server/models"
+	fileAPI "github.com/freecloudio/server/restapi/operations/file"
 	"github.com/go-openapi/runtime/middleware"
 )
 

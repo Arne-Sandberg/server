@@ -16,7 +16,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/freecloudio/freecloud/models"
+	models "github.com/freecloudio/server/models"
 )
 
 // NewUpdateFileParams creates a new UpdateFileParams object

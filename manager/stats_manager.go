@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/server/models"
 )
 
 type StatsManager struct {

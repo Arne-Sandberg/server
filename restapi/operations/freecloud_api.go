@@ -20,12 +20,12 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/freecloudio/freecloud/restapi/operations/auth"
-	"github.com/freecloudio/freecloud/restapi/operations/file"
-	"github.com/freecloudio/freecloud/restapi/operations/system"
-	"github.com/freecloudio/freecloud/restapi/operations/user"
+	"github.com/freecloudio/server/restapi/operations/auth"
+	"github.com/freecloudio/server/restapi/operations/file"
+	"github.com/freecloudio/server/restapi/operations/system"
+	"github.com/freecloudio/server/restapi/operations/user"
 
-	models "github.com/freecloudio/freecloud/models"
+	models "github.com/freecloudio/server/models"
 )
 
 // NewFreecloudAPI creates a new Freecloud instance

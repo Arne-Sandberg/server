@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/freecloudio/freecloud/config"
-	"github.com/freecloudio/freecloud/repository"
-	"github.com/freecloudio/freecloud/utils"
+	"github.com/freecloudio/server/config"
+	"github.com/freecloudio/server/repository"
+	"github.com/freecloudio/server/utils"
 
 	"errors"
 	"mime"
 
-	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/server/models"
 	log "gopkg.in/clog.v1"
 )
 

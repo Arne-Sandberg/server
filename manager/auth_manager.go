@@ -6,10 +6,10 @@ import (
 
 	log "gopkg.in/clog.v1"
 
-	"github.com/freecloudio/freecloud/crypt"
-	"github.com/freecloudio/freecloud/models"
-	"github.com/freecloudio/freecloud/repository"
-	"github.com/freecloudio/freecloud/utils"
+	"github.com/freecloudio/server/crypt"
+	"github.com/freecloudio/server/models"
+	"github.com/freecloudio/server/repository"
+	"github.com/freecloudio/server/utils"
 )
 
 const (

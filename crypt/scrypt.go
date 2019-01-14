@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/freecloudio/freecloud/utils"
+	"github.com/freecloudio/server/utils"
 	"golang.org/x/crypto/scrypt"
 )
 

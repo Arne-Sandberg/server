@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/freecloudio/freecloud/restapi"
-	"github.com/freecloudio/freecloud/restapi/operations"
+	"github.com/freecloudio/server/restapi"
+	"github.com/freecloudio/server/restapi/operations"
 	loads "github.com/go-openapi/loads"
 	flags "github.com/jessevdk/go-flags"
 )
