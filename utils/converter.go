@@ -22,3 +22,10 @@ func ConvertToSlash(path string, isPath bool) string {
 
 	return path
 }
+
+// ConvertToCleanEmail removes all leading & trailing whitespaces and makes it lowercase
+func ConvertToCleanEmail(email string) string {
+	email = strings.TrimSpace(email)
+	email = strings.ToLower(email)
+	return email
+}

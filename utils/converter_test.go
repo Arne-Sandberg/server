@@ -28,7 +28,23 @@ func TestConvertToSlash(t *testing.T) {
 
 	for input, expOutput := range l {
 		if output := ConvertToSlash(input.Path, input.IsDir); output != expOutput {
-			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
+			t.Errorf("Expected result '%s' for input '%v' but got: '%s'", expOutput, input, output)
+		}
+	}
+}
+
+func TestConvertToCleanEmail(t *testing.T) {
+	var l = map[string]string{
+		"UpperCase@Email.Com":                  "uppercase@email.com",
+		"    leadingspaces@email.com":          "leadingspaces@email.com",
+		"trailingspaces@email.com":             "trailingspaces@email.com",
+		"   \t leadingtrailing@email.com   \t": "leadingtrailing@email.com",
+		"\t  CombIned@EmaiL.cOm  \t  ":         "combined@email.com",
+	}
+
+	for input, expOutput := range l {
+		if output := ConvertToCleanEmail(input); output != expOutput {
+			t.Errorf("Expected result '%s' for input '%s' but got: '%s'", expOutput, input, output)
 		}
 	}
 }
