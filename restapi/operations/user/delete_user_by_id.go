@@ -10,7 +10,7 @@ import (
 
 	middleware "github.com/go-openapi/runtime/middleware"
 
-	models "github.com/freecloudio/freecloud/models"
+	models "github.com/freecloudio/server/models"
 )
 
 // DeleteUserByIDHandlerFunc turns a function with the right signature into a delete user by ID handler

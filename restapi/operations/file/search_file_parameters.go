@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	models "github.com/freecloudio/freecloud/models"
+	models "github.com/freecloudio/server/models"
 )
 
 // NewSearchFileParams creates a new SearchFileParams object

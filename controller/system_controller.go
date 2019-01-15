@@ -3,8 +3,8 @@ package controller
 import (
 	"github.com/go-openapi/runtime/middleware"
 
-	"github.com/freecloudio/freecloud/manager"
-	systemAPI "github.com/freecloudio/freecloud/restapi/operations/system"
+	"github.com/freecloudio/server/manager"
+	systemAPI "github.com/freecloudio/server/restapi/operations/system"
 )
 
 func SystemStatsHandler() middleware.Responder {

@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/freecloudio/freecloud/config"
-	"github.com/freecloudio/freecloud/models"
-	"github.com/freecloudio/freecloud/utils"
+	"github.com/freecloudio/server/config"
+	"github.com/freecloudio/server/models"
+	"github.com/freecloudio/server/utils"
 	"github.com/mholt/archiver"
 	log "gopkg.in/clog.v1"
 )

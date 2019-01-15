@@ -3,7 +3,7 @@ package manager
 import (
 	"testing"
 
-	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/server/models"
 )
 
 func TestGetUserPath(t *testing.T) {

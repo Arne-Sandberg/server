@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/freecloudio/freecloud/models"
-	"github.com/freecloudio/freecloud/utils"
+	"github.com/freecloudio/server/models"
+	"github.com/freecloudio/server/utils"
 	log "gopkg.in/clog.v1"
 )
 

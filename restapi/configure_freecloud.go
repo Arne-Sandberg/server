@@ -12,18 +12,18 @@ import (
 	middleware "github.com/go-openapi/runtime/middleware"
 	log "gopkg.in/clog.v1"
 
-	"github.com/freecloudio/freecloud/config"
-	"github.com/freecloudio/freecloud/manager"
-	"github.com/freecloudio/freecloud/restapi/operations"
-	"github.com/freecloudio/freecloud/restapi/operations/auth"
-	"github.com/freecloudio/freecloud/restapi/operations/file"
-	"github.com/freecloudio/freecloud/restapi/operations/system"
-	"github.com/freecloudio/freecloud/restapi/operations/user"
-	"github.com/freecloudio/freecloud/utils"
+	"github.com/freecloudio/server/config"
+	"github.com/freecloudio/server/manager"
+	"github.com/freecloudio/server/restapi/operations"
+	"github.com/freecloudio/server/restapi/operations/auth"
+	"github.com/freecloudio/server/restapi/operations/file"
+	"github.com/freecloudio/server/restapi/operations/system"
+	"github.com/freecloudio/server/restapi/operations/user"
+	"github.com/freecloudio/server/utils"
 
-	"github.com/freecloudio/freecloud/controller"
-	"github.com/freecloudio/freecloud/models"
-	"github.com/freecloudio/freecloud/repository"
+	"github.com/freecloudio/server/controller"
+	"github.com/freecloudio/server/models"
+	"github.com/freecloudio/server/repository"
 )
 
 //go:generate swagger generate server --name Freecloud --spec ./api/freecloud.yml --principal models.Principal

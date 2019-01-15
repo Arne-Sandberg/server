@@ -6,10 +6,10 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "gopkg.in/clog.v1"
 
-	"github.com/freecloudio/freecloud/manager"
-	"github.com/freecloudio/freecloud/models"
-	authAPI "github.com/freecloudio/freecloud/restapi/operations/auth"
-	userAPI "github.com/freecloudio/freecloud/restapi/operations/user"
+	"github.com/freecloudio/server/manager"
+	"github.com/freecloudio/server/models"
+	authAPI "github.com/freecloudio/server/restapi/operations/auth"
+	userAPI "github.com/freecloudio/server/restapi/operations/user"
 )
 
 func AuthSignupHandler(params authAPI.SignupParams) middleware.Responder {

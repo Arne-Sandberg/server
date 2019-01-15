@@ -8,8 +8,8 @@ import (
 	errors "github.com/go-openapi/errors"
 	log "gopkg.in/clog.v1"
 
-	"github.com/freecloudio/freecloud/manager"
-	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/server/manager"
+	"github.com/freecloudio/server/models"
 )
 
 func FileServerMiddleware(next http.Handler) http.Handler {

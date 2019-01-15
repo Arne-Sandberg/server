@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/freecloudio/freecloud/models"
+	"github.com/freecloudio/server/models"
 	log "gopkg.in/clog.v1"
 )
 

@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	models "github.com/freecloudio/freecloud/models"
+	models "github.com/freecloudio/server/models"
 )
 
 // NewZipFilesParams creates a new ZipFilesParams object

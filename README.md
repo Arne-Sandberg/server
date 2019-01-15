@@ -1,11 +1,11 @@
 # freecloud
 
-[![Build Status](https://travis-ci.com/freecloudio/freecloud.svg?branch=master)](https://travis-ci.org/freecloudio/freecloud)
-[![license](https://img.shields.io/github/license/freecloudio/freecloud.svg)](https://github.com/freecloudio/freecloud/blob/master/LICENSE)
+[![Build Status](https://travis-ci.com/freecloudio/server.svg?branch=master)](https://travis-ci.org/freecloudio/freecloud)
+[![license](https://img.shields.io/github/license/freecloudio/server.svg)](https://github.com/freecloudio/freecloud/blob/master/LICENSE)
 
 
-[![GitHub issues](https://img.shields.io/github/issues-raw/freecloudio/freecloud.svg)](https://github.com/freecloudio/freecloud/issues?q=is%3Aopen+is%3Aissue)
-[![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/freecloudio/freecloud.svg)](https://github.com/freecloudio/freecloud/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub issues](https://img.shields.io/github/issues-raw/freecloudio/server.svg)](https://github.com/freecloudio/freecloud/issues?q=is%3Aopen+is%3Aissue)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/freecloudio/server.svg)](https://github.com/freecloudio/freecloud/issues?q=is%3Aissue+is%3Aclosed)
 
 
 ## Installing
@@ -16,8 +16,8 @@ Once you have grabbed a recent version of Go, just run the following:
 ```
 mkdir -p $GOPATH/src/github.com/freecloudio/
 cd $GOPATH/src/github.com/freecloudio/
-git clone --recursive https://github.com/freecloudio/freecloud
-cd freecloud
+git clone --recursive https://github.com/freecloudio/server
+cd server
 dep ensure
 make run
 ```
@@ -25,7 +25,7 @@ make run
 If you want to be sure to have the newest web-client then install npm and run the following:
 
 ```
-cd $GOPATH/src/github.com/freecloudio/freecloud/client/
+cd $GOPATH/src/github.com/freecloudio/server/client/
 git checkout master && git pull
 npm install
 npm run build
@@ -43,7 +43,7 @@ The API reference can be accessed under `localhost:8080/api/v1/docs` after start
 ___
 
 [![forthebadge](https://forthebadge.com/images/badges/made-with-go.svg)](https://forthebadge.com)
-[![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
-
 [![forthebadge](https://forthebadge.com/images/badges/gluten-free.svg)](https://forthebadge.com)
-[![forthebadge](https://forthebadge.com/images/badges/powered-by-netflix.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://forthebadge.com)
+[![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
