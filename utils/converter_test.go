@@ -37,9 +37,10 @@ func TestConvertToCleanEmail(t *testing.T) {
 	var l = map[string]string{
 		"UpperCase@Email.Com":                  "uppercase@email.com",
 		"    leadingspaces@email.com":          "leadingspaces@email.com",
-		"trailingspaces@email.com":             "trailingspaces@email.com",
+		"trailingspaces@email.com       ":      "trailingspaces@email.com",
 		"   \t leadingtrailing@email.com   \t": "leadingtrailing@email.com",
 		"\t  CombIned@EmaiL.cOm  \t  ":         "combined@email.com",
+		"correct@email.com":                    "correct@email.com",
 	}
 
 	for input, expOutput := range l {
