@@ -776,6 +776,40 @@ func (mgr *FileManager) DeleteUserFiles(user *models.User) (err error) {
 	return
 }
 
+func (mgr *FileManager) ShareFiles(fromUser *models.User, toUserIDs []int64, paths []string) error {
+	type failedShareStruct struct {
+		toUserMail string
+		path       string
+	}
+	failedShares := []*failedShareStruct{}
+
+	for _, toUserID := range toUserIDs {
+		toUser, err := GetAuthManager().GetUserByID(toUserID)
+		if err != nil {
+			return err
+		}
+
+		for _, path := range paths {
+			err := mgr.ShareFile(fromUser, toUser, path)
+			if err != nil {
+				log.Error(0, "failed to share '%s' to user '%d': %v", path, toUserID, err)
+				failedShares = append(failedShares, &failedShareStruct{toUser.Email, path})
+			}
+		}
+	}
+
+	if len(failedShares) > 0 {
+		var sb strings.Builder
+		for _, failedShare := range failedShares {
+			sb.WriteString(fmt.Sprintf("%s: %s\n", failedShare.toUserMail, failedShare.path))
+		}
+
+		return fmt.Errorf("failed to share one or mutliple files to an user: %s", sb.String())
+	}
+
+	return nil
+}
+
 func (mgr *FileManager) ShareFile(fromUser, toUser *models.User, path string) (err error) {
 	filePath, fileName := mgr.splitPath(path)
 	// Get fileInfo without resolving shared files

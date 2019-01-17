@@ -94,8 +94,8 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		FileSearchFileHandler: file.SearchFileHandlerFunc(func(params file.SearchFileParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileSearchFile has not yet been implemented")
 		}),
-		FileShareFileHandler: file.ShareFileHandlerFunc(func(params file.ShareFileParams, principal *models.Principal) middleware.Responder {
-			return middleware.NotImplemented("operation FileShareFile has not yet been implemented")
+		FileShareFilesHandler: file.ShareFilesHandlerFunc(func(params file.ShareFilesParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation FileShareFiles has not yet been implemented")
 		}),
 		AuthSignupHandler: auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
 			return middleware.NotImplemented("operation AuthSignup has not yet been implemented")
@@ -194,8 +194,8 @@ type FreecloudAPI struct {
 	FileRescanUserByIDHandler file.RescanUserByIDHandler
 	// FileSearchFileHandler sets the operation handler for the search file operation
 	FileSearchFileHandler file.SearchFileHandler
-	// FileShareFileHandler sets the operation handler for the share file operation
-	FileShareFileHandler file.ShareFileHandler
+	// FileShareFilesHandler sets the operation handler for the share files operation
+	FileShareFilesHandler file.ShareFilesHandler
 	// AuthSignupHandler sets the operation handler for the signup operation
 	AuthSignupHandler auth.SignupHandler
 	// UserUpdateCurrentUserHandler sets the operation handler for the update current user operation
@@ -343,8 +343,8 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "file.SearchFileHandler")
 	}
 
-	if o.FileShareFileHandler == nil {
-		unregistered = append(unregistered, "file.ShareFileHandler")
+	if o.FileShareFilesHandler == nil {
+		unregistered = append(unregistered, "file.ShareFilesHandler")
 	}
 
 	if o.AuthSignupHandler == nil {
@@ -565,7 +565,7 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/share"] = file.NewShareFile(o.context, o.FileShareFileHandler)
+	o.handlers["POST"]["/share"] = file.NewShareFiles(o.context, o.FileShareFilesHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)

@@ -13,40 +13,40 @@ import (
 	models "github.com/freecloudio/server/models"
 )
 
-// StarredFilesHandlerFunc turns a function with the right signature into a starred files handler
-type StarredFilesHandlerFunc func(StarredFilesParams, *models.Principal) middleware.Responder
+// ShareFilesHandlerFunc turns a function with the right signature into a share files handler
+type ShareFilesHandlerFunc func(ShareFilesParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn StarredFilesHandlerFunc) Handle(params StarredFilesParams, principal *models.Principal) middleware.Responder {
+func (fn ShareFilesHandlerFunc) Handle(params ShareFilesParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
-// StarredFilesHandler interface for that can handle valid starred files params
-type StarredFilesHandler interface {
-	Handle(StarredFilesParams, *models.Principal) middleware.Responder
+// ShareFilesHandler interface for that can handle valid share files params
+type ShareFilesHandler interface {
+	Handle(ShareFilesParams, *models.Principal) middleware.Responder
 }
 
-// NewStarredFiles creates a new http.Handler for the starred files operation
-func NewStarredFiles(ctx *middleware.Context, handler StarredFilesHandler) *StarredFiles {
-	return &StarredFiles{Context: ctx, Handler: handler}
+// NewShareFiles creates a new http.Handler for the share files operation
+func NewShareFiles(ctx *middleware.Context, handler ShareFilesHandler) *ShareFiles {
+	return &ShareFiles{Context: ctx, Handler: handler}
 }
 
-/*StarredFiles swagger:route GET /starred file starredFiles
+/*ShareFiles swagger:route POST /share file shareFiles
 
-Get starred files/folders
+Share files/folders
 
 */
-type StarredFiles struct {
+type ShareFiles struct {
 	Context *middleware.Context
-	Handler StarredFilesHandler
+	Handler ShareFilesHandler
 }
 
-func (o *StarredFiles) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *ShareFiles) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
 		r = rCtx
 	}
-	var Params = NewStarredFilesParams()
+	var Params = NewShareFilesParams()
 
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {

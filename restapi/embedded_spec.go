@@ -447,7 +447,7 @@ func init() {
           "file"
         ],
         "summary": "Share files/folders",
-        "operationId": "shareFile",
+        "operationId": "shareFiles",
         "parameters": [
           {
             "name": "shareRequest",
@@ -1636,7 +1636,7 @@ func init() {
           "file"
         ],
         "summary": "Share files/folders",
-        "operationId": "shareFile",
+        "operationId": "shareFiles",
         "parameters": [
           {
             "name": "shareRequest",
