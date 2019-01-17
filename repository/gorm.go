@@ -49,6 +49,7 @@ func InitDatabaseConnection(databaseType, user, password, host string, port int,
 	log.Info("Initialized database connection")
 
 	err = db.AutoMigrate(databaseModels...).Error
+	fmt.Printf("Auto migrate: %v", databaseModels)
 	if err != nil {
 		log.Error(0, "Failed to auto migrate db structs: %v", err)
 		return err
