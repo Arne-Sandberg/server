@@ -10,7 +10,7 @@
 
 ## Installing
 
-We support Go version 1.9 upwards, 1.7 and 1.8 *should* work, but are untested (come on, they are over a year old!).
+We support Go version 1.10 and upwards.
 Once you have grabbed a recent version of Go, just run the following:
 
 ```

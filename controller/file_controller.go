@@ -76,3 +76,12 @@ func FileZipFilesHandler(params fileAPI.ZipFilesParams, principal *models.Princi
 
 	return fileAPI.NewZipFilesOK().WithPayload(&models.Path{Path: zipPath})
 }
+
+func FileShareFilesHandler(params fileAPI.ShareFilesParams, principal *models.Principal) middleware.Responder {
+	err := manager.GetFileManager().ShareFiles(principal.User, params.ShareRequest.Users, params.ShareRequest.Paths)
+	if err != nil {
+		return fileAPI.NewShareFilesDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewShareFilesOK()
+}

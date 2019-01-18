@@ -11,15 +11,15 @@ import (
 	golangswaggerpaths "path"
 )
 
-// ShareFileURL generates an URL for the share file operation
-type ShareFileURL struct {
+// ShareFilesURL generates an URL for the share files operation
+type ShareFilesURL struct {
 	_basePath string
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *ShareFileURL) WithBasePath(bp string) *ShareFileURL {
+func (o *ShareFilesURL) WithBasePath(bp string) *ShareFilesURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -27,12 +27,12 @@ func (o *ShareFileURL) WithBasePath(bp string) *ShareFileURL {
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *ShareFileURL) SetBasePath(bp string) {
+func (o *ShareFilesURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *ShareFileURL) Build() (*url.URL, error) {
+func (o *ShareFilesURL) Build() (*url.URL, error) {
 	var _result url.URL
 
 	var _path = "/share"
@@ -47,7 +47,7 @@ func (o *ShareFileURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *ShareFileURL) Must(u *url.URL, err error) *url.URL {
+func (o *ShareFilesURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +58,17 @@ func (o *ShareFileURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *ShareFileURL) String() string {
+func (o *ShareFilesURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *ShareFileURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *ShareFilesURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on ShareFileURL")
+		return nil, errors.New("scheme is required for a full url on ShareFilesURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on ShareFileURL")
+		return nil, errors.New("host is required for a full url on ShareFilesURL")
 	}
 
 	base, err := o.Build()
@@ -82,6 +82,6 @@ func (o *ShareFileURL) BuildFull(scheme, host string) (*url.URL, error) {
 }
 
 // StringFull returns the string representation of a complete url
-func (o *ShareFileURL) StringFull(scheme, host string) string {
+func (o *ShareFilesURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }
