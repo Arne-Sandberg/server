@@ -8,32 +8,33 @@ import (
 	"github.com/freecloudio/server/models"
 )
 
-func cleanDBFiles() {
-	os.Remove("userTest.db")
-}
-
-var adminUser = &models.User{Email: "admin.user@example.com", IsAdmin: true}
-var user1 = &models.User{Email: "user1@example.com"}
-var user2 = &models.User{Email: "user2@example.com"}
-
 func TestUserRepository(t *testing.T) {
+	adminUser := &models.User{Email: "admin.user@example.com", IsAdmin: true}
+	user1 := &models.User{Email: "user1@example.com"}
+	user2 := &models.User{Email: "user2@example.com"}
+	dbName := "userTest.db"
+
+	cleanDBFiles := func() {
+		os.Remove(dbName)
+	}
+
 	cleanDBFiles()
+	defer cleanDBFiles()
 
 	var rep *UserRepository
 
 	success := t.Run("create connection and repository", func(t *testing.T) {
-		err := InitDatabaseConnection("", "", "", "", 0, "userTest.db")
+		err := InitDatabaseConnection("", "", "", "", 0, dbName)
 		if err != nil {
 			t.Fatalf("Failed to connect to gorm database: %v", err)
 		}
 
 		rep, err = CreateUserRepository()
 		if err != nil {
-			t.Errorf("Failed to create user repository: %v", err)
+			t.Fatalf("Failed to create user repository: %v", err)
 		}
 	})
 	if !success {
-		cleanDBFiles()
 		t.Skip("Further test skipped due to setup failing")
 	}
 
@@ -69,7 +70,6 @@ func TestUserRepository(t *testing.T) {
 		}
 	})
 	if !success {
-		cleanDBFiles()
 		t.Skip("Skipping further tests due to no created users")
 	}
 
@@ -122,7 +122,7 @@ func TestUserRepository(t *testing.T) {
 	})
 
 	if delSuccess {
-		t.Run("correct read back of deleted user", func(t *testing.T) {
+		t.Run("correct read back after deleting user", func(t *testing.T) {
 			_, err := rep.GetByID(user1.ID)
 			if err == nil || !IsRecordNotFoundError(err) {
 				t.Errorf("Succeeded to read deleted user by ID or error is not 'record not found': %v", err)
@@ -187,6 +187,4 @@ func TestUserRepository(t *testing.T) {
 			}
 		})
 	}
-
-	cleanDBFiles()
 }
