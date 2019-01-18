@@ -30,5 +30,5 @@ const (
 
 // ValidatePath checks whether the path contains any forbidden characters
 func ValidatePath(path string) bool {
-	return !(strings.Contains(path, "../") || strings.Contains(path, "/..") || strings.Contains(path, "~") || strings.Contains(path, "\\..") || strings.Contains(path, "..\\") || strings.ContainsAny(path, forbiddenPathCharacters))
+	return !(strings.Contains(path, "..") || strings.Contains(path, "~") || strings.ContainsAny(path, forbiddenPathCharacters))
 }

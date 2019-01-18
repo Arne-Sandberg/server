@@ -16,18 +16,18 @@ import (
 	models "github.com/freecloudio/server/models"
 )
 
-// NewShareFileParams creates a new ShareFileParams object
+// NewShareFilesParams creates a new ShareFilesParams object
 // no default values defined in spec.
-func NewShareFileParams() ShareFileParams {
+func NewShareFilesParams() ShareFilesParams {
 
-	return ShareFileParams{}
+	return ShareFilesParams{}
 }
 
-// ShareFileParams contains all the bound params for the share file operation
+// ShareFilesParams contains all the bound params for the share files operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters shareFile
-type ShareFileParams struct {
+// swagger:parameters shareFiles
+type ShareFilesParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -42,8 +42,8 @@ type ShareFileParams struct {
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewShareFileParams() beforehand.
-func (o *ShareFileParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewShareFilesParams() beforehand.
+func (o *ShareFilesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r

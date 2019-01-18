@@ -95,8 +95,8 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	api.FileSearchFileHandler = file.SearchFileHandlerFunc(func(params file.SearchFileParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation file.SearchFile has not yet been implemented")
 	})
-	api.FileShareFileHandler = file.ShareFileHandlerFunc(func(params file.ShareFileParams, principal *models.Principal) middleware.Responder {
-		return middleware.NotImplemented("operation file.ShareFile has not yet been implemented")
+	api.FileShareFilesHandler = file.ShareFilesHandlerFunc(func(params file.ShareFilesParams, principal *models.Principal) middleware.Responder {
+		return controller.FileShareFilesHandler(params, principal)
 	})
 	api.AuthSignupHandler = auth.SignupHandlerFunc(func(params auth.SignupParams) middleware.Responder {
 		return controller.AuthSignupHandler(params)

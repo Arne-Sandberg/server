@@ -76,9 +76,11 @@ func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 // NewSession verifies the user's credentials and then returns a new session.
 func (mgr *AuthManager) NewSession(email string, password string) (*models.Session, error) {
 	// First, do some sanity checks so we can reduce calls to the credentials provider with obviously wrong data.
-	if len(password) == 0 || len(email) == 0 {
+	if !utils.ValidateEmail(email) || !utils.ValidatePassword(password) {
 		return nil, ErrMissingCredentials
 	}
+
+	email = utils.ConvertToCleanEmail(email)
 
 	user, err := mgr.userRep.GetByEmail(email)
 	if err != nil {
@@ -127,6 +129,8 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		!utils.ValidateLastName(user.LastName) {
 		return nil, ErrInvalidUserData
 	}
+
+	user.Email = utils.ConvertToCleanEmail(user.Email)
 
 	existingUser, err := mgr.userRep.GetByEmail(user.Email)
 	if err != nil && !repository.IsRecordNotFoundError(err) {
@@ -227,6 +231,7 @@ func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
 }
 
 func (mgr *AuthManager) GetUserByEmail(email string) (*models.User, error) {
+	email = utils.ConvertToCleanEmail(email)
 	return mgr.userRep.GetByEmail(email)
 }
 
