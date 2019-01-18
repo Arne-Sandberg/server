@@ -254,7 +254,7 @@ func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
 
 // GetAdminCount returns the count of admin users
 func (mgr *AuthManager) GetAdminCount() (int, error) {
-	count, err := mgr.userRep.GetAdminCount()
+	count, err := mgr.userRep.AdminCount()
 	return int(count), err
 }
 
