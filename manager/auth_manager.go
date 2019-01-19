@@ -178,7 +178,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 }
 
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
-	if err = mgr.sessionRep.DeleteForUser(userID); err != nil {
+	if err = mgr.sessionRep.DeleteAllForUser(userID); err != nil {
 		// TODO: log me
 		return
 	}
@@ -254,9 +254,11 @@ func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
 
 // GetAdminCount returns the count of admin users
 func (mgr *AuthManager) GetAdminCount() (int, error) {
-	return mgr.userRep.AdminCount()
+	count, err := mgr.userRep.AdminCount()
+	return int(count), err
 }
 
+// GetSessionCount return the count of active sessions
 func (mgr *AuthManager) GetSessionCount() (int, error) {
 	return mgr.sessionRep.Count()
 }

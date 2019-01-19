@@ -12,12 +12,10 @@ func init() {
 	databaseModels = append(databaseModels, &models.Session{})
 }
 
-// SessionRepository provides CRUD methods for managing sessions.
-// Note: This is not exported on purpose! Reason being that all repositories
-// share a common database connection. This means that each repository must
-// check if it needs to initialize the connection upon creation.
+// SessionRepository represents the database for storing sessions
 type SessionRepository struct{}
 
+// CreateSessionRepository creates a new SessionRepository IF gorm has been initialized before
 func CreateSessionRepository() (*SessionRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
@@ -25,6 +23,7 @@ func CreateSessionRepository() (*SessionRepository, error) {
 	return &SessionRepository{}, nil
 }
 
+// Create stores a new session
 func (rep *SessionRepository) Create(session *models.Session) (err error) {
 	err = databaseConnection.Create(session).Error
 	if err != nil {
@@ -33,6 +32,7 @@ func (rep *SessionRepository) Create(session *models.Session) (err error) {
 	return
 }
 
+// Count returns the amount of stored sessions
 func (rep *SessionRepository) Count() (count int, err error) {
 	err = databaseConnection.Model(&models.Session{}).Count(&count).Error
 	if err != nil {
@@ -41,6 +41,7 @@ func (rep *SessionRepository) Count() (count int, err error) {
 	return
 }
 
+// Delete deletes a given session
 func (rep *SessionRepository) Delete(session *models.Session) (err error) {
 	err = databaseConnection.Delete(session).Error
 	if err != nil {
@@ -49,7 +50,8 @@ func (rep *SessionRepository) Delete(session *models.Session) (err error) {
 	return
 }
 
-func (rep *SessionRepository) DeleteForUser(userID int64) (err error) {
+// DeleteAllForUser deletes all session for one user
+func (rep *SessionRepository) DeleteAllForUser(userID int64) (err error) {
 	err = databaseConnection.Where("user_id = ?", userID).Delete(models.Session{}).Error
 	if err != nil {
 		log.Error(0, "Could not clean all sessions for user %d: %v", userID, err)
@@ -57,6 +59,7 @@ func (rep *SessionRepository) DeleteForUser(userID int64) (err error) {
 	return
 }
 
+// DeleteExpired deletes all expired sessions
 func (rep *SessionRepository) DeleteExpired() (err error) {
 	log.Trace("Cleaning old sessions")
 	err = databaseConnection.Where("expires_at < ?", time.Now().UTC().Unix()).Delete(&models.Session{}).Error
@@ -66,6 +69,7 @@ func (rep *SessionRepository) DeleteExpired() (err error) {
 	return
 }
 
+// GetByToken reads and returns a session by token
 func (rep *SessionRepository) GetByToken(token string) (session *models.Session, err error) {
 	session = &models.Session{}
 	err = databaseConnection.First(session, "token = ?", token).Error

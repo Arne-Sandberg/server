@@ -14,8 +14,10 @@ func init() {
 // Directories first, otherwise sorted by name.
 const fileListOrder = "is_dir, name"
 
+// FileInfoRepository represents a the database for storing file infos
 type FileInfoRepository struct{}
 
+// CreateFileInfoRepository creates a new FileInfoRepository IF gorm has been inizialized
 func CreateFileInfoRepository() (*FileInfoRepository, error) {
 	if databaseConnection == nil {
 		return nil, ErrGormNotInitialized
@@ -23,6 +25,7 @@ func CreateFileInfoRepository() (*FileInfoRepository, error) {
 	return &FileInfoRepository{}, nil
 }
 
+// Create stores a new file info
 func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {
 	err = databaseConnection.Create(fileInfo).Error
 	if err != nil {
@@ -32,8 +35,9 @@ func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (rep *FileInfoRepository) Delete(fileInfo *models.FileInfo) (err error) {
-	err = databaseConnection.Delete(fileInfo).Error
+// Delete deletes a file info by its fileInfoID
+func (rep *FileInfoRepository) Delete(fileInfoID int64) (err error) {
+	err = databaseConnection.Delete(&models.FileInfo{ID: fileInfoID}).Error
 	if err != nil {
 		log.Error(0, "Could not delete fileInfo: %v", err)
 		return
@@ -41,6 +45,7 @@ func (rep *FileInfoRepository) Delete(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
+// Update updates a stored file info
 func (rep *FileInfoRepository) Update(fileInfo *models.FileInfo) (err error) {
 	err = databaseConnection.Save(fileInfo).Error
 	if err != nil {
@@ -50,6 +55,7 @@ func (rep *FileInfoRepository) Update(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
+// GetStarredFileInfosForUser returns all file infos a user starred
 func (rep *FileInfoRepository) GetStarredFileInfosForUser(userID int64) (starredFileInfosForUser []*models.FileInfo, err error) {
 	err = databaseConnection.Where(&models.FileInfo{OwnerID: userID, Starred: true}).Order(fileListOrder).Find(&starredFileInfosForUser).Error
 	if err != nil && IsRecordNotFoundError(err) {
@@ -63,6 +69,7 @@ func (rep *FileInfoRepository) GetStarredFileInfosForUser(userID int64) (starred
 	return
 }
 
+// GetSharedFileInfosForUser
 func (rep *FileInfoRepository) GetSharedFileInfosForUser(userID int64) (sharedFilesForUser []*models.FileInfo, err error) {
 	return
 }
