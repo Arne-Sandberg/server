@@ -126,7 +126,7 @@ func TestShareEntryRepository(t *testing.T) {
 				t.Fatalf("Failed to get count after share entry deletion: %v", err)
 			}
 			if count != 2 {
-				t.Errorf("Count unequal to 2 after share entry deletion: %d", count)
+				t.Errorf("Count unequal to two after share entry deletion: %d", count)
 			}
 		})
 	}

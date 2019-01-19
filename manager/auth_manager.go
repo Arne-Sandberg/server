@@ -178,7 +178,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 }
 
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
-	if err = mgr.sessionRep.DeleteForUser(userID); err != nil {
+	if err = mgr.sessionRep.DeleteAllForUser(userID); err != nil {
 		// TODO: log me
 		return
 	}
