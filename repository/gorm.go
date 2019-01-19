@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
+	// Import database dialects for gorm
 	_ "github.com/jinzhu/gorm/dialects/mssql"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -12,6 +13,7 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+// ErrGormNotInitialized is returned if a repository is initialized before the database connection
 var ErrGormNotInitialized = errors.New("db repository: gorm repository must be initialized first")
 
 // databaseConnection is shared between most repositories (session, user, ...)
@@ -20,7 +22,7 @@ var (
 	databaseModels     []interface{} // Contains pointers to all models that should be automigrated by gorm initialization
 )
 
-// TODO: Create struct for args
+// InitDatabaseConnection initializes the gorm connection
 func InitDatabaseConnection(databaseType, user, password, host string, port int, name string) error {
 	var args string
 
@@ -59,6 +61,7 @@ func InitDatabaseConnection(databaseType, user, password, host string, port int,
 	return nil
 }
 
+// CloseDatabaseConnection closes the gorm connection
 func CloseDatabaseConnection() {
 	if err := databaseConnection.Close(); err != nil {
 		log.Fatal(0, "Error shutting down gorm: %v", err)
@@ -68,6 +71,7 @@ func CloseDatabaseConnection() {
 	databaseConnection = nil
 }
 
+// IsRecordNotFoundError checks whether an error is 'record not found'
 func IsRecordNotFoundError(err error) bool {
 	return gorm.IsRecordNotFoundError(err)
 }

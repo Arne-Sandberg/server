@@ -167,7 +167,7 @@ func (mgr *FileManager) scanDirForChanges(user *models.User, path, name string) 
 			continue
 		}
 
-		err = mgr.fileInfoRep.Delete(dbFile)
+		err = mgr.fileInfoRep.Delete(dbFile.ID)
 		if err != nil {
 			log.Error(0, "Error removing file from db: %v", err)
 			return
@@ -743,7 +743,7 @@ func (mgr *FileManager) DeleteFile(user *models.User, path string) (err error) {
 }
 
 func (mgr *FileManager) deleteFileInDB(fileInfo *models.FileInfo) (err error) {
-	err = mgr.fileInfoRep.Delete(fileInfo)
+	err = mgr.fileInfoRep.Delete(fileInfo.ID)
 
 	if fileInfo.IsDir {
 		var folderContent []*models.FileInfo
