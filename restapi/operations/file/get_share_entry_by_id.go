@@ -13,40 +13,40 @@ import (
 	models "github.com/freecloudio/server/models"
 )
 
-// ShareFilesHandlerFunc turns a function with the right signature into a share files handler
-type ShareFilesHandlerFunc func(ShareFilesParams, *models.Principal) middleware.Responder
+// GetShareEntryByIDHandlerFunc turns a function with the right signature into a get share entry by ID handler
+type GetShareEntryByIDHandlerFunc func(GetShareEntryByIDParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ShareFilesHandlerFunc) Handle(params ShareFilesParams, principal *models.Principal) middleware.Responder {
+func (fn GetShareEntryByIDHandlerFunc) Handle(params GetShareEntryByIDParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
-// ShareFilesHandler interface for that can handle valid share files params
-type ShareFilesHandler interface {
-	Handle(ShareFilesParams, *models.Principal) middleware.Responder
+// GetShareEntryByIDHandler interface for that can handle valid get share entry by ID params
+type GetShareEntryByIDHandler interface {
+	Handle(GetShareEntryByIDParams, *models.Principal) middleware.Responder
 }
 
-// NewShareFiles creates a new http.Handler for the share files operation
-func NewShareFiles(ctx *middleware.Context, handler ShareFilesHandler) *ShareFiles {
-	return &ShareFiles{Context: ctx, Handler: handler}
+// NewGetShareEntryByID creates a new http.Handler for the get share entry by ID operation
+func NewGetShareEntryByID(ctx *middleware.Context, handler GetShareEntryByIDHandler) *GetShareEntryByID {
+	return &GetShareEntryByID{Context: ctx, Handler: handler}
 }
 
-/*ShareFiles swagger:route POST /file/share/ file shareFiles
+/*GetShareEntryByID swagger:route GET /file/share/{shareID} file getShareEntryById
 
-Share files/folders
+Get share entry by shareID
 
 */
-type ShareFiles struct {
+type GetShareEntryByID struct {
 	Context *middleware.Context
-	Handler ShareFilesHandler
+	Handler GetShareEntryByIDHandler
 }
 
-func (o *ShareFiles) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *GetShareEntryByID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
 		r = rCtx
 	}
-	var Params = NewShareFilesParams()
+	var Params = NewGetShareEntryByIDParams()
 
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {

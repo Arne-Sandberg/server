@@ -35,7 +35,7 @@ func (o *ZipFilesURL) SetBasePath(bp string) {
 func (o *ZipFilesURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/zip"
+	var _path = "/file/zip"
 
 	_basePath := o._basePath
 	if _basePath == "" {

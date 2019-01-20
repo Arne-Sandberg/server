@@ -31,7 +31,7 @@ func NewDownloadFile(ctx *middleware.Context, handler DownloadFileHandler) *Down
 	return &DownloadFile{Context: ctx, Handler: handler}
 }
 
-/*DownloadFile swagger:route GET /download file downloadFile
+/*DownloadFile swagger:route GET /file/download file downloadFile
 
 Downloads a file.
 

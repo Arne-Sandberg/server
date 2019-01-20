@@ -35,7 +35,7 @@ func (o *ShareFilesURL) SetBasePath(bp string) {
 func (o *ShareFilesURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/share"
+	var _path = "/file/share/"
 
 	_basePath := o._basePath
 	if _basePath == "" {

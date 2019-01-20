@@ -119,6 +119,12 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	api.FileZipFilesHandler = file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal *models.Principal) middleware.Responder {
 		return controller.FileZipFilesHandler(params, principal)
 	})
+	api.FileGetShareEntryByIDHandler = file.GetShareEntryByIDHandlerFunc(func(params file.GetShareEntryByIDParams, principal *models.Principal) middleware.Responder {
+		return middleware.NotImplemented("operation file.GetShareEntryByID has not yet been implemented")
+	})
+	api.FileDeleteShareEntryByIDHandler = file.DeleteShareEntryByIDHandlerFunc(func(params file.DeleteShareEntryByIDParams, principal *models.Principal) middleware.Responder {
+		return middleware.NotImplemented("operation file.DeleteShareEntryByID has not yet been implemented")
+	})
 
 	initializeServer()
 	api.ServerShutdown = func() {

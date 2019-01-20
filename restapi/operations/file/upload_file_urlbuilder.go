@@ -39,7 +39,7 @@ func (o *UploadFileURL) SetBasePath(bp string) {
 func (o *UploadFileURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/upload"
+	var _path = "/file/upload"
 
 	_basePath := o._basePath
 	if _basePath == "" {

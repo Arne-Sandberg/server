@@ -831,9 +831,7 @@ func (mgr *FileManager) ShareFile(fromUser, toUser *models.User, path string) (e
 	}
 
 	shareEntry := &models.ShareEntry{
-		OwnerID:      fromUser.ID,
-		SharedWithID: toUser.ID,
-		FileID:       fileInfo.ID,
+		FileID: fileInfo.ID,
 	}
 	err = mgr.shareEntryRep.Create(shareEntry)
 	if err != nil {
