@@ -914,3 +914,22 @@ func (mgr *FileManager) GetAvatarForUser(userID int64) (string, error) {
 func (mgr *FileManager) NewAvatarFileHandleForuser(userID int64) (*os.File, error) {
 	return mgr.fileSystemRep.NewHandle(filepath.Join(config.GetString("fs.base_directory"), config.GetString("fs.avatar_directory"), string(userID)))
 }
+
+func (mgr *FileManager) GetShareEntryByID(shareID int64, user *models.User) (*models.ShareEntry, error) {
+	return mgr.shareEntryRep.GetByIDForUser(shareID, user.ID)
+}
+
+func (mgr *FileManager) DeleteShareEntryByID(shareID int64, user *models.User) error {
+	shareEntry, err := mgr.shareEntryRep.GetByIDForUser(shareID, user.ID)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.shareEntryRep.Delete(shareEntry.ID)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Delete file of shared_with user
+	return nil
+}

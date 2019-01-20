@@ -139,7 +139,24 @@ func TestShareEntryRepository(t *testing.T) {
 		if len(readBackShareEntries) != 2 {
 			t.Errorf("Length of read back share entries with file id '%d' is unequal to 2: %d", shareEntry1.FileID, len(readBackShareEntries))
 		}
+		readBackShareEntry, err = rep.GetByIDForUser(shareEntry1.ID, fileOrig1.OwnerID)
+		if err != nil {
+			t.Errorf("Failed to read back shareEntry1 by ID and owner id of fileOrig1: %v", err)
+		}
+		expRes = &models.ShareEntry{ID: shareEntry1.ID, FileID: shareEntry1.FileID, OwnerID: fileOrig1.OwnerID, SharedWithID: fileShared1.OwnerID}
+		if !reflect.DeepEqual(readBackShareEntry, expRes) {
+			t.Errorf("Read back sharedEntry1 and expected result for shareEntry1 not deeply equal")
+		}
 	})
+
+	t.Run("correct read back of created share entry for wrong user", func(t *testing.T) {
+		_, err := rep.GetByIDForUser(shareEntry0.ID, 9999)
+		if err == nil || !IsRecordNotFoundError(err) {
+			t.Errorf("Succeeded to read share entry for wrong user or error is not 'record not found': %v", err)
+		}
+	})
+
+	t.Skip("")
 
 	delSuccess := t.Run("delete share entry", func(t *testing.T) {
 		err := rep.Delete(shareEntry2.ID)

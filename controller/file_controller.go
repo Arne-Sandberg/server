@@ -85,3 +85,21 @@ func FileShareFilesHandler(params fileAPI.ShareFilesParams, principal *models.Pr
 
 	return fileAPI.NewShareFilesOK()
 }
+
+func FileGetShareEntryByIDHandler(params fileAPI.GetShareEntryByIDParams, principal *models.Principal) middleware.Responder {
+	shareEntry, err := manager.GetFileManager().GetShareEntryByID(params.ShareID, principal.User)
+	if err != nil {
+		return fileAPI.NewGetShareEntryByIDDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewGetShareEntryByIDOK().WithPayload(shareEntry)
+}
+
+func FileDeleteShareEntryByIDHandler(params fileAPI.DeleteShareEntryByIDParams, principal *models.Principal) middleware.Responder {
+	err := manager.GetFileManager().DeleteShareEntryByID(params.ShareID, principal.User)
+	if err != nil {
+		return fileAPI.NewDeleteShareEntryByIDDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	}
+
+	return fileAPI.NewDeleteShareEntryByIDOK()
+}
