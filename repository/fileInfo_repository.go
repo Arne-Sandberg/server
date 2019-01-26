@@ -57,7 +57,7 @@ func (rep *FileInfoRepository) Update(fileInfo *models.FileInfo) (err error) {
 
 // GetStarredFileInfosForUser returns all file infos a user starred
 func (rep *FileInfoRepository) GetStarredFileInfosForUser(userID int64) (starredFileInfosForUser []*models.FileInfo, err error) {
-	err = databaseConnection.Where(&models.FileInfo{OwnerID: userID, Starred: true}).Order(fileListOrder).Find(&starredFileInfosForUser).Error
+	err = databaseConnection.Raw(getStarredFilesByUserID, userID).Scan(&starredFileInfosForUser).Error
 	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 		starredFileInfosForUser = make([]*models.FileInfo, 0)
@@ -69,21 +69,17 @@ func (rep *FileInfoRepository) GetStarredFileInfosForUser(userID int64) (starred
 	return
 }
 
-// GetSharedFileInfosForUser
+// GetSharedWithFileInfosForUser returns all file infos shared with the user
+func (rep *FileInfoRepository) GetSharedWithFileInfosForUser(userID int64) (sharedFilesForUser []*models.FileInfo, err error) {
+	return
+}
+
+// GetSharedFileInfosForUser returns all file infos a user shared with someone else
 func (rep *FileInfoRepository) GetSharedFileInfosForUser(userID int64) (sharedFilesForUser []*models.FileInfo, err error) {
 	return
 }
 
-func (rep *FileInfoRepository) GetDirectoryContentByPath(userID int64, path, dirName string) (dirInfo *models.FileInfo, content []*models.FileInfo, err error) {
-	dirInfo, err = rep.GetByPath(userID, path, dirName)
-	if err != nil || !dirInfo.IsDir {
-		return
-	}
-
-	content, err = rep.GetDirectoryContentByID(dirInfo.ID)
-	return
-}
-
+// GetDirectoryContentByID returns all direct child files of a directory
 func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID int64) (content []*models.FileInfo, err error) {
 	err = databaseConnection.Where(&models.FileInfo{ParentID: directoryID}).Order(fileListOrder).Find(&content).Error
 	if err != nil && IsRecordNotFoundError(err) {
@@ -96,6 +92,7 @@ func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID int64) (conte
 	return
 }
 
+// GetByPath returns a file info by userID, path and name
 func (rep *FileInfoRepository) GetByPath(userID int64, path, name string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
 	err = databaseConnection.Where(&models.FileInfo{OwnerID: userID, Path: path, Name: name}).First(fileInfo).Error
@@ -106,6 +103,7 @@ func (rep *FileInfoRepository) GetByPath(userID int64, path, name string) (fileI
 	return
 }
 
+// GetByID returns a file by its fileID
 func (rep *FileInfoRepository) GetByID(fileID int64) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
 	err = databaseConnection.First(fileInfo, "id = ?", fileID).Error
@@ -116,21 +114,23 @@ func (rep *FileInfoRepository) GetByID(fileID int64) (fileInfo *models.FileInfo,
 	return
 }
 
-func (rep *FileInfoRepository) SearchForFileInfo(userID int64, path, fileName string) (results []*models.FileInfo, err error) {
+// SearchForFileInfo returns a list of file infos for a path and name search term
+func (rep *FileInfoRepository) SearchForFileInfo(userID int64, path, name string) (results []*models.FileInfo, err error) {
 	pathSearch := path + "%"
-	fileNameSearch := "%" + fileName + "%"
+	fileNameSearch := "%" + name + "%"
 	err = databaseConnection.Where("owner_id = ? AND path LIKE ? AND name LIKE ?", userID, pathSearch, fileNameSearch).Order(fileListOrder).Find(&results).Error
 
 	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
-		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", fileName, path, userID, err)
+		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", name, path, userID, err)
 		return
 	}
 
 	return
 }
 
+// DeleteUserFileInfos deletes all file infos for an user
 func (rep *FileInfoRepository) DeleteUserFileInfos(userID int64) (err error) {
 	var files []models.FileInfo
 	err = databaseConnection.Find(&files, &models.FileInfo{OwnerID: userID}).Error
@@ -149,3 +149,23 @@ func (rep *FileInfoRepository) DeleteUserFileInfos(userID int64) (err error) {
 
 	return
 }
+
+// Count returns the count of file infos
+func (rep *FileInfoRepository) Count() (count int64, err error) {
+	err = databaseConnection.Model(&models.FileInfo{}).Count(&count).Error
+	if err != nil {
+		log.Error(0, "Could not get count of file infos: %v", err)
+		return
+	}
+	return
+}
+
+var (
+	getStarredFilesByUserID = `
+		select file.id, file.is_dir, file.last_changed, file.mime_type, file.name, file.owner_id, file.parent_id, file.path, file.share_id, file.size, (stars.file_id is not null) as starred
+			from stars
+			join file_infos as file
+			on stars.file_id = file.id
+			where user_id = ?
+	`
+)

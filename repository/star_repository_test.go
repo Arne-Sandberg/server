@@ -30,7 +30,7 @@ func TestStarRepository(t *testing.T) {
 
 		rep, err = CreateStarRepository()
 		if err != nil {
-			t.Fatalf("Failed to create user repository: %v", err)
+			t.Fatalf("Failed to create star repository: %v", err)
 		}
 	})
 	if !success {
