@@ -45,7 +45,7 @@ func (rep *ShareEntryRepository) Delete(shareID int64) (err error) {
 // GetByID reads and returns a share entry by shareID
 func (rep *ShareEntryRepository) GetByID(shareID int64) (shareEntry *models.ShareEntry, err error) {
 	shareEntry = &models.ShareEntry{}
-	err = databaseConnection.First(shareEntry, "id = ?", shareID).Error
+	err = databaseConnection.Raw(getByIDQuery, shareID).Scan(shareEntry).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntry for ID %v: %v", shareID, err)
 		return
@@ -55,9 +55,20 @@ func (rep *ShareEntryRepository) GetByID(shareID int64) (shareEntry *models.Shar
 
 // GetByFileID reads and returns a share entry by fileID
 func (rep *ShareEntryRepository) GetByFileID(fileID int64) (shareEntries []*models.ShareEntry, err error) {
-	err = databaseConnection.Find(&shareEntries, &models.ShareEntry{FileID: fileID}).Error
+	err = databaseConnection.Raw(getByFileIDQuery, fileID).Scan(&shareEntries).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntries for FileID %v: %v", fileID, err)
+		return
+	}
+	return
+}
+
+// GetByIDForUser reads and returns a share entry by shareID and whether the userID is owner or shared_with
+func (rep *ShareEntryRepository) GetByIDForUser(shareID int64, userID int64) (shareEntry *models.ShareEntry, err error) {
+	shareEntry = &models.ShareEntry{}
+	err = databaseConnection.Raw(getByIDAndUserQuery, shareID, userID, userID).Scan(shareEntry).Error
+	if err != nil {
+		log.Error(0, "Could not get shareEntry for ID %v and user %v: %v", shareID, userID, err)
 		return
 	}
 	return
@@ -72,3 +83,26 @@ func (rep *ShareEntryRepository) Count() (count int64, err error) {
 	}
 	return
 }
+
+var (
+	fromPart = `
+		from (
+			select share_entries.id as share_id, file_id, owner_id
+			from share_entries
+			left outer join file_infos
+			on share_entries.file_id = file_infos.id ) as orig
+		left outer join (
+			select share_entries.id as share_id, file_infos.owner_id as shared_with_id
+			from share_entries
+			left outer join file_infos
+			on share_entries.id = file_infos.share_id ) as share
+		on orig.share_id = share.share_id`
+	whereShareIDPart = " where orig.share_id = ?"
+	whereFileIDPart  = " where orig.file_id = ?"
+	andUserIDPart    = " and (orig.owner_id = ? or share.shared_with_id = ?)"
+
+	getAllQuery         = "select orig.share_id as id, orig.file_id, orig.owner_id, share.shared_with_id" + fromPart // No variables
+	getByIDQuery        = getAllQuery + whereShareIDPart                                                             // Only ShareID variable
+	getByIDAndUserQuery = getByIDQuery + andUserIDPart                                                               // ShareID and TWO times UserID variables
+	getByFileIDQuery    = getAllQuery + whereFileIDPart                                                              // Only FileID variable
+)

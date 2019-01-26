@@ -5,19 +5,23 @@ import (
 	"strconv"
 )
 
+// SessionTokenLength defines the length of a token
 const SessionTokenLength = 32
 
+// Session represents one session for an user
 type Session struct {
 	UserID    int64  `gorm:"index"`
 	Token     string `gorm:"primary_key"`
 	ExpiresAt int64
 }
 
-func (s Session) GetTokenString() string {
+// GetSessionString assembles the session string for the frontend
+func (s Session) GetSessionString() string {
 	return fmt.Sprintf("%s%d", s.Token, s.UserID)
 }
 
-func ParseSessionTokenString(token string) (*Session, error) {
+// ParseSessionString parses a given session string into a session
+func ParseSessionString(token string) (*Session, error) {
 	if len(token) < SessionTokenLength {
 		return nil, fmt.Errorf("given token '%s' is not long enough", token)
 	}

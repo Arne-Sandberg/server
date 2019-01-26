@@ -27,7 +27,7 @@ func ValidateToken(token string, scopes []string) (principal *models.Principal, 
 
 	if len(scopes) > 0 {
 		var session *models.Session
-		session, err = models.ParseSessionTokenString(token)
+		session, err = models.ParseSessionString(token)
 		if err != nil {
 			return nil, errors.New(http.StatusUnauthorized, "Token could not be parsed")
 		}
