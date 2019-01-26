@@ -31,7 +31,7 @@ func NewRescanCurrentUser(ctx *middleware.Context, handler RescanCurrentUserHand
 	return &RescanCurrentUser{Context: ctx, Handler: handler}
 }
 
-/*RescanCurrentUser swagger:route POST /rescan/me file rescanCurrentUser
+/*RescanCurrentUser swagger:route POST /file/rescan/me file rescanCurrentUser
 
 Rescan own data folder
 

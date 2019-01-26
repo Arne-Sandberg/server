@@ -46,7 +46,7 @@ type FileInfo struct {
 	Size int64 `json:"size,omitempty"`
 
 	// starred
-	Starred bool `json:"starred,omitempty"`
+	Starred bool `json:"starred,omitempty" gorm:"-"`
 }
 
 // Validate validates this file info

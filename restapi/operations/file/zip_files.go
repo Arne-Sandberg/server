@@ -31,7 +31,7 @@ func NewZipFiles(ctx *middleware.Context, handler ZipFilesHandler) *ZipFiles {
 	return &ZipFiles{Context: ctx, Handler: handler}
 }
 
-/*ZipFiles swagger:route POST /zip file zipFiles
+/*ZipFiles swagger:route POST /file/zip file zipFiles
 
 Creates a zip archive from files
 
