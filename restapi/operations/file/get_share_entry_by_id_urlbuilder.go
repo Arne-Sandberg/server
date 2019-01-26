@@ -9,17 +9,24 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+	"strings"
+
+	"github.com/go-openapi/swag"
 )
 
-// RescanCurrentUserURL generates an URL for the rescan current user operation
-type RescanCurrentUserURL struct {
+// GetShareEntryByIDURL generates an URL for the get share entry by ID operation
+type GetShareEntryByIDURL struct {
+	ShareID int64
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *RescanCurrentUserURL) WithBasePath(bp string) *RescanCurrentUserURL {
+func (o *GetShareEntryByIDURL) WithBasePath(bp string) *GetShareEntryByIDURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -27,15 +34,22 @@ func (o *RescanCurrentUserURL) WithBasePath(bp string) *RescanCurrentUserURL {
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *RescanCurrentUserURL) SetBasePath(bp string) {
+func (o *GetShareEntryByIDURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *RescanCurrentUserURL) Build() (*url.URL, error) {
+func (o *GetShareEntryByIDURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/file/rescan/me"
+	var _path = "/file/share/{shareID}"
+
+	shareID := swag.FormatInt64(o.ShareID)
+	if shareID != "" {
+		_path = strings.Replace(_path, "{shareID}", shareID, -1)
+	} else {
+		return nil, errors.New("ShareID is required on GetShareEntryByIDURL")
+	}
 
 	_basePath := o._basePath
 	if _basePath == "" {
@@ -47,7 +61,7 @@ func (o *RescanCurrentUserURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *RescanCurrentUserURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetShareEntryByIDURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +72,17 @@ func (o *RescanCurrentUserURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *RescanCurrentUserURL) String() string {
+func (o *GetShareEntryByIDURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *RescanCurrentUserURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetShareEntryByIDURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on RescanCurrentUserURL")
+		return nil, errors.New("scheme is required for a full url on GetShareEntryByIDURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on RescanCurrentUserURL")
+		return nil, errors.New("host is required for a full url on GetShareEntryByIDURL")
 	}
 
 	base, err := o.Build()
@@ -82,6 +96,6 @@ func (o *RescanCurrentUserURL) BuildFull(scheme, host string) (*url.URL, error) 
 }
 
 // StringFull returns the string representation of a complete url
-func (o *RescanCurrentUserURL) StringFull(scheme, host string) string {
+func (o *GetShareEntryByIDURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

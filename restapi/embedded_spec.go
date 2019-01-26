@@ -135,48 +135,6 @@ func init() {
         }
       }
     },
-    "/download": {
-      "get": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "produces": [
-          "application/gzip"
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Downloads a file.",
-        "operationId": "downloadFile",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Path to the file to download",
-            "name": "path",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Requested gzipped file",
-            "schema": {
-              "type": "file"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
     "/file": {
       "get": {
         "security": [
@@ -330,7 +288,49 @@ func init() {
         }
       }
     },
-    "/rescan/me": {
+    "/file/download": {
+      "get": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "produces": [
+          "application/gzip"
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Downloads a file.",
+        "operationId": "downloadFile",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Path to the file to download",
+            "name": "path",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested gzipped file",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/file/rescan/me": {
       "post": {
         "security": [
           {
@@ -357,7 +357,7 @@ func init() {
         }
       }
     },
-    "/rescan/{id}": {
+    "/file/rescan/{id}": {
       "post": {
         "security": [
           {
@@ -394,7 +394,7 @@ func init() {
         }
       }
     },
-    "/search": {
+    "/file/search": {
       "get": {
         "security": [
           {
@@ -434,7 +434,7 @@ func init() {
         }
       }
     },
-    "/share": {
+    "/file/share/": {
       "post": {
         "security": [
           {
@@ -471,7 +471,82 @@ func init() {
         }
       }
     },
-    "/starred": {
+    "/file/share/{shareID}": {
+      "get": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Get share entry by shareID",
+        "operationId": "getShareEntryByID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "Requested shareID",
+            "name": "shareID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Share entry",
+            "schema": {
+              "$ref": "#/definitions/ShareEntry"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Delete share entry by shareID",
+        "operationId": "deleteShareEntryByID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ShareID to be deleted",
+            "name": "shareID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/file/starred": {
       "get": {
         "security": [
           {
@@ -501,37 +576,7 @@ func init() {
         }
       }
     },
-    "/system/stats": {
-      "get": {
-        "security": [
-          {
-            "TokenAuth": [
-              "admin"
-            ]
-          }
-        ],
-        "tags": [
-          "system"
-        ],
-        "summary": "Get system status",
-        "operationId": "getSystemStats",
-        "responses": {
-          "200": {
-            "description": "System stats",
-            "schema": {
-              "$ref": "#/definitions/SystemStats"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/upload": {
+    "/file/upload": {
       "post": {
         "security": [
           {
@@ -566,6 +611,76 @@ func init() {
         "responses": {
           "200": {
             "description": "Success"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/file/zip": {
+      "post": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Creates a zip archive from files",
+        "operationId": "zipFiles",
+        "parameters": [
+          {
+            "name": "paths",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PathList"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Path"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/system/stats": {
+      "get": {
+        "security": [
+          {
+            "TokenAuth": [
+              "admin"
+            ]
+          }
+        ],
+        "tags": [
+          "system"
+        ],
+        "summary": "Get system status",
+        "operationId": "getSystemStats",
+        "responses": {
+          "200": {
+            "description": "System stats",
+            "schema": {
+              "$ref": "#/definitions/SystemStats"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -785,46 +900,6 @@ func init() {
           }
         }
       }
-    },
-    "/zip": {
-      "post": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Creates a zip archive from files",
-        "operationId": "zipFiles",
-        "parameters": [
-          {
-            "name": "paths",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/PathList"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Path"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
@@ -1019,6 +1094,30 @@ func init() {
       "properties": {
         "keyword": {
           "type": "string"
+        }
+      }
+    },
+    "ShareEntry": {
+      "type": "object",
+      "properties": {
+        "FileID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
+        },
+        "OwnerID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-custom-tag": "gorm:\"-\""
+        },
+        "SharedWithID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-custom-tag": "gorm:\"-\""
         }
       }
     },
@@ -1324,48 +1423,6 @@ func init() {
         }
       }
     },
-    "/download": {
-      "get": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "produces": [
-          "application/gzip"
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Downloads a file.",
-        "operationId": "downloadFile",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Path to the file to download",
-            "name": "path",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Requested gzipped file",
-            "schema": {
-              "type": "file"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
     "/file": {
       "get": {
         "security": [
@@ -1519,7 +1576,49 @@ func init() {
         }
       }
     },
-    "/rescan/me": {
+    "/file/download": {
+      "get": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "produces": [
+          "application/gzip"
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Downloads a file.",
+        "operationId": "downloadFile",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Path to the file to download",
+            "name": "path",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested gzipped file",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/file/rescan/me": {
       "post": {
         "security": [
           {
@@ -1546,7 +1645,7 @@ func init() {
         }
       }
     },
-    "/rescan/{id}": {
+    "/file/rescan/{id}": {
       "post": {
         "security": [
           {
@@ -1583,7 +1682,7 @@ func init() {
         }
       }
     },
-    "/search": {
+    "/file/search": {
       "get": {
         "security": [
           {
@@ -1623,7 +1722,7 @@ func init() {
         }
       }
     },
-    "/share": {
+    "/file/share/": {
       "post": {
         "security": [
           {
@@ -1660,7 +1759,82 @@ func init() {
         }
       }
     },
-    "/starred": {
+    "/file/share/{shareID}": {
+      "get": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Get share entry by shareID",
+        "operationId": "getShareEntryByID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "Requested shareID",
+            "name": "shareID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Share entry",
+            "schema": {
+              "$ref": "#/definitions/ShareEntry"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Delete share entry by shareID",
+        "operationId": "deleteShareEntryByID",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "description": "ShareID to be deleted",
+            "name": "shareID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/file/starred": {
       "get": {
         "security": [
           {
@@ -1690,37 +1864,7 @@ func init() {
         }
       }
     },
-    "/system/stats": {
-      "get": {
-        "security": [
-          {
-            "TokenAuth": [
-              "admin"
-            ]
-          }
-        ],
-        "tags": [
-          "system"
-        ],
-        "summary": "Get system status",
-        "operationId": "getSystemStats",
-        "responses": {
-          "200": {
-            "description": "System stats",
-            "schema": {
-              "$ref": "#/definitions/SystemStats"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/upload": {
+    "/file/upload": {
       "post": {
         "security": [
           {
@@ -1755,6 +1899,76 @@ func init() {
         "responses": {
           "200": {
             "description": "Success"
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/file/zip": {
+      "post": {
+        "security": [
+          {
+            "TokenAuth": [
+              "user"
+            ]
+          }
+        ],
+        "tags": [
+          "file"
+        ],
+        "summary": "Creates a zip archive from files",
+        "operationId": "zipFiles",
+        "parameters": [
+          {
+            "name": "paths",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PathList"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Path"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/system/stats": {
+      "get": {
+        "security": [
+          {
+            "TokenAuth": [
+              "admin"
+            ]
+          }
+        ],
+        "tags": [
+          "system"
+        ],
+        "summary": "Get system status",
+        "operationId": "getSystemStats",
+        "responses": {
+          "200": {
+            "description": "System stats",
+            "schema": {
+              "$ref": "#/definitions/SystemStats"
+            }
           },
           "default": {
             "description": "Unexpected error",
@@ -1974,46 +2188,6 @@ func init() {
           }
         }
       }
-    },
-    "/zip": {
-      "post": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Creates a zip archive from files",
-        "operationId": "zipFiles",
-        "parameters": [
-          {
-            "name": "paths",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/PathList"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/Path"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
@@ -2208,6 +2382,30 @@ func init() {
       "properties": {
         "keyword": {
           "type": "string"
+        }
+      }
+    },
+    "ShareEntry": {
+      "type": "object",
+      "properties": {
+        "FileID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
+        },
+        "OwnerID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-custom-tag": "gorm:\"-\""
+        },
+        "SharedWithID": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-custom-tag": "gorm:\"-\""
         }
       }
     },

@@ -31,7 +31,7 @@ func NewSearchFile(ctx *middleware.Context, handler SearchFileHandler) *SearchFi
 	return &SearchFile{Context: ctx, Handler: handler}
 }
 
-/*SearchFile swagger:route GET /search file searchFile
+/*SearchFile swagger:route GET /file/search file searchFile
 
 Search files/folders
 

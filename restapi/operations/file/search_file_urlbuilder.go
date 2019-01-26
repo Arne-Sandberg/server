@@ -35,7 +35,7 @@ func (o *SearchFileURL) SetBasePath(bp string) {
 func (o *SearchFileURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/search"
+	var _path = "/file/search"
 
 	_basePath := o._basePath
 	if _basePath == "" {

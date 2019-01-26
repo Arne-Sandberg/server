@@ -58,6 +58,9 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		FileDeleteFileHandler: file.DeleteFileHandlerFunc(func(params file.DeleteFileParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileDeleteFile has not yet been implemented")
 		}),
+		FileDeleteShareEntryByIDHandler: file.DeleteShareEntryByIDHandlerFunc(func(params file.DeleteShareEntryByIDParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation FileDeleteShareEntryByID has not yet been implemented")
+		}),
 		UserDeleteUserByIDHandler: user.DeleteUserByIDHandlerFunc(func(params user.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation UserDeleteUserByID has not yet been implemented")
 		}),
@@ -69,6 +72,9 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		}),
 		FileGetPathInfoHandler: file.GetPathInfoHandlerFunc(func(params file.GetPathInfoParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileGetPathInfo has not yet been implemented")
+		}),
+		FileGetShareEntryByIDHandler: file.GetShareEntryByIDHandlerFunc(func(params file.GetShareEntryByIDParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation FileGetShareEntryByID has not yet been implemented")
 		}),
 		FileGetStarredFileInfosHandler: file.GetStarredFileInfosHandlerFunc(func(params file.GetStarredFileInfosParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileGetStarredFileInfos has not yet been implemented")
@@ -170,6 +176,8 @@ type FreecloudAPI struct {
 	UserDeleteCurrentUserHandler user.DeleteCurrentUserHandler
 	// FileDeleteFileHandler sets the operation handler for the delete file operation
 	FileDeleteFileHandler file.DeleteFileHandler
+	// FileDeleteShareEntryByIDHandler sets the operation handler for the delete share entry by ID operation
+	FileDeleteShareEntryByIDHandler file.DeleteShareEntryByIDHandler
 	// UserDeleteUserByIDHandler sets the operation handler for the delete user by ID operation
 	UserDeleteUserByIDHandler user.DeleteUserByIDHandler
 	// FileDownloadFileHandler sets the operation handler for the download file operation
@@ -178,6 +186,8 @@ type FreecloudAPI struct {
 	UserGetCurrentUserHandler user.GetCurrentUserHandler
 	// FileGetPathInfoHandler sets the operation handler for the get path info operation
 	FileGetPathInfoHandler file.GetPathInfoHandler
+	// FileGetShareEntryByIDHandler sets the operation handler for the get share entry by ID operation
+	FileGetShareEntryByIDHandler file.GetShareEntryByIDHandler
 	// FileGetStarredFileInfosHandler sets the operation handler for the get starred file infos operation
 	FileGetStarredFileInfosHandler file.GetStarredFileInfosHandler
 	// SystemGetSystemStatsHandler sets the operation handler for the get system stats operation
@@ -295,6 +305,10 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "file.DeleteFileHandler")
 	}
 
+	if o.FileDeleteShareEntryByIDHandler == nil {
+		unregistered = append(unregistered, "file.DeleteShareEntryByIDHandler")
+	}
+
 	if o.UserDeleteUserByIDHandler == nil {
 		unregistered = append(unregistered, "user.DeleteUserByIDHandler")
 	}
@@ -309,6 +323,10 @@ func (o *FreecloudAPI) Validate() error {
 
 	if o.FileGetPathInfoHandler == nil {
 		unregistered = append(unregistered, "file.GetPathInfoHandler")
+	}
+
+	if o.FileGetShareEntryByIDHandler == nil {
+		unregistered = append(unregistered, "file.GetShareEntryByIDHandler")
 	}
 
 	if o.FileGetStarredFileInfosHandler == nil {
@@ -505,12 +523,17 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/file/share/{shareID}"] = file.NewDeleteShareEntryByID(o.context, o.FileDeleteShareEntryByIDHandler)
+
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/user/{id}"] = user.NewDeleteUserByID(o.context, o.UserDeleteUserByIDHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/download"] = file.NewDownloadFile(o.context, o.FileDownloadFileHandler)
+	o.handlers["GET"]["/file/download"] = file.NewDownloadFile(o.context, o.FileDownloadFileHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -525,7 +548,12 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/starred"] = file.NewGetStarredFileInfos(o.context, o.FileGetStarredFileInfosHandler)
+	o.handlers["GET"]["/file/share/{shareID}"] = file.NewGetShareEntryByID(o.context, o.FileGetShareEntryByIDHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/file/starred"] = file.NewGetStarredFileInfos(o.context, o.FileGetStarredFileInfosHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -550,22 +578,22 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/rescan/me"] = file.NewRescanCurrentUser(o.context, o.FileRescanCurrentUserHandler)
+	o.handlers["POST"]["/file/rescan/me"] = file.NewRescanCurrentUser(o.context, o.FileRescanCurrentUserHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/rescan/{id}"] = file.NewRescanUserByID(o.context, o.FileRescanUserByIDHandler)
+	o.handlers["POST"]["/file/rescan/{id}"] = file.NewRescanUserByID(o.context, o.FileRescanUserByIDHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/search"] = file.NewSearchFile(o.context, o.FileSearchFileHandler)
+	o.handlers["GET"]["/file/search"] = file.NewSearchFile(o.context, o.FileSearchFileHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/share"] = file.NewShareFiles(o.context, o.FileShareFilesHandler)
+	o.handlers["POST"]["/file/share"] = file.NewShareFiles(o.context, o.FileShareFilesHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -590,12 +618,12 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/upload"] = file.NewUploadFile(o.context, o.FileUploadFileHandler)
+	o.handlers["POST"]["/file/upload"] = file.NewUploadFile(o.context, o.FileUploadFileHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/zip"] = file.NewZipFiles(o.context, o.FileZipFilesHandler)
+	o.handlers["POST"]["/file/zip"] = file.NewZipFiles(o.context, o.FileZipFilesHandler)
 
 }
 

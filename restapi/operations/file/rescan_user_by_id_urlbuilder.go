@@ -42,7 +42,7 @@ func (o *RescanUserByIDURL) SetBasePath(bp string) {
 func (o *RescanUserByIDURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/rescan/{id}"
+	var _path = "/file/rescan/{id}"
 
 	id := swag.FormatInt64(o.ID)
 	if id != "" {

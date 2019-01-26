@@ -22,7 +22,7 @@ func AuthSignupHandler(params authAPI.SignupParams) middleware.Responder {
 		return authAPI.NewSignupDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
 	}
 
-	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetTokenString()})
+	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
 }
 
 func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
@@ -37,11 +37,11 @@ func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
 		return authAPI.NewLoginDefault(http.StatusUnauthorized).WithPayload(&models.Error{Message: "Wrong credentials or account does not exist"})
 	}
 
-	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetTokenString()})
+	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
 }
 
 func AuthLogoutHandler(params authAPI.LogoutParams, principal *models.Principal) middleware.Responder {
-	session, _ := models.ParseSessionTokenString(principal.Token.Token)
+	session, _ := models.ParseSessionString(principal.Token.Token)
 	err := manager.GetAuthManager().DeleteSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)

@@ -39,7 +39,7 @@ func (o *DownloadFileURL) SetBasePath(bp string) {
 func (o *DownloadFileURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/download"
+	var _path = "/file/download"
 
 	_basePath := o._basePath
 	if _basePath == "" {

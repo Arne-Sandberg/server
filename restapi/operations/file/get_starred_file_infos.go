@@ -31,7 +31,7 @@ func NewGetStarredFileInfos(ctx *middleware.Context, handler GetStarredFileInfos
 	return &GetStarredFileInfos{Context: ctx, Handler: handler}
 }
 
-/*GetStarredFileInfos swagger:route GET /starred file getStarredFileInfos
+/*GetStarredFileInfos swagger:route GET /file/starred file getStarredFileInfos
 
 Get starred files/folders infos
 

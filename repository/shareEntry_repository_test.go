@@ -9,9 +9,6 @@ import (
 )
 
 func TestShareEntryRepository(t *testing.T) {
-	shareEntry0 := &models.ShareEntry{FileID: 0, OwnerID: 0, SharedWithID: 1}
-	shareEntry1 := &models.ShareEntry{FileID: 1, OwnerID: 1, SharedWithID: 2}
-	shareEntry2 := &models.ShareEntry{FileID: 1, OwnerID: 1, SharedWithID: 3}
 	dbName := "shareEntryTest.db"
 
 	cleanDBFiles := func() {
@@ -48,6 +45,34 @@ func TestShareEntryRepository(t *testing.T) {
 		}
 	})
 
+	var fileRep *FileInfoRepository
+	fileOrig0 := &models.FileInfo{OwnerID: 1}
+	fileOrig1 := &models.FileInfo{OwnerID: 2}
+
+	success = t.Run("create file info repository and create needed files", func(t *testing.T) {
+		var err error
+		fileRep, err = CreateFileInfoRepository()
+		if err != nil {
+			t.Fatalf("Failed to initialize file info repository: %v", err)
+		}
+
+		err = fileRep.Create(fileOrig0)
+		if err != nil {
+			t.Errorf("Failed to create fileOrig0: %v", err)
+		}
+		err = fileRep.Create(fileOrig1)
+		if err != nil {
+			t.Errorf("Failed to create fileOrig1: %v", err)
+		}
+	})
+	if !success {
+		t.Skip("Further test skipped du to no created original files")
+	}
+
+	shareEntry0 := &models.ShareEntry{FileID: fileOrig0.ID}
+	shareEntry1 := &models.ShareEntry{FileID: fileOrig1.ID}
+	shareEntry2 := &models.ShareEntry{FileID: fileOrig1.ID}
+
 	success = t.Run("create share entries", func(t *testing.T) {
 		err := rep.Create(shareEntry0)
 		if err != nil {
@@ -66,6 +91,28 @@ func TestShareEntryRepository(t *testing.T) {
 		t.Skip("Skipping further tests due to no created share entries")
 	}
 
+	fileShared0 := &models.FileInfo{OwnerID: 2, ShareID: shareEntry0.ID}
+	fileShared1 := &models.FileInfo{OwnerID: 1, ShareID: shareEntry1.ID}
+	fileShared2 := &models.FileInfo{OwnerID: 3, ShareID: shareEntry2.ID}
+
+	success = t.Run("create shared files", func(t *testing.T) {
+		err := fileRep.Create(fileShared0)
+		if err != nil {
+			t.Errorf("Failed to create fileShared0: %v", err)
+		}
+		err = fileRep.Create(fileShared1)
+		if err != nil {
+			t.Errorf("Failed to create fileShared1: %v", err)
+		}
+		err = fileRep.Create(fileShared2)
+		if err != nil {
+			t.Errorf("Failed to create fileShared2: %v", err)
+		}
+	})
+	if !success {
+		t.Skip("Skipping further tests due to no created shared files")
+	}
+
 	t.Run("correct count after creating share entries", func(t *testing.T) {
 		count, err := rep.Count()
 		if err != nil {
@@ -81,8 +128,9 @@ func TestShareEntryRepository(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to read back shareEntry0 by ID: %v", err)
 		}
-		if !reflect.DeepEqual(readBackShareEntry, shareEntry0) {
-			t.Error("Read back shareEntry0 and shareEntry0 not deeply equal")
+		expRes := &models.ShareEntry{ID: shareEntry0.ID, FileID: shareEntry0.FileID, OwnerID: fileOrig0.OwnerID, SharedWithID: fileShared0.OwnerID}
+		if !reflect.DeepEqual(readBackShareEntry, expRes) {
+			t.Error("Read back shareEntry0 and expected result for shareEntry0 not deeply equal")
 		}
 		readBackShareEntries, err := rep.GetByFileID(shareEntry1.FileID)
 		if err != nil {
@@ -91,7 +139,24 @@ func TestShareEntryRepository(t *testing.T) {
 		if len(readBackShareEntries) != 2 {
 			t.Errorf("Length of read back share entries with file id '%d' is unequal to 2: %d", shareEntry1.FileID, len(readBackShareEntries))
 		}
+		readBackShareEntry, err = rep.GetByIDForUser(shareEntry1.ID, fileOrig1.OwnerID)
+		if err != nil {
+			t.Errorf("Failed to read back shareEntry1 by ID and owner id of fileOrig1: %v", err)
+		}
+		expRes = &models.ShareEntry{ID: shareEntry1.ID, FileID: shareEntry1.FileID, OwnerID: fileOrig1.OwnerID, SharedWithID: fileShared1.OwnerID}
+		if !reflect.DeepEqual(readBackShareEntry, expRes) {
+			t.Errorf("Read back sharedEntry1 and expected result for shareEntry1 not deeply equal")
+		}
 	})
+
+	t.Run("correct read back of created share entry for wrong user", func(t *testing.T) {
+		_, err := rep.GetByIDForUser(shareEntry0.ID, 9999)
+		if err == nil || !IsRecordNotFoundError(err) {
+			t.Errorf("Succeeded to read share entry for wrong user or error is not 'record not found': %v", err)
+		}
+	})
+
+	t.Skip("")
 
 	delSuccess := t.Run("delete share entry", func(t *testing.T) {
 		err := rep.Delete(shareEntry2.ID)
@@ -113,8 +178,9 @@ func TestShareEntryRepository(t *testing.T) {
 			if len(readBackShareEntries) != 1 {
 				t.Fatalf("Length of read back share entries after deletion with file id '%d' is unequal to 2: %d", shareEntry2.FileID, len(readBackShareEntries))
 			}
-			if !reflect.DeepEqual(readBackShareEntries[0], shareEntry1) {
-				t.Errorf("Remaining share entry for fileID '%d' it not deeply equal to not deleted shareEntry1", shareEntry2.FileID)
+			expRes := &models.ShareEntry{ID: shareEntry1.ID, FileID: shareEntry1.FileID, OwnerID: fileOrig1.OwnerID, SharedWithID: fileShared1.OwnerID}
+			if !reflect.DeepEqual(readBackShareEntries[0], expRes) {
+				t.Errorf("Remaining share entry for fileID '%d' it not deeply equal to expected result of not deleted shareEntry1", shareEntry2.FileID)
 			}
 		})
 	}

@@ -35,7 +35,7 @@ func (o *GetStarredFileInfosURL) SetBasePath(bp string) {
 func (o *GetStarredFileInfosURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/starred"
+	var _path = "/file/starred"
 
 	_basePath := o._basePath
 	if _basePath == "" {
