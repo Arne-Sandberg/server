@@ -80,8 +80,8 @@ func (rep *FileInfoRepository) GetSharedFileInfosForUser(userID int64) (sharedFi
 }
 
 // GetDirectoryContentByID returns all direct child files of a directory
-func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID int64) (content []*models.FileInfo, err error) {
-	err = databaseConnection.Where(&models.FileInfo{ParentID: directoryID}).Order(fileListOrder).Find(&content).Error
+func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID, userID int64) (content []*models.FileInfo, err error) {
+	err = databaseConnection.Raw(getDirectoryContentByFileUserID, directoryID, userID, userID).Scan(&content).Error
 	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
@@ -95,7 +95,7 @@ func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID int64) (conte
 // GetByPath returns a file info by userID, path and name
 func (rep *FileInfoRepository) GetByPath(userID int64, path, name string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = databaseConnection.Where(&models.FileInfo{OwnerID: userID, Path: path, Name: name}).First(fileInfo).Error
+	err = databaseConnection.Raw(getByPathUserID, path, name, userID, userID)
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, name, userID, err)
 		return
@@ -161,11 +161,10 @@ func (rep *FileInfoRepository) Count() (count int64, err error) {
 }
 
 var (
-	getStarredFilesByUserID = `
-		select file.id, file.is_dir, file.last_changed, file.mime_type, file.name, file.owner_id, file.parent_id, file.path, file.share_id, file.size, (stars.file_id is not null) as starred
-			from stars
-			join file_infos as file
-			on stars.file_id = file.id
-			where user_id = ?
-	`
+	selectPart    = "select file.id, file.is_dir, file.last_changed, file.mime_type, file.name, file.owner_id, file.parent_id, file.path, file.share_id, file.size, (stars.file_id is not null) as starred"
+	joinStarsPart = " left outer join stars on stars.file_id = file.id and stars.user_id = ?"
+
+	getStarredFilesByUserID         = selectPart + " from file_infos as file join stars on stars.file_id = file.id where stars.user_id = ?"                                       // Only userID
+	getDirectoryContentByFileUserID = selectPart + " from (select * from file_infos as file where file.parent_id = ? and file.owner_id = ?) as file" + joinStarsPart              // ParentID and two times userID
+	getByPathUserID                 = selectPart + " from (select * from file_infos as file where file.path = ? and file.name = ? and file.owner_id = ?) as file" + joinStarsPart // Path, name and two times userID
 )

@@ -8,8 +8,8 @@ import (
 )
 
 func TestFileInfoRepository(t *testing.T) {
-	fileOrig0 := &models.FileInfo{OwnerID: 1}
-	fileOrig1 := &models.FileInfo{OwnerID: 2}
+	fileOrig0 := &models.FileInfo{OwnerID: 1, ParentID: 0}
+	fileOrig1 := &models.FileInfo{OwnerID: 2, ParentID: 0}
 	dbName := "fileInfoTest.db"
 
 	cleanDBFiles := func() {
@@ -89,9 +89,9 @@ func TestFileInfoRepository(t *testing.T) {
 		t.Skip("Skipping further tests due to no created share entries")
 	}
 
-	fileShared0 := &models.FileInfo{OwnerID: 2, ShareID: shareEntry0.ID}
-	fileShared1 := &models.FileInfo{OwnerID: 1, ShareID: shareEntry1.ID}
-	fileShared2 := &models.FileInfo{OwnerID: 3, ShareID: shareEntry2.ID}
+	fileShared0 := &models.FileInfo{OwnerID: 2, ShareID: shareEntry0.ID, ParentID: 0}
+	fileShared1 := &models.FileInfo{OwnerID: 1, ShareID: shareEntry1.ID, ParentID: 0}
+	fileShared2 := &models.FileInfo{OwnerID: 3, ShareID: shareEntry2.ID, ParentID: 0}
 
 	success = t.Run("create shared files", func(t *testing.T) {
 		err := rep.Create(fileShared0)
