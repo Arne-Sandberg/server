@@ -57,7 +57,7 @@ func (rep *FileInfoRepository) Update(fileInfo *models.FileInfo) (err error) {
 
 // GetStarredFileInfosForUser returns all file infos a user starred
 func (rep *FileInfoRepository) GetStarredFileInfosForUser(userID int64) (starredFileInfosForUser []*models.FileInfo, err error) {
-	err = databaseConnection.Raw(getStarredFilesByUserID, userID).Scan(&starredFileInfosForUser).Error
+	err = databaseConnection.Raw(getStarredFilesByUserID, userID).Order(fileListOrder).Scan(&starredFileInfosForUser).Error
 	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 		starredFileInfosForUser = make([]*models.FileInfo, 0)
@@ -79,23 +79,35 @@ func (rep *FileInfoRepository) GetSharedFileInfosForUser(userID int64) (sharedFi
 	return
 }
 
-// GetDirectoryContentByID returns all direct child files of a directory
-func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID, userID int64) (content []*models.FileInfo, err error) {
-	err = databaseConnection.Raw(getDirectoryContentByFileUserID, directoryID, userID, userID).Scan(&content).Error
+// GetDirectoryContentByIDForUser returns all direct child files of a directory with stars for an user
+func (rep *FileInfoRepository) GetDirectoryContentByIDForUser(directoryID, userID int64) (content []*models.FileInfo, err error) {
+	err = databaseConnection.Raw(getDirectoryContentForOwner, directoryID, userID, userID).Order(fileListOrder).Scan(&content).Error
 	if err != nil && IsRecordNotFoundError(err) {
 		err = nil
 	} else if err != nil {
-		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
+		log.Error(0, "Could not get dir content for dirID %v for user %v: %v", directoryID, userID, err)
 		return
 	}
 
 	return
 }
 
-// GetByPath returns a file info by userID, path and name
+// GetDirectoryContentByID returns all direct child files of a directory
+func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID int64) (content []*models.FileInfo, err error) {
+	err = databaseConnection.Where(&models.FileInfo{ParentID: directoryID}).Order(fileListOrder).Order(fileListOrder).Find(&content).Error
+	if err != nil && IsRecordNotFoundError(err) {
+		err = nil
+	} else if err != nil {
+		log.Error(0, "Could not get dir content for dirID %v: %v", directoryID, err)
+		return
+	}
+	return
+}
+
+// GetByPath returns a file info by userID, path and name AND the owner is the user
 func (rep *FileInfoRepository) GetByPath(userID int64, path, name string) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
-	err = databaseConnection.Raw(getByPathUserID, path, name, userID, userID)
+	err = databaseConnection.Raw(getByPathForOwner, path, name, userID, userID).Scan(fileInfo).Error
 	if err != nil {
 		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, name, userID, err)
 		return
@@ -103,7 +115,7 @@ func (rep *FileInfoRepository) GetByPath(userID int64, path, name string) (fileI
 	return
 }
 
-// GetByID returns a file by its fileID
+// GetByID returns a file by its fileID AND the owner is the user
 func (rep *FileInfoRepository) GetByID(fileID int64) (fileInfo *models.FileInfo, err error) {
 	fileInfo = &models.FileInfo{}
 	err = databaseConnection.First(fileInfo, "id = ?", fileID).Error
@@ -164,7 +176,7 @@ var (
 	selectPart    = "select file.id, file.is_dir, file.last_changed, file.mime_type, file.name, file.owner_id, file.parent_id, file.path, file.share_id, file.size, (stars.file_id is not null) as starred"
 	joinStarsPart = " left outer join stars on stars.file_id = file.id and stars.user_id = ?"
 
-	getStarredFilesByUserID         = selectPart + " from file_infos as file join stars on stars.file_id = file.id where stars.user_id = ?"                                       // Only userID
-	getDirectoryContentByFileUserID = selectPart + " from (select * from file_infos as file where file.parent_id = ? and file.owner_id = ?) as file" + joinStarsPart              // ParentID and two times userID
-	getByPathUserID                 = selectPart + " from (select * from file_infos as file where file.path = ? and file.name = ? and file.owner_id = ?) as file" + joinStarsPart // Path, name and two times userID
+	getStarredFilesByUserID     = selectPart + " from file_infos as file join stars on stars.file_id = file.id where stars.user_id = ?"                                       // Only userID
+	getDirectoryContentForOwner = selectPart + " from (select * from file_infos as file where file.parent_id = ? and file.owner_id = ?) as file" + joinStarsPart              // ParentID and two times userID
+	getByPathForOwner           = selectPart + " from (select * from file_infos as file where file.path = ? and file.name = ? and file.owner_id = ?) as file" + joinStarsPart // Path, name and two times userID
 )
