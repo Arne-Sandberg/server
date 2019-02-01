@@ -9,8 +9,8 @@ import (
 )
 
 func TestFileInfoRepository(t *testing.T) {
-	fileOrig0 := &models.FileInfo{OwnerID: 1, ParentID: 0, Path: "/", Name: "fileOrig0"}
-	fileOrig1 := &models.FileInfo{OwnerID: 2, ParentID: 0, Path: "/", Name: "fileOrig1"}
+	fileOrig0 := &models.FileInfo{OwnerID: 1, ParentID: 101, Path: "/", Name: "fileOrig0"}
+	fileOrig1 := &models.FileInfo{OwnerID: 2, ParentID: 102, Path: "/", Name: "fileOrig1"}
 	dbName := "fileInfoTest.db"
 
 	cleanDBFiles := func() {
@@ -90,9 +90,9 @@ func TestFileInfoRepository(t *testing.T) {
 		t.Skip("Skipping further tests due to no created share entries")
 	}
 
-	fileShared0 := &models.FileInfo{OwnerID: 2, ShareID: shareEntry0.ID, ParentID: 0, Path: "/", Name: "fileShared0"}
-	fileShared1 := &models.FileInfo{OwnerID: 1, ShareID: shareEntry1.ID, ParentID: 0, Path: "/", Name: "fileShared1"}
-	fileShared2 := &models.FileInfo{OwnerID: 3, ShareID: shareEntry2.ID, ParentID: 0, Path: "/", Name: "fileShared2"}
+	fileShared0 := &models.FileInfo{OwnerID: 2, ShareID: shareEntry0.ID, ParentID: 102, Path: "/", Name: "fileShared0"}
+	fileShared1 := &models.FileInfo{OwnerID: 1, ShareID: shareEntry1.ID, ParentID: 101, Path: "/", Name: "fileShared1"}
+	fileShared2 := &models.FileInfo{OwnerID: 3, ShareID: shareEntry2.ID, ParentID: 103, Path: "/", Name: "fileShared2"}
 
 	success = t.Run("create shared files", func(t *testing.T) {
 		err := rep.Create(fileShared0)
@@ -114,7 +114,7 @@ func TestFileInfoRepository(t *testing.T) {
 
 	var starRep *StarRepository
 	star0 := &models.Star{FileID: fileOrig0.ID, UserID: fileOrig0.OwnerID}
-	star1 := &models.Star{FileID: shareEntry0.FileID, UserID: fileShared0.OwnerID}
+	star1 := &models.Star{FileID: fileShared0.ID, UserID: fileShared0.OwnerID}
 	star2 := &models.Star{FileID: fileOrig1.ID, UserID: fileOrig1.OwnerID}
 
 	success = t.Run("create star repository and create stars", func(t *testing.T) {
@@ -170,5 +170,42 @@ func TestFileInfoRepository(t *testing.T) {
 		if !reflect.DeepEqual(readBackFileInfo, fileOrig1) {
 			t.Error("Read back orig file 1 by path and orig file 1 not deeply equal")
 		}
+		readBackFileInfos, err := rep.GetDirectoryContentByID(101, 1)
+		if err != nil {
+			t.Errorf("Failed to get dir content for dir 101 and user 1: %v", err)
+		}
+		if len(readBackFileInfos) != 2 {
+			t.Error("Length of read back dir content of dir 101 and user 1 is unequal to two")
+		}
+		if !readBackFileInfos[0].Starred {
+			t.Error("First file of read back dir content of dir 101 and user 1 is not starred")
+		}
+		readBackFileInfos[0].Starred = false
+		if !reflect.DeepEqual(readBackFileInfos[0], fileOrig0) {
+			t.Error("First info of read back dir content of dir 101 and user 1 and file orig 0 are not deeply equal")
+		}
+		if !reflect.DeepEqual(readBackFileInfos[1], fileShared1) {
+			t.Error("Second file of read back dir content of dir 101 and user 1 and file shared 1 are not deeply equal")
+		}
+		readBackFileInfos, err = rep.GetStarredFileInfosByUser(2)
+		if err != nil {
+			t.Errorf("Failed to get starred files for user 2: %v", err)
+		}
+		if len(readBackFileInfos) != 2 {
+			t.Error("Length of read back starred file of user 2 is unequal to two")
+		}
+		if !readBackFileInfos[0].Starred || !readBackFileInfos[1].Starred {
+			t.Error("Not all read back starred file infors are starred")
+		}
+		readBackFileInfos[0].Starred = false
+		readBackFileInfos[1].Starred = false
+		if !reflect.DeepEqual(readBackFileInfos[0], fileOrig1) {
+			t.Error("First file of read back starred files for user 2 and file orig 1 are not deeply equal")
+		}
+		if !reflect.DeepEqual(readBackFileInfos[1], fileShared0) {
+			t.Error("Second file of read back starred file for user 2 and file shared 0 are not deeply equal")
+		}
 	})
+
+	// TODO: Test Delete, Update, GetShared, GetSharedWith, Search, DeleteUser
 }
