@@ -175,7 +175,7 @@ func TestFileInfoRepository(t *testing.T) {
 			t.Errorf("Failed to get dir content for dir 101 and user 1: %v", err)
 		}
 		if len(readBackFileInfos) != 2 {
-			t.Error("Length of read back dir content of dir 101 and user 1 is unequal to two")
+			t.Fatal("Length of read back dir content of dir 101 and user 1 is unequal to two")
 		}
 		if !readBackFileInfos[0].Starred {
 			t.Error("First file of read back dir content of dir 101 and user 1 is not starred")
@@ -205,6 +205,17 @@ func TestFileInfoRepository(t *testing.T) {
 		if !reflect.DeepEqual(readBackFileInfos[1], fileShared0) {
 			t.Error("Second file of read back starred file for user 2 and file shared 0 are not deeply equal")
 		}
+	})
+
+	t.Run("search files", func(t *testing.T) {
+		searchResults, err := rep.Search(1, "/", "file")
+		if err != nil {
+			t.Fatalf("Failed to search for '/' and 'file' for user 0: %v", err)
+		}
+		if len(searchResults) != 2 {
+			t.Fatalf("Length of search result unequal to two: %d", len(searchResults))
+		}
+		// TODO: Starred and single results
 	})
 
 	// TODO: Test Delete, Update, GetShared, GetSharedWith, Search, DeleteUser
