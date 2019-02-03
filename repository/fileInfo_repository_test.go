@@ -18,7 +18,7 @@ func TestFileInfoRepository(t *testing.T) {
 	}
 
 	cleanDBFiles()
-	//defer cleanDBFiles()
+	defer cleanDBFiles()
 
 	var rep *FileInfoRepository
 
@@ -170,12 +170,12 @@ func TestFileInfoRepository(t *testing.T) {
 		if !reflect.DeepEqual(readBackFileInfo, fileOrig1) {
 			t.Error("Read back orig file 1 by path and orig file 1 not deeply equal")
 		}
-		readBackFileInfos, err := rep.GetDirectoryContentByID(101, 1)
+		readBackFileInfos, err := rep.GetDirectoryContentByID(1, 101)
 		if err != nil {
 			t.Errorf("Failed to get dir content for dir 101 and user 1: %v", err)
 		}
 		if len(readBackFileInfos) != 2 {
-			t.Fatal("Length of read back dir content of dir 101 and user 1 is unequal to two")
+			t.Fatalf("Length of read back dir content of dir 101 and user 1 is unequal to two: %d", len(readBackFileInfos))
 		}
 		if !readBackFileInfos[0].Starred {
 			t.Error("First file of read back dir content of dir 101 and user 1 is not starred")
