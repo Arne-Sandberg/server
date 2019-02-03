@@ -80,7 +80,7 @@ func (rep *FileInfoRepository) GetSharedFileInfosByUser(userID int64) (sharedFil
 }
 
 // GetDirectoryContentByID returns all direct child files of a directory with stars for an user; for no stars use userID '0'
-func (rep *FileInfoRepository) GetDirectoryContentByID(directoryID, userID int64) (content []*models.FileInfo, err error) {
+func (rep *FileInfoRepository) GetDirectoryContentByID(userID, directoryID int64) (content []*models.FileInfo, err error) {
 	if userID > 0 {
 		err = databaseConnection.Raw(getDirectoryContent, directoryID, userID).Order(fileListOrder).Scan(&content).Error
 	} else {

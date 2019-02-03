@@ -104,7 +104,7 @@ func (mgr *FileManager) scanDirForChanges(user *models.User, path, name string) 
 	if err != nil {
 		return
 	}
-	dbPathInfo, dbFiles, err := mgr.fileInfoRep.GetDirectoryContentByPath(user.ID, path, name)
+	dbPathInfo, dbFiles, err := mgr.getDirectoryContentByPath(user.ID, path, name)
 	if err != nil {
 		return
 	}
@@ -182,6 +182,19 @@ func (mgr *FileManager) scanDirForChanges(user *models.User, path, name string) 
 			log.Error(0, "Error updating file in db: %v", err)
 			return
 		}
+	}
+
+	return
+}
+
+func (mgr *FileManager) getDirectoryContentByPath(userID int64, path, name string) (dirInfo *models.FileInfo, dirContent []*models.FileInfo, err error) {
+	dirInfo, err = mgr.fileInfoRep.GetByPath(userID, path, name)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if dirInfo.IsDir {
+		dirContent, _ = mgr.fileInfoRep.GetDirectoryContentByID(userID, dirInfo.ID)
 	}
 
 	return
@@ -380,7 +393,7 @@ func (mgr *FileManager) GetPathInfo(user *models.User, path string) (*models.Pat
 
 	var content []*models.FileInfo
 	if dirInfo.IsDir {
-		content, err = mgr.fileInfoRep.GetDirectoryContentByID(dirInfo.ID)
+		content, err = mgr.fileInfoRep.GetDirectoryContentByID(user.ID, dirInfo.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +409,7 @@ func (mgr *FileManager) GetPathInfo(user *models.User, path string) (*models.Pat
 }
 
 func (mgr *FileManager) GetStarredFileInfosForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
-	starredFilesInfo, err = mgr.fileInfoRep.GetStarredFileInfosForUser(user.ID)
+	starredFilesInfo, err = mgr.fileInfoRep.GetStarredFileInfosByUser(user.ID)
 	if err != nil {
 		return
 	}
@@ -404,7 +417,7 @@ func (mgr *FileManager) GetStarredFileInfosForUser(user *models.User) (starredFi
 }
 
 func (mgr *FileManager) ListSharedFilesForUser(user *models.User) (sharedFilesInfo []*models.FileInfo, err error) {
-	sharedFilesInfo, err = mgr.fileInfoRep.GetSharedFileInfosForUser(user.ID)
+	sharedFilesInfo, err = mgr.fileInfoRep.GetSharedFileInfosByUser(user.ID)
 	if err != nil {
 		return
 	}
@@ -640,7 +653,7 @@ func (mgr *FileManager) moveFileInDB(user *models.User, fileInfo *models.FileInf
 
 	if fileInfo.IsDir {
 		var folderContent []*models.FileInfo
-		folderContent, err = mgr.fileInfoRep.GetDirectoryContentByID(fileInfo.ID)
+		folderContent, err = mgr.fileInfoRep.GetDirectoryContentByID(user.ID, fileInfo.ID)
 		for _, contentInfo := range folderContent {
 			err = mgr.moveFileInDB(user, contentInfo, fileInfo)
 			if err != nil {
@@ -672,7 +685,7 @@ func (mgr *FileManager) copyFile(user *models.User, fileInfo *models.FileInfo, n
 			}
 
 			var folderContent []*models.FileInfo
-			folderContent, err = mgr.fileInfoRep.GetDirectoryContentByID(fileInfo.ID)
+			folderContent, err = mgr.fileInfoRep.GetDirectoryContentByID(user.ID, fileInfo.ID)
 			for _, contentInfo := range folderContent {
 				err = mgr.copyFile(user, contentInfo, "", newFolderInfo)
 				if err != nil {
@@ -746,21 +759,14 @@ func (mgr *FileManager) deleteFileInDB(fileInfo *models.FileInfo) (err error) {
 	err = mgr.fileInfoRep.Delete(fileInfo.ID)
 
 	if fileInfo.IsDir {
-		var folderContent []*models.FileInfo
-		folderContent, err = mgr.fileInfoRep.GetDirectoryContentByID(fileInfo.ID)
-		for _, contentInfo := range folderContent {
-			err = mgr.deleteFileInDB(contentInfo)
-			if err != nil {
-				return
-			}
-		}
+		// TODO: Delete in db directly with where parent == ?
 	}
 	return
 }
 
 func (mgr *FileManager) SearchForFiles(user *models.User, path string) (results []*models.FileInfo, err error) {
 	filePath, fileName := mgr.splitPath(path)
-	return mgr.fileInfoRep.SearchForFileInfo(user.ID, filePath, fileName)
+	return mgr.fileInfoRep.Search(user.ID, filePath, fileName)
 }
 
 func (mgr *FileManager) DeleteUserFiles(user *models.User) (err error) {
