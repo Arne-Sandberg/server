@@ -215,8 +215,38 @@ func TestFileInfoRepository(t *testing.T) {
 		if len(searchResults) != 2 {
 			t.Fatalf("Length of search result unequal to two: %d", len(searchResults))
 		}
-		// TODO: Starred and single results
+		if !searchResults[0].Starred {
+			t.Error("First result of search not starred")
+		}
+		searchResults[0].Starred = false
+		if !reflect.DeepEqual(searchResults[0], fileOrig0) {
+			t.Error("First search result and fileOrig not deeply equal")
+		}
+		if !reflect.DeepEqual(searchResults[1], fileShared1) {
+			t.Error("Second search result and fileShared1 not deeply equal")
+		}
 	})
 
-	// TODO: Test Delete, Update, GetShared, GetSharedWith, Search, DeleteUser
+	t.Run("delete file", func(t *testing.T) {
+		err := rep.Delete(fileShared2.ID)
+		if err != nil {
+			t.Errorf("Failed to delete fileShared2: %v", err)
+		}
+	})
+
+	t.Run("deleted file removed", func(t *testing.T) {
+		_, err := rep.GetByID(fileShared2.ID)
+		if err == nil || !IsRecordNotFoundError(err) {
+			t.Errorf("Reading back deleted file info succeeded or error is not 'record not found': %v", err)
+		}
+		count, err := rep.Count()
+		if err != nil {
+			t.Errorf("Failed to get count after deleting file: %v", err)
+		}
+		if count != 4 {
+			t.Errorf("Count after deleting file unequal to 4: %d", count)
+		}
+	})
+
+	// TODO: Test Update, GetShared, GetSharedWith, DeleteUser
 }
