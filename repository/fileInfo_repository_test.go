@@ -227,6 +227,8 @@ func TestFileInfoRepository(t *testing.T) {
 		}
 	})
 
+	// TODO: Test GetShared, GetSharedWith
+
 	t.Run("delete file", func(t *testing.T) {
 		err := rep.Delete(fileShared2.ID)
 		if err != nil {
@@ -248,5 +250,33 @@ func TestFileInfoRepository(t *testing.T) {
 		}
 	})
 
-	// TODO: Test Update, GetShared, GetSharedWith, DeleteUser
+	t.Run("update file", func(t *testing.T) {
+		fileShared1.Name = "new name"
+		err := rep.Update(fileShared1)
+		if err != nil {
+			t.Errorf("Failed to update fileShared1: %v", err)
+		}
+		readBackFileInfo, err := rep.GetByPath(fileShared1.OwnerID, fileShared1.Path, fileShared1.Name)
+		if err != nil {
+			t.Errorf("Failed to read back updated fileShared1: %v", err)
+		}
+		readBackFileInfo.Starred = false
+		if !reflect.DeepEqual(readBackFileInfo, fileShared1) {
+			t.Error("Read back updated fileShared1 and fileShared1 not deeply equal")
+		}
+	})
+
+	t.Run("delete user file infos", func(t *testing.T) {
+		err := rep.DeleteUserFileInfos(2)
+		if err != nil {
+			t.Errorf("Failed to delete files for user 2: %v", err)
+		}
+		count, err := rep.Count()
+		if err != nil {
+			t.Errorf("Failed to get count after delete user file info: %v", err)
+		}
+		if count != 2 {
+			t.Errorf("Count after deleting user file infos for user 2 is unqual to two: %d", count)
+		}
+	})
 }
