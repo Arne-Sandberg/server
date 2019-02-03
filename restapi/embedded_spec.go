@@ -964,7 +964,8 @@ func init() {
           "format": "int64"
         },
         "starred": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-go-custom-tag": "gorm:\"-\""
         }
       }
     },
@@ -2252,7 +2253,8 @@ func init() {
           "format": "int64"
         },
         "starred": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-go-custom-tag": "gorm:\"-\""
         }
       }
     },

@@ -28,7 +28,7 @@ func TestShareEntryRepository(t *testing.T) {
 
 		rep, err = CreateShareEntryRepository()
 		if err != nil {
-			t.Fatalf("Failed to create user repository: %v", err)
+			t.Fatalf("Failed to create share entry repository: %v", err)
 		}
 	})
 	if !success {
@@ -66,7 +66,7 @@ func TestShareEntryRepository(t *testing.T) {
 		}
 	})
 	if !success {
-		t.Skip("Further test skipped du to no created original files")
+		t.Skip("Further test skipped due to no created original files")
 	}
 
 	shareEntry0 := &models.ShareEntry{FileID: fileOrig0.ID}
