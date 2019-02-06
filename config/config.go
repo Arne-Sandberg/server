@@ -15,16 +15,13 @@ func setDefaults() {
 	// Upload limit is given in GB
 	viper.SetDefault("http.upload_limit", 10)
 
-	viper.SetDefault("grpc.web.port", 9090)
-	viper.SetDefault("grpc.nat.port", 9091)
-	viper.SetDefault("grpc.nat.start", false)
-
 	viper.SetDefault("auth.session_cookie", "fc-session")
 	// Session expiry is given in hours
 	viper.SetDefault("auth.session_expiry", 24)
 
 	viper.SetDefault("fs.base_directory", "data")
 	viper.SetDefault("fs.avatar_directory", "avatars")
+	viper.SetDefault("fs.tmp_clear_interval", 6)
 	viper.SetDefault("fs.tmp_data_expiry", 24)
 
 	viper.SetDefault("db.type", "sqlite3")

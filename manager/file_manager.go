@@ -19,8 +19,6 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
-const tmpName = ".tmp"
-
 var (
 	ErrFileNotFound     = errors.New("vfs: File not found")
 	ErrSharedIntoShared = errors.New("vfs: Moving or copying shared file into shared folder")
@@ -33,11 +31,12 @@ type FileManager struct {
 	fileSystemRep *repository.FileSystemRepository
 	fileInfoRep   *repository.FileInfoRepository
 	shareEntryRep *repository.ShareEntryRepository
+	tmpName       string
 }
 
 var fileManager *FileManager
 
-func CreateFileManager(fileSystemRep *repository.FileSystemRepository, fileInfoRep *repository.FileInfoRepository, shareEntryRep *repository.ShareEntryRepository) (*FileManager, error) {
+func CreateFileManager(fileSystemRep *repository.FileSystemRepository, fileInfoRep *repository.FileInfoRepository, shareEntryRep *repository.ShareEntryRepository, tmpName string) (*FileManager, error) {
 	if fileManager != nil {
 		return fileManager, nil
 	}
@@ -46,6 +45,7 @@ func CreateFileManager(fileSystemRep *repository.FileSystemRepository, fileInfoR
 		fileSystemRep: fileSystemRep,
 		fileInfoRep:   fileInfoRep,
 		shareEntryRep: shareEntryRep,
+		tmpName:       tmpName,
 	}
 	err := fileManager.ScanFSForChanges()
 
@@ -232,7 +232,7 @@ func (mgr *FileManager) CreateUserFolders(userID int64) error {
 	userPath := mgr.getUserPathWithID(userID)
 
 	//Create user dir if not existing and add it to the db
-	created, err := mgr.fileSystemRep.CreateDirIfNotExist(userPath)
+	created, err := mgr.fileSystemRep.CreateDirectory(userPath)
 	if err != nil {
 		return fmt.Errorf("failed to create folder for user id %v: %v", userID, err)
 	}
@@ -251,15 +251,15 @@ func (mgr *FileManager) CreateUserFolders(userID int64) error {
 	}
 
 	//Create tmp dir for if not existing and add it to the db
-	created, err = mgr.fileSystemRep.CreateDirIfNotExist(filepath.Join(userPath, tmpName))
+	created, err = mgr.fileSystemRep.CreateDirectory(filepath.Join(userPath, mgr.tmpName))
 	if err != nil {
 		return fmt.Errorf("failed creating tmp folder for user id %v: %v", userID, err)
 	}
-	_, err = mgr.fileInfoRep.GetByPath(userID, "/", tmpName)
+	_, err = mgr.fileInfoRep.GetByPath(userID, "/", mgr.tmpName)
 	if created || repository.IsRecordNotFoundError(err) {
 		err = mgr.fileInfoRep.Create(&models.FileInfo{
 			Path:        "/",
-			Name:        tmpName,
+			Name:        mgr.tmpName,
 			IsDir:       true,
 			OwnerID:     userID,
 			LastChanged: utils.GetTimestampNow(),
@@ -283,7 +283,9 @@ func (mgr *FileManager) NewFileHandleForUser(user *models.User, path string) (*o
 		return nil, err
 	}
 
-	return mgr.fileSystemRep.NewHandle(filepath.Join(mgr.getUserPathWithID(folderInfo.OwnerID), folderInfo.Path, folderInfo.Name, fileName))
+	handlePath := filepath.Join(mgr.getUserPathWithID(folderInfo.OwnerID), folderInfo.Path, folderInfo.Name, fileName)
+
+	return mgr.fileSystemRep.CreateHandle(handlePath)
 }
 
 func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error) {
@@ -362,7 +364,7 @@ func (mgr *FileManager) CreateDirectoryForUser(user *models.User, path string) (
 		return
 	}
 
-	err = mgr.fileSystemRep.CreateDirectory(filepath.Join(userPath, path))
+	_, err = mgr.fileSystemRep.CreateDirectory(filepath.Join(userPath, path))
 	if err != nil {
 		err = fmt.Errorf("error creating directory for user %v: %v", user.ID, err)
 		log.Error(0, "%v", err)
@@ -528,7 +530,7 @@ func (mgr *FileManager) ZipFiles(user *models.User, paths []string) (zipPath str
 		_, name := mgr.splitPath(paths[0])
 		outputName = name + ".zip"
 	}
-	zipPath = filepath.Join(tmpName, outputName)
+	zipPath = filepath.Join(mgr.tmpName, outputName)
 	outputPath := filepath.Join(mgr.getUserPath(user), zipPath)
 
 	err = mgr.fileSystemRep.Zip(paths, outputPath)
@@ -915,10 +917,6 @@ func (mgr *FileManager) GetAvatarForUser(userID int64) (string, error) {
 		return "", err
 	}
 	return p, nil
-}
-
-func (mgr *FileManager) NewAvatarFileHandleForuser(userID int64) (*os.File, error) {
-	return mgr.fileSystemRep.NewHandle(filepath.Join(config.GetString("fs.base_directory"), config.GetString("fs.avatar_directory"), string(userID)))
 }
 
 func (mgr *FileManager) GetShareEntryByID(shareID int64, user *models.User) (*models.ShareEntry, error) {

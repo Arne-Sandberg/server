@@ -26,6 +26,8 @@ import (
 	"github.com/freecloudio/server/repository"
 )
 
+const tmpName = ".tmp"
+
 //go:generate swagger generate server --name Freecloud --spec ./api/freecloud.yml --principal models.Principal
 
 func configureFlags(api *operations.FreecloudAPI) {
@@ -184,13 +186,13 @@ func initializeServer() {
 	if err != nil {
 		log.Fatal(0, "ShareEntryRepository setup failed, bailing out!: %v", err)
 	}
-	fileSystemRep, err := repository.CreateFileSystemRepository(config.GetString("fs.base_directory"), config.GetInt("fs.tmp_data_expiry"))
+	fileSystemRep, err := repository.CreateFileSystemRepository(config.GetString("fs.base_directory"), tmpName, config.GetInt("fs.tmp_clear_interval"), config.GetInt("fs.tmp_data_expiry"))
 	if err != nil {
 		log.Fatal(0, "FileSystemRepository setup failed, bailing out!: %v", err)
 	}
 
 	manager.CreateAuthManager(sessionRep, userRep)
-	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep)
+	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep, tmpName)
 	manager.CreateStatsManager("0.0.1") // TODO: Better place to save version
 }
 

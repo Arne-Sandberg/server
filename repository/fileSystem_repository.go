@@ -10,27 +10,28 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/freecloudio/server/config"
 	"github.com/freecloudio/server/models"
 	"github.com/freecloudio/server/utils"
 	"github.com/mholt/archiver"
 	log "gopkg.in/clog.v1"
 )
 
-const tmpName = ".tmp"
-
 var (
 	// ErrForbiddenPathName indicates a path having weird characters that nobody should use, also these characters are forbidden on Windows
 	ErrForbiddenPathName = errors.New("paths cannot contain the following characters: <>:\"\\|?*")
-	ErrFileNotExist      = errors.New("file does not exist")
+	// ErrFileNotExist is the error that a file does not exist
+	ErrFileNotExist = errors.New("file does not exist")
 )
 
+// FileSystemRepository represents the local filesystem for storing files
 type FileSystemRepository struct {
-	base string
-	done chan struct{}
+	base    string
+	tmpName string
+	done    chan struct{}
 }
 
-func CreateFileSystemRepository(baseDir string, tmpDataExpiry int) (*FileSystemRepository, error) {
+// CreateFileSystemRepository creates a new fileSystemRepository at a given relative or abolute path with a interval for temp cleanup in hours and a tmp data expiry in hours
+func CreateFileSystemRepository(baseDir, tmpName string, tmpClearInterval, tmpDataExpiry int) (*FileSystemRepository, error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -60,34 +61,40 @@ func CreateFileSystemRepository(baseDir string, tmpDataExpiry int) (*FileSystemR
 		done: make(chan struct{}),
 	}
 
-	go fileSystemRepository.cleanupTempFolderRoutine(time.Hour * time.Duration(tmpDataExpiry))
+	go fileSystemRepository.cleanupTempFolderRoutine(tmpClearInterval, tmpDataExpiry)
 
 	return fileSystemRepository, nil
 }
 
-func (dfs *FileSystemRepository) Close() {
-	dfs.done <- struct{}{}
+// Close closes the repository and with that ends the go routine for tmp cleanup
+func (rep *FileSystemRepository) Close() error {
+	rep.done <- struct{}{}
+	return nil
 }
 
-func (dfs *FileSystemRepository) cleanupTempFolderRoutine(interval time.Duration) {
-	log.Trace("Starting temp folder cleaner, running now and every %v", interval)
-	dfs.cleanupTempFolder()
+// cleanupTempFolderRoutine is the actual routine that periodically calls cleanupTempFolder
+func (rep *FileSystemRepository) cleanupTempFolderRoutine(interval, expiry int) {
+	log.Trace("Starting temp folder cleaner, running now and every %v hours", interval)
+	rep.cleanupTempFolder(expiry)
 
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(time.Hour * time.Duration(interval))
 	for {
 		select {
-		case <-dfs.done:
+		case <-rep.done:
 			return
 		case <-ticker.C:
-			dfs.cleanupTempFolder()
+			rep.cleanupTempFolder(expiry)
 		}
 	}
 }
 
-func (dfs *FileSystemRepository) cleanupTempFolder() {
+// cleanupTempFolder deletes the content of all tmp folders
+func (rep *FileSystemRepository) cleanupTempFolder(expiry int) {
 	log.Trace("Cleaning temp folder")
 
-	infoList, err := ioutil.ReadDir(dfs.base)
+	now := time.Now()
+
+	infoList, err := ioutil.ReadDir(rep.base)
 	if err != nil {
 		log.Warn("Cleaning temp folder failed: %v", err)
 	}
@@ -97,14 +104,15 @@ func (dfs *FileSystemRepository) cleanupTempFolder() {
 			continue
 		}
 
-		tmpFolderPath := filepath.Join(dfs.base, info.Name(), tmpName)
+		tmpFolderPath := filepath.Join(rep.base, info.Name(), rep.tmpName)
 		tmpInfoList, err := ioutil.ReadDir(tmpFolderPath)
 		if err != nil {
 			log.Warn("Error reading temp folder in %v during temp cleanup: %v", tmpFolderPath, err)
 		}
 
 		for _, tmpInfo := range tmpInfoList {
-			if time.Now().After(tmpInfo.ModTime().Add(time.Hour * time.Duration(config.GetInt("fs.tmp_data_expiry")))) {
+			expires := tmpInfo.ModTime().Add(time.Hour * time.Duration(expiry))
+			if now.After(expires) {
 				err = os.RemoveAll(filepath.Join(tmpFolderPath, tmpInfo.Name()))
 				if err != nil {
 					log.Warn("Error deleting file %v in temp folder %v during temp cleanup: %v", tmpInfo.Name(), tmpFolderPath, err)
@@ -115,13 +123,13 @@ func (dfs *FileSystemRepository) cleanupTempFolder() {
 	}
 }
 
-// NewHandle opens an *os.File handle for writing to.
+// CreateHandle opens an *os.File handle for writing to.
 // Before opening the file, it check the path for sanity.
-func (dfs *FileSystemRepository) NewHandle(path string) (*os.File, error) {
+func (rep *FileSystemRepository) CreateHandle(path string) (*os.File, error) {
 	if !utils.ValidatePath(path) {
 		return nil, ErrForbiddenPathName
 	}
-	f, err := os.Create(filepath.Join(dfs.base, path))
+	f, err := os.Create(filepath.Join(rep.base, path))
 	if err != nil {
 		log.Error(0, "Could not create file %s: %v", path, err)
 		return nil, err
@@ -129,26 +137,19 @@ func (dfs *FileSystemRepository) NewHandle(path string) (*os.File, error) {
 	return f, nil
 }
 
-// CreateDirectory creates a new directory at "path".
-// Before doing so, it check the path for sanity.
-func (dfs *FileSystemRepository) CreateDirectory(path string) error {
-	log.Trace("Path for new directory is '%s'", path)
+// CreateDirectory checks whether directory exists and creates it otherwise
+func (rep *FileSystemRepository) CreateDirectory(path string) (created bool, err error) {
 	if !utils.ValidatePath(path) {
-		return ErrForbiddenPathName
+		return false, ErrForbiddenPathName
 	}
-	err := os.MkdirAll(filepath.Join(dfs.base, path), 0755)
-	if err != nil {
-		log.Error(0, "Could not create directory %s: %v", path, err)
-	}
-	return err
-}
 
-// CreateDirIfNotExist checks whether directory exists and creates it otherwise
-func (dfs *FileSystemRepository) CreateDirIfNotExist(path string) (created bool, err error) {
-	_, fileErr := os.Stat(filepath.Join(dfs.base, path))
+	_, fileErr := os.Stat(filepath.Join(rep.base, path))
 	if os.IsNotExist(fileErr) {
 		log.Info("Directory does not exist, creating it now")
-		err = dfs.CreateDirectory(path)
+		err := os.MkdirAll(filepath.Join(rep.base, path), 0755)
+		if err != nil {
+			log.Error(0, "Could not create directory %s: %v", path, err)
+		}
 		return true, err
 	} else if fileErr != nil {
 		err = fileErr
@@ -160,12 +161,12 @@ func (dfs *FileSystemRepository) CreateDirIfNotExist(path string) (created bool,
 
 // GetDirectoryContent returns a list of all files and folders in the given "path" (relative to the user's directory).
 // Before doing so, it checks the path for sanity.
-func (dfs *FileSystemRepository) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
+func (rep *FileSystemRepository) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
 	if !utils.ValidatePath(path) {
 		return nil, ErrForbiddenPathName
 	}
 
-	info, err := ioutil.ReadDir(filepath.Join(dfs.base, userPath, path))
+	info, err := ioutil.ReadDir(filepath.Join(rep.base, userPath, path))
 	if err != nil {
 		log.Error(0, "Could not list files in %s: %v", path, err)
 		return nil, err
@@ -178,13 +179,13 @@ func (dfs *FileSystemRepository) GetDirectoryContent(userPath, path string) ([]*
 
 	fileInfos := make([]*models.FileInfo, len(info), len(info))
 	for i, f := range info {
-		fileInfos[i] = dfs.generateInfo(f, path)
+		fileInfos[i] = rep.generateInfo(f, path)
 	}
 	return fileInfos, nil
 }
 
-func (dfs *FileSystemRepository) GetInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
-	osFileInfo, err := os.Stat(filepath.Join(dfs.base, userPath, path, name))
+func (rep *FileSystemRepository) GetInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
+	osFileInfo, err := os.Stat(filepath.Join(rep.base, userPath, path, name))
 	if os.IsNotExist(err) {
 		err = ErrFileNotExist
 		return
@@ -193,11 +194,11 @@ func (dfs *FileSystemRepository) GetInfo(userPath, path, name string) (fileInfo 
 		return
 	}
 
-	fileInfo = dfs.generateInfo(osFileInfo, path)
+	fileInfo = rep.generateInfo(osFileInfo, path)
 	return
 }
 
-func (dfs *FileSystemRepository) generateInfo(osFileInfo os.FileInfo, path string) *models.FileInfo {
+func (rep *FileSystemRepository) generateInfo(osFileInfo os.FileInfo, path string) *models.FileInfo {
 	return &models.FileInfo{
 		Path:        utils.ConvertToSlash(path, true),
 		Name:        osFileInfo.Name(),
@@ -208,17 +209,17 @@ func (dfs *FileSystemRepository) generateInfo(osFileInfo os.FileInfo, path strin
 	}
 }
 
-func (dfs *FileSystemRepository) GetDownloadPath(path string) string {
-	return filepath.Join(dfs.base, path)
+func (rep *FileSystemRepository) GetDownloadPath(path string) string {
+	return filepath.Join(rep.base, path)
 }
 
 // Zip zips all given absolute paths to a zip archive with the given path
-func (dfs *FileSystemRepository) Zip(paths []string, outputPath string) (err error) {
+func (rep *FileSystemRepository) Zip(paths []string, outputPath string) (err error) {
 	for it := 0; it < len(paths); it++ {
-		paths[it] = filepath.Join(dfs.base, paths[it])
+		paths[it] = filepath.Join(rep.base, paths[it])
 	}
 
-	fullZipPath := filepath.Join(dfs.base, outputPath)
+	fullZipPath := filepath.Join(rep.base, outputPath)
 	if err != nil {
 		return
 	}
@@ -231,7 +232,7 @@ func (dfs *FileSystemRepository) Zip(paths []string, outputPath string) (err err
 	return
 }
 
-func (dfs *FileSystemRepository) Move(oldPath, newPath string) (err error) {
+func (rep *FileSystemRepository) Move(oldPath, newPath string) (err error) {
 	if !utils.ValidatePath(oldPath) {
 		err = ErrForbiddenPathName
 		return
@@ -241,7 +242,7 @@ func (dfs *FileSystemRepository) Move(oldPath, newPath string) (err error) {
 		return
 	}
 
-	err = os.Rename(filepath.Join(dfs.base, oldPath), filepath.Join(dfs.base, newPath))
+	err = os.Rename(filepath.Join(rep.base, oldPath), filepath.Join(rep.base, newPath))
 	if err != nil {
 		log.Error(0, "Moving %v to %v failed", oldPath, newPath)
 		return
@@ -250,13 +251,13 @@ func (dfs *FileSystemRepository) Move(oldPath, newPath string) (err error) {
 	return
 }
 
-func (dfs *FileSystemRepository) Delete(path string) (err error) {
+func (rep *FileSystemRepository) Delete(path string) (err error) {
 	if !utils.ValidatePath(path) {
 		err = ErrForbiddenPathName
 		return
 	}
 
-	err = os.RemoveAll(filepath.Join(dfs.base, path))
+	err = os.RemoveAll(filepath.Join(rep.base, path))
 	if err != nil {
 		log.Error(0, "Deleting %v failed", path)
 		return
@@ -264,9 +265,9 @@ func (dfs *FileSystemRepository) Delete(path string) (err error) {
 	return
 }
 
-func (dfs *FileSystemRepository) Copy(oldPath, newPath string) (err error) {
-	oldFullPath := filepath.Join(dfs.base, oldPath)
-	newFullPath := filepath.Join(dfs.base, newPath)
+func (rep *FileSystemRepository) Copy(oldPath, newPath string) (err error) {
+	oldFullPath := filepath.Join(rep.base, oldPath)
+	newFullPath := filepath.Join(rep.base, newPath)
 
 	in, err := os.Open(oldFullPath)
 	if err != nil {
