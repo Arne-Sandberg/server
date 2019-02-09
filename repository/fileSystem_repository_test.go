@@ -78,7 +78,7 @@ func TestFileSystemRepository(t *testing.T) {
 	}
 
 	t.Run("get info", func(t *testing.T) {
-		fileInfo, err := rep.GetInfo("1", ".tmp", "testfile.txt")
+		fileInfo, err := rep.GetInfo("1", ".tmp/testfile.txt")
 		if err != nil {
 			t.Fatalf("Failed to get fileInfo for '1/.tmp/testfile.txt': %v", err)
 		}
@@ -90,7 +90,7 @@ func TestFileSystemRepository(t *testing.T) {
 		}
 		fileInfo.LastChanged = 0
 		if !reflect.DeepEqual(fileInfo, expFileInfo) {
-			t.Error("Read fileInfo and expected fileInfo not deeply equal")
+			t.Errorf("Read fileInfo and expected fileInfo not deeply equal: %v", fileInfo)
 		}
 	})
 
@@ -128,11 +128,11 @@ func TestFileSystemRepository(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to move file '2/anotherFile.txt' to '1/movedFile.txt': %v", err)
 		}
-		_, err = rep.GetInfo("2", "/", "anotherFile.txt")
+		_, err = rep.GetInfo("2", "/anotherFile.txt")
 		if err == nil || err != ErrFileNotExist {
 			t.Errorf("Getting fileInfo of moved file was successfull or error unequal to 'file not found': %v", err)
 		}
-		fileInfo, err := rep.GetInfo("1", "/", "movedFile.txt")
+		fileInfo, err := rep.GetInfo("1", "/movedFile.txt")
 		if err != nil {
 			t.Fatalf("Failed to get fileInfo of moved file: %v", err)
 		}
@@ -153,11 +153,11 @@ func TestFileSystemRepository(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to copy file '1/.tmp/testfile.txt' to '1/copiedFile.txt': %v", err)
 		}
-		_, err = rep.GetInfo("1", "/.tmp", "testfile.txt")
+		_, err = rep.GetInfo("1", "/.tmp/testfile.txt")
 		if err != nil {
 			t.Errorf("Failed getting fileInfo for orig file after copying: %v", err)
 		}
-		fileInfo, err := rep.GetInfo("1", "/", "copiedFile.txt")
+		fileInfo, err := rep.GetInfo("1", "/copiedFile.txt")
 		if err != nil {
 			t.Fatalf("Failed to get fileInfo of copied file: %v", err)
 		}
@@ -178,7 +178,7 @@ func TestFileSystemRepository(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to delete file '1/copiedFile.txt': %v", err)
 		}
-		_, err = rep.GetInfo("1", "/", "copiedFile.txt")
+		_, err = rep.GetInfo("1", "/copiedFile.txt")
 		if err == nil || err != ErrFileNotExist {
 			t.Errorf("Getting fileInfo for deleted file succeeded or error is unequal to 'file does not exist': %v", err)
 		}
@@ -189,11 +189,11 @@ func TestFileSystemRepository(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to cleanup tmp folder: %v", err)
 		}
-		_, err = rep.GetInfo("1", ".tmp", "testfile.txt")
+		_, err = rep.GetInfo("1", ".tmp/testfile.txt")
 		if err == nil || err != ErrFileNotExist {
 			t.Errorf("Reading tmp file after tmp cleanup successfull or error unequal to 'file does not exist': %v", err)
 		}
-		_, err = rep.GetInfo("1", "/", "movedFile.txt")
+		_, err = rep.GetInfo("1", "/movedFile.txt")
 		if err != nil {
 			t.Errorf("Failed to read normal file after tmp cleanup: %v", err)
 		}
@@ -204,7 +204,7 @@ func TestFileSystemRepository(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create zip out of '1/.tmp/' and '2': %v", err)
 		}
-		fileInfo, err := rep.GetInfo("2", "/", "test.zip")
+		fileInfo, err := rep.GetInfo("2", "/test.zip")
 		if err != nil {
 			t.Fatalf("Failed to get fileInfo of created zip: %v", err)
 		}

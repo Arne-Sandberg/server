@@ -209,26 +209,6 @@ func (mgr *FileManager) getUserPathWithID(userID int64) string {
 	return "/" + filepath.Join(strconv.Itoa(int(userID)))
 }
 
-// splitPath splits the given full path into the path and the name of the file/dir
-func (mgr *FileManager) splitPath(origPath string) (path, name string) {
-	origPath = utils.ConvertToSlash(origPath, false)
-	if origPath == "/." || origPath == "/" || origPath == "." || origPath == "" {
-		return "/", ""
-	}
-
-	if strings.HasSuffix(origPath, "/") {
-		origPath = origPath[:len(origPath)-1]
-	}
-
-	path = utils.ConvertToSlash(filepath.Dir(origPath), true)
-	if strings.HasSuffix(path, "./") {
-		path = path[:len(path)-2]
-	}
-
-	name = filepath.Base(origPath)
-	return
-}
-
 func (mgr *FileManager) CreateUserFolders(userID int64) error {
 	userPath := mgr.getUserPathWithID(userID)
 
@@ -278,7 +258,7 @@ func (mgr *FileManager) NewFileHandleForUser(user *models.User, path string) (*o
 		return nil, ErrForbiddenPathName
 	}
 
-	filePath, fileName := mgr.splitPath(path)
+	filePath, fileName := utils.SplitPath(path)
 	folderInfo, err := mgr.GetFileInfo(user, filePath, false)
 	if err != nil {
 		return nil, err
@@ -295,7 +275,7 @@ func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error
 		return
 	}
 
-	filePath, fileName := mgr.splitPath(path)
+	filePath, fileName := utils.SplitPath(path)
 	folderInfo, err := mgr.GetFileInfo(user, filePath, false)
 	if err != nil {
 		return
@@ -355,7 +335,7 @@ func (mgr *FileManager) CreateDirectoryForUser(user *models.User, path string) (
 		return
 	}
 
-	folderPath, folderName := mgr.splitPath(path)
+	folderPath, folderName := utils.SplitPath(path)
 	userPath := mgr.getUserPath(user)
 
 	parFolderInfo, err := mgr.GetFileInfo(user, folderPath, false)
@@ -431,7 +411,7 @@ func (mgr *FileManager) ListSharedFilesForUser(user *models.User) (sharedFilesIn
 // Set adaptSharePath to true if the returned path of the fileInfo should be from the root of the requesting user
 // Set adaptSharePath to false if it should stay the orig path of the sharing user
 func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string, adaptSharedPath bool) (*models.FileInfo, error) {
-	filePath, fileName := mgr.splitPath(requestedPath)
+	filePath, fileName := utils.SplitPath(requestedPath)
 	fileInfo, err := mgr.fileInfoRep.GetByPath(user.ID, filePath, fileName)
 
 	if err == nil && fileInfo.ShareID <= 0 { // File exists in db for user and is owned by him: Directly return info
@@ -460,7 +440,7 @@ func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string, ada
 		parentName := ""
 		for {
 			removedPath = filepath.Join(removedPath, parentName)
-			parentPath, parentName = mgr.splitPath(parentPath)
+			parentPath, parentName = utils.SplitPath(parentPath)
 
 			fileInfo, err = mgr.fileInfoRep.GetByPath(user.ID, parentPath, parentName)
 
@@ -509,7 +489,7 @@ func (mgr *FileManager) GetDownloadPath(user *models.User, path string) (downloa
 
 	downloadURL = mgr.fileSystemRep.GetDownloadPath(filepath.Join(mgr.getUserPathWithID(fileInfo.OwnerID), fileInfo.Path, fileInfo.Name))
 
-	_, fileName := mgr.splitPath(path)
+	_, fileName := utils.SplitPath(path)
 	filename = fileName
 	return
 }
@@ -528,7 +508,7 @@ func (mgr *FileManager) ZipFiles(user *models.User, paths []string) (zipPath str
 
 	outputName := time.Now().Format("2006.01.02_15:04:05.zip")
 	if len(paths) == 1 {
-		_, name := mgr.splitPath(paths[0])
+		_, name := utils.SplitPath(paths[0])
 		outputName = name + ".zip"
 	}
 	zipPath = filepath.Join(mgr.tmpName, outputName)
@@ -768,7 +748,7 @@ func (mgr *FileManager) deleteFileInDB(fileInfo *models.FileInfo) (err error) {
 }
 
 func (mgr *FileManager) SearchForFiles(user *models.User, path string) (results []*models.FileInfo, err error) {
-	filePath, fileName := mgr.splitPath(path)
+	filePath, fileName := utils.SplitPath(path)
 	return mgr.fileInfoRep.Search(user.ID, filePath, fileName)
 }
 
@@ -820,7 +800,7 @@ func (mgr *FileManager) ShareFiles(fromUser *models.User, toUserIDs []int64, pat
 }
 
 func (mgr *FileManager) ShareFile(fromUser, toUser *models.User, path string) (err error) {
-	filePath, fileName := mgr.splitPath(path)
+	filePath, fileName := utils.SplitPath(path)
 	// Get fileInfo without resolving shared files
 	fileInfo, err := mgr.fileInfoRep.GetByPath(fromUser.ID, filePath, fileName)
 	if err != nil {

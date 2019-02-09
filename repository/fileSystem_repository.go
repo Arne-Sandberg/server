@@ -202,7 +202,8 @@ func (rep *FileSystemRepository) GetInfo(userPath, path string) (fileInfo *model
 		return
 	}
 
-	fileInfo = rep.generateInfo(osFileInfo, path)
+	folderPath, _ := utils.SplitPath(path)
+	fileInfo = rep.generateInfo(osFileInfo, folderPath)
 	return
 }
 

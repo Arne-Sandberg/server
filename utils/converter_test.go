@@ -49,3 +49,28 @@ func TestConvertToCleanEmail(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitPath(t *testing.T) {
+	var l = map[string][2]string{
+		"/hello/dear/file.txt": {"/hello/dear/", "file.txt"},
+		"/file2.txt":           {"/", "file2.txt"},
+		"/":                    {"/", ""},
+		"\\":                   {"/", ""},
+		".":                    {"/", ""},
+		"\\testFolder\\":       {"/", "testFolder"},
+		"/testFolder":          {"/", "testFolder"},
+		"/.tmp":                {"/", ".tmp"},
+		"testFolder/":          {"/", "testFolder"},
+		".tmp/":                {"/", ".tmp"},
+		"/testFolder/":         {"/", "testFolder"},
+		"/.tmp/":               {"/", ".tmp"},
+		"testFolder":           {"/", "testFolder"},
+		".tmp":                 {"/", ".tmp"},
+	}
+
+	for input, expOutput := range l {
+		if path, name := SplitPath(input); path != expOutput[0] || name != expOutput[1] {
+			t.Errorf("Expected result %v for input %s but got: %v and %v", expOutput, input, path, name)
+		}
+	}
+}

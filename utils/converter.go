@@ -29,3 +29,23 @@ func ConvertToCleanEmail(email string) string {
 	email = strings.ToLower(email)
 	return email
 }
+
+// SplitPath splits the given full path into the path and the name of the file/dir
+func SplitPath(origPath string) (path, name string) {
+	origPath = ConvertToSlash(origPath, false)
+	if origPath == "/." || origPath == "/" || origPath == "." || origPath == "" {
+		return "/", ""
+	}
+
+	if strings.HasSuffix(origPath, "/") {
+		origPath = origPath[:len(origPath)-1]
+	}
+
+	path = ConvertToSlash(filepath.Dir(origPath), true)
+	if strings.HasSuffix(path, "./") {
+		path = path[:len(path)-2]
+	}
+
+	name = filepath.Base(origPath)
+	return
+}
