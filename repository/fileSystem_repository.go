@@ -192,8 +192,8 @@ func (rep *FileSystemRepository) GetDirectoryInfo(userPath, path string) ([]*mod
 }
 
 // GetInfo generates and returns the fileInfo of a file in the fileSystem
-func (rep *FileSystemRepository) GetInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
-	osFileInfo, err := os.Stat(filepath.Join(rep.base, userPath, path, name))
+func (rep *FileSystemRepository) GetInfo(userPath, path string) (fileInfo *models.FileInfo, err error) {
+	osFileInfo, err := os.Stat(filepath.Join(rep.base, userPath, path))
 	if os.IsNotExist(err) {
 		err = ErrFileNotExist
 		return

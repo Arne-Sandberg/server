@@ -90,17 +90,18 @@ func (mgr *FileManager) ScanUserFolderForChanges(user *models.User) (err error) 
 }
 
 func (mgr *FileManager) scanDirForChanges(user *models.User, path, name string) (folderSize int64, err error) {
+	fsPath := filepath.Join(path, name)
+
 	// Get all needed data, paths, etc.
 	userPath := mgr.getUserPath(user)
-	pathInfo, err := mgr.fileSystemRep.GetInfo(userPath, path, name)
+	pathInfo, err := mgr.fileSystemRep.GetInfo(userPath, fsPath)
 	// Return if the scanning dir is a file
 	if err != nil || !pathInfo.IsDir {
 		return pathInfo.Size, fmt.Errorf("path is not a directory")
 	}
 
 	// Get dir contents of fs and db
-	fsPath := filepath.Join(path, name)
-	fsFiles, err := mgr.fileSystemRep.GetDirectoryContent(userPath, fsPath)
+	fsFiles, err := mgr.fileSystemRep.GetDirectoryInfo(userPath, fsPath)
 	if err != nil {
 		return
 	}
@@ -301,7 +302,7 @@ func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error
 	}
 
 	userPath := mgr.getUserPathWithID(folderInfo.OwnerID)
-	fileInfo, err := mgr.fileSystemRep.GetInfo(userPath, filepath.Join(folderInfo.Path, folderInfo.Name), fileName)
+	fileInfo, err := mgr.fileSystemRep.GetInfo(userPath, filepath.Join(folderInfo.Path, folderInfo.Name, fileName))
 	if err != nil {
 		return
 	}
