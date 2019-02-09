@@ -63,6 +63,11 @@ func TestFileSystemRepository(t *testing.T) {
 			t.Errorf("Failed to create new file handle for '1/.tmp/testfile.txt': %v", err)
 		}
 		file.Close()
+		file, err = rep.CreateHandle("2/anotherFile.txt")
+		if err != nil {
+			t.Errorf("Failed to create file '2/anotherFile.txt': %v", err)
+		}
+		file.Close()
 		_, err = rep.CreateHandle("~/badFile.txt")
 		if err != ErrForbiddenPathName {
 			t.Errorf("Error for forbidden file name is unequal to ErrForbiddenPathName: %v", err)
@@ -118,11 +123,59 @@ func TestFileSystemRepository(t *testing.T) {
 		}
 	})
 
+	t.Run("move file", func(t *testing.T) {
+		err := rep.Move("2/anotherFile.txt", "1/movedFile.txt")
+		if err != nil {
+			t.Fatalf("Failed to move file '2/anotherFile.txt' to '1/movedFile.txt': %v", err)
+		}
+		_, err = rep.GetInfo("2", "/", "anotherFile.txt")
+		if err == nil || err != ErrFileNotExist {
+			t.Errorf("Getting fileInfo of moved file was successfull or error unequal to 'file not found': %v", err)
+		}
+		fileInfo, err := rep.GetInfo("1", "/", "movedFile.txt")
+		if err != nil {
+			t.Fatalf("Failed to get fileInfo of moved file: %v", err)
+		}
+		expFileInfo := &models.FileInfo{
+			IsDir:    false,
+			MimeType: "text/plain; charset=utf-8",
+			Name:     "movedFile.txt",
+			Path:     "/",
+		}
+		fileInfo.LastChanged = 0
+		if !reflect.DeepEqual(fileInfo, expFileInfo) {
+			t.Errorf("FileInfo of moved file and expected fileInfo not deeply equal: %v", fileInfo)
+		}
+	})
+
+	t.Run("copy file", func(t *testing.T) {
+		err := rep.Copy("1/.tmp/testfile.txt", "1/copiedFile.txt")
+		if err != nil {
+			t.Fatalf("Failed to copy file '1/.tmp/testfile.txt' to '1/copiedFile.txt': %v", err)
+		}
+		_, err = rep.GetInfo("1", "/.tmp", "testfile.txt")
+		if err != nil {
+			t.Errorf("Failed getting fileInfo for orig file after copying: %v", err)
+		}
+		fileInfo, err := rep.GetInfo("1", "/", "copiedFile.txt")
+		if err != nil {
+			t.Fatalf("Failed to get fileInfo of copied file: %v", err)
+		}
+		expFileInfo := &models.FileInfo{
+			IsDir:    false,
+			MimeType: "text/plain; charset=utf-8",
+			Name:     "copiedFile.txt",
+			Path:     "/",
+		}
+		fileInfo.LastChanged = 0
+		if !reflect.DeepEqual(fileInfo, expFileInfo) {
+			t.Errorf("FileInfo of copied file and expected fileInfo not deeply equal: %v", fileInfo)
+		}
+	})
+
 	// TODO: Test cleanUpTempFolder
 	// TODO: Test Zip
-	// TODO: Test Move
 	// TODO: Test Delete
-	// TODO: Test Copy
 
 	t.Run("close repository", func(t *testing.T) {
 		err := rep.Close()

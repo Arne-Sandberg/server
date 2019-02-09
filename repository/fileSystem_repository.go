@@ -234,6 +234,7 @@ func (rep *FileSystemRepository) Zip(paths []string, outputPath string) (err err
 	return
 }
 
+// Move moves the file/folder of oldPath to newPath
 func (rep *FileSystemRepository) Move(oldPath, newPath string) (err error) {
 	if !utils.ValidatePath(oldPath) {
 		err = ErrForbiddenPathName
@@ -267,6 +268,7 @@ func (rep *FileSystemRepository) Delete(path string) (err error) {
 	return
 }
 
+// Copy copied the file/folder of oldPath to newPath
 func (rep *FileSystemRepository) Copy(oldPath, newPath string) (err error) {
 	oldFullPath := filepath.Join(rep.base, oldPath)
 	newFullPath := filepath.Join(rep.base, newPath)
