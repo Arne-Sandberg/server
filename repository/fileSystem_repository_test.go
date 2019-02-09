@@ -173,9 +173,29 @@ func TestFileSystemRepository(t *testing.T) {
 		}
 	})
 
-	// TODO: Test cleanUpTempFolder
+	t.Run("delete file", func(t *testing.T) {
+		err := rep.Delete("1/copiedFile.txt")
+		if err != nil {
+			t.Fatalf("Failed to delete file '1/copiedFile.txt': %v", err)
+		}
+		_, err = rep.GetInfo("1", "/", "copiedFile.txt")
+		if err == nil || err != ErrFileNotExist {
+			t.Errorf("Getting fileInfo for deleted file succeeded or error is unequal to 'file does not exist': %v", err)
+		}
+	})
+
+	t.Run("cleanup temp folder", func(t *testing.T) {
+		err := rep.cleanupTempFolder()
+		if err != nil {
+			t.Fatalf("Failed to cleanup tmp folder: %v", err)
+		}
+		_, err = rep.GetInfo("1", ".tmp", "testfile.txt")
+		if err == nil || err != ErrFileNotExist {
+			t.Errorf("Reading tmp file after tmp cleanup successfull or error unequal to 'file does not exist': %v", err)
+		}
+	})
+
 	// TODO: Test Zip
-	// TODO: Test Delete
 
 	t.Run("close repository", func(t *testing.T) {
 		err := rep.Close()

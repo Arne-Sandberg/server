@@ -25,13 +25,15 @@ var (
 
 // FileSystemRepository represents the local filesystem for storing files
 type FileSystemRepository struct {
-	base    string
-	tmpName string
-	done    chan struct{}
+	base               string
+	tmpName            string
+	tmpCleanupInterval int
+	tmpDataExpiry      int
+	done               chan struct{}
 }
 
 // CreateFileSystemRepository creates a new fileSystemRepository at a given relative or abolute path with a interval for temp cleanup in hours and a tmp data expiry in hours
-func CreateFileSystemRepository(baseDir, tmpName string, tmpClearInterval, tmpDataExpiry int) (*FileSystemRepository, error) {
+func CreateFileSystemRepository(baseDir, tmpName string, tmpCleanupInterval, tmpDataExpiry int) (*FileSystemRepository, error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -57,11 +59,13 @@ func CreateFileSystemRepository(baseDir, tmpName string, tmpClearInterval, tmpDa
 
 	log.Info("Initialized filesystem at base directory %s", base)
 	fileSystemRepository := &FileSystemRepository{
-		base: base,
-		done: make(chan struct{}),
+		base:               base,
+		tmpCleanupInterval: tmpCleanupInterval,
+		tmpDataExpiry:      tmpDataExpiry,
+		done:               make(chan struct{}),
 	}
 
-	go fileSystemRepository.cleanupTempFolderRoutine(tmpClearInterval, tmpDataExpiry)
+	go fileSystemRepository.cleanupTempFolderRoutine()
 
 	return fileSystemRepository, nil
 }
@@ -73,33 +77,34 @@ func (rep *FileSystemRepository) Close() error {
 }
 
 // cleanupTempFolderRoutine is the actual routine that periodically calls cleanupTempFolder
-func (rep *FileSystemRepository) cleanupTempFolderRoutine(interval, expiry int) {
-	log.Trace("Starting temp folder cleaner, running now and every %v hours", interval)
-	rep.cleanupTempFolder(expiry)
+func (rep *FileSystemRepository) cleanupTempFolderRoutine() {
+	log.Trace("Starting temp folder cleaner, running now and every %v hours", rep.tmpCleanupInterval)
+	rep.cleanupTempFolder()
 
-	ticker := time.NewTicker(time.Hour * time.Duration(interval))
+	ticker := time.NewTicker(time.Hour * time.Duration(rep.tmpCleanupInterval))
 	for {
 		select {
 		case <-rep.done:
 			return
 		case <-ticker.C:
-			rep.cleanupTempFolder(expiry)
+			rep.cleanupTempFolder()
 		}
 	}
 }
 
 // cleanupTempFolder deletes the content of all tmp folders
-func (rep *FileSystemRepository) cleanupTempFolder(expiry int) {
+func (rep *FileSystemRepository) cleanupTempFolder() (err error) {
 	log.Trace("Cleaning temp folder")
 
 	now := time.Now()
 
-	infoList, err := ioutil.ReadDir(rep.base)
+	baseList, err := ioutil.ReadDir(rep.base)
 	if err != nil {
 		log.Warn("Cleaning temp folder failed: %v", err)
+		return
 	}
 
-	for _, info := range infoList {
+	for _, info := range baseList {
 		if !info.IsDir() {
 			continue
 		}
@@ -111,7 +116,7 @@ func (rep *FileSystemRepository) cleanupTempFolder(expiry int) {
 		}
 
 		for _, tmpInfo := range tmpInfoList {
-			expires := tmpInfo.ModTime().Add(time.Hour * time.Duration(expiry))
+			expires := tmpInfo.ModTime().Add(time.Hour * time.Duration(rep.tmpDataExpiry))
 			if now.After(expires) {
 				err = os.RemoveAll(filepath.Join(tmpFolderPath, tmpInfo.Name()))
 				if err != nil {
@@ -121,6 +126,7 @@ func (rep *FileSystemRepository) cleanupTempFolder(expiry int) {
 			}
 		}
 	}
+	return
 }
 
 // CreateHandle opens an *os.File handle for writing to.
@@ -254,6 +260,7 @@ func (rep *FileSystemRepository) Move(oldPath, newPath string) (err error) {
 	return
 }
 
+// Delete deletes the file/folder at the given path
 func (rep *FileSystemRepository) Delete(path string) (err error) {
 	if !utils.ValidatePath(path) {
 		err = ErrForbiddenPathName
