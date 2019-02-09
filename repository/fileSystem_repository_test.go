@@ -193,9 +193,33 @@ func TestFileSystemRepository(t *testing.T) {
 		if err == nil || err != ErrFileNotExist {
 			t.Errorf("Reading tmp file after tmp cleanup successfull or error unequal to 'file does not exist': %v", err)
 		}
+		_, err = rep.GetInfo("1", "/", "movedFile.txt")
+		if err != nil {
+			t.Errorf("Failed to read normal file after tmp cleanup: %v", err)
+		}
 	})
 
-	// TODO: Test Zip
+	t.Run("create zip", func(t *testing.T) {
+		err := rep.Zip([]string{"1/.tmp", "2"}, "2/test.zip")
+		if err != nil {
+			t.Fatalf("Failed to create zip out of '1/.tmp/' and '2': %v", err)
+		}
+		fileInfo, err := rep.GetInfo("2", "/", "test.zip")
+		if err != nil {
+			t.Fatalf("Failed to get fileInfo of created zip: %v", err)
+		}
+		expFileInfo := &models.FileInfo{
+			IsDir:    false,
+			MimeType: "application/zip",
+			Name:     "test.zip",
+			Path:     "/",
+		}
+		fileInfo.LastChanged = 0
+		fileInfo.Size = 0
+		if !reflect.DeepEqual(fileInfo, expFileInfo) {
+			t.Errorf("FileInfo of created zip and expected fileInfo not deeply equal: %v", fileInfo)
+		}
+	})
 
 	t.Run("close repository", func(t *testing.T) {
 		err := rep.Close()

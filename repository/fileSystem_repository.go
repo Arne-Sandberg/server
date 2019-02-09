@@ -60,6 +60,7 @@ func CreateFileSystemRepository(baseDir, tmpName string, tmpCleanupInterval, tmp
 	log.Info("Initialized filesystem at base directory %s", base)
 	fileSystemRepository := &FileSystemRepository{
 		base:               base,
+		tmpName:            tmpName,
 		tmpCleanupInterval: tmpCleanupInterval,
 		tmpDataExpiry:      tmpDataExpiry,
 		done:               make(chan struct{}),
