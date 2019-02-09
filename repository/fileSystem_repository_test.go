@@ -2,7 +2,11 @@ package repository
 
 import (
 	"os"
+	"path/filepath"
+	"reflect"
 	"testing"
+
+	"github.com/freecloudio/server/models"
 )
 
 func TestFileSystemRepository(t *testing.T) {
@@ -14,7 +18,7 @@ func TestFileSystemRepository(t *testing.T) {
 	}
 
 	clearData()
-	//defer clearData()
+	defer clearData()
 
 	var rep *FileSystemRepository
 
@@ -56,7 +60,7 @@ func TestFileSystemRepository(t *testing.T) {
 	success = t.Run("new file handle", func(t *testing.T) {
 		file, err := rep.CreateHandle("1/.tmp/testfile.txt")
 		if err != nil {
-			t.Errorf("Failed to create new file handle for '1/testfile.txt': %v", err)
+			t.Errorf("Failed to create new file handle for '1/.tmp/testfile.txt': %v", err)
 		}
 		file.Close()
 		_, err = rep.CreateHandle("~/badFile.txt")
@@ -67,6 +71,58 @@ func TestFileSystemRepository(t *testing.T) {
 	if !success {
 		t.Skip("Skip further tests due to failing setup")
 	}
+
+	t.Run("get info", func(t *testing.T) {
+		fileInfo, err := rep.GetInfo("1", ".tmp", "testfile.txt")
+		if err != nil {
+			t.Fatalf("Failed to get fileInfo for '1/.tmp/testfile.txt': %v", err)
+		}
+		expFileInfo := &models.FileInfo{
+			IsDir:    false,
+			MimeType: "text/plain; charset=utf-8",
+			Name:     "testfile.txt",
+			Path:     "/.tmp/",
+		}
+		fileInfo.LastChanged = 0
+		if !reflect.DeepEqual(fileInfo, expFileInfo) {
+			t.Error("Read fileInfo and expected fileInfo not deeply equal")
+		}
+	})
+
+	t.Run("get directory info", func(t *testing.T) {
+		dirInfo, err := rep.GetDirectoryInfo("/1", ".tmp")
+		if err != nil {
+			t.Fatalf("Failed to get directory info for '1/.tmp': %v", err)
+		}
+		if len(dirInfo) != 1 {
+			t.Fatalf("Length of dir info unequal to 1: %d", len(dirInfo))
+		}
+		expFileInfo := &models.FileInfo{
+			IsDir:    false,
+			MimeType: "text/plain; charset=utf-8",
+			Name:     "testfile.txt",
+			Path:     "/.tmp/",
+		}
+		dirInfo[0].LastChanged = 0
+		if !reflect.DeepEqual(dirInfo[0], expFileInfo) {
+			t.Errorf("Read fileInfo in dir info and expected fileInfo are not deeply equal: %v", dirInfo[0])
+		}
+	})
+
+	t.Run("download path", func(t *testing.T) {
+		path := "1/.tmp/testfile.txt"
+		downloadPath := rep.GetDownloadPath(path)
+		expDownloadPath, _ := filepath.Abs(filepath.Join(dirName, path))
+		if downloadPath != expDownloadPath {
+			t.Errorf("DownloadPath unequal to expected DownloadPath: %s", downloadPath)
+		}
+	})
+
+	// TODO: Test cleanUpTempFolder
+	// TODO: Test Zip
+	// TODO: Test Move
+	// TODO: Test Delete
+	// TODO: Test Copy
 
 	t.Run("close repository", func(t *testing.T) {
 		err := rep.Close()

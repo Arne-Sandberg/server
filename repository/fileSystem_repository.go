@@ -159,9 +159,9 @@ func (rep *FileSystemRepository) CreateDirectory(path string) (created bool, err
 	return false, nil
 }
 
-// GetDirectoryContent returns a list of all files and folders in the given "path" (relative to the user's directory).
+// GetDirectoryInfo returns a list of all files and folders in the given "path" (relative to the user's directory).
 // Before doing so, it checks the path for sanity.
-func (rep *FileSystemRepository) GetDirectoryContent(userPath, path string) ([]*models.FileInfo, error) {
+func (rep *FileSystemRepository) GetDirectoryInfo(userPath, path string) ([]*models.FileInfo, error) {
 	if !utils.ValidatePath(path) {
 		return nil, ErrForbiddenPathName
 	}
@@ -184,6 +184,7 @@ func (rep *FileSystemRepository) GetDirectoryContent(userPath, path string) ([]*
 	return fileInfos, nil
 }
 
+// GetInfo generates and returns the fileInfo of a file in the fileSystem
 func (rep *FileSystemRepository) GetInfo(userPath, path, name string) (fileInfo *models.FileInfo, err error) {
 	osFileInfo, err := os.Stat(filepath.Join(rep.base, userPath, path, name))
 	if os.IsNotExist(err) {
@@ -209,6 +210,7 @@ func (rep *FileSystemRepository) generateInfo(osFileInfo os.FileInfo, path strin
 	}
 }
 
+// GetDownloadPath returns the absolute path for the server to serve from
 func (rep *FileSystemRepository) GetDownloadPath(path string) string {
 	return filepath.Join(rep.base, path)
 }
