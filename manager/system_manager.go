@@ -38,7 +38,8 @@ func (mgr *SystemManager) GetSystemStats() (stats *models.SystemStats, err error
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	uptime := time.Since(mgr.startTime)
-	sessionCount, err := GetAuthManager().GetSessionCount()
+	var sessionCount int
+	sessionCount, err = GetAuthManager().GetSessionCount()
 	if err != nil {
 		sessionCount = -1
 	}
