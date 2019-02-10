@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"errors"
 	"time"
 
 	log "gopkg.in/clog.v1"
@@ -16,13 +15,6 @@ import (
 const (
 	sessionExpiry      = 24 * time.Hour
 	sessionTokenLength = 32 // characters
-)
-
-var (
-	ErrMissingCredentials = errors.New("auth: Missing credentials")
-	ErrInvalidCredentials = errors.New("auth: Invalid credentials")
-	ErrInvalidUserData    = errors.New("auth: Invalid user data")
-	ErrUserAlreadyExists  = errors.New("auth: User already exists")
 )
 
 // AuthManager has methods for authenticating users.

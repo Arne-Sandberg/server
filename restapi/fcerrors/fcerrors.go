@@ -55,7 +55,7 @@ func NewMsg(code Code, message string) *FCError {
 
 // Wrap any error with the given code. Useful for wrapping database errors etc.
 // If the given error is nil, nil will be returned
-func Wrap(err error, code Code) *FCError {
+func Wrap(err error, code Code) error {
 	if err == nil {
 		return nil
 	}
