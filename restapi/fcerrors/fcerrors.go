@@ -44,12 +44,12 @@ type FCError struct {
 }
 
 // New returns a new FCError with the given code and its default message
-func New(code Code) *FCError {
+func New(code Code) error {
 	return &FCError{Message: code.Msg, Code: code}
 }
 
 // NewMsg returns a new FCError with the given code and message
-func NewMsg(code Code, message string) *FCError {
+func NewMsg(code Code, message string) error {
 	return &FCError{Message: message, Code: code}
 }
 
