@@ -52,3 +52,15 @@ func TestGetAuthManager(t *testing.T) {
 		t.Errorf("Created and read system manager are not deeply equal: %v != %v", mgr, mgrGet)
 	}
 }
+
+// TODO: Test NewSession
+// TODO: Test CreateUser
+// TODO: Test DeleteUser
+// TODO: Test GetAllUsers
+// TODO: Test ValidateSession
+// TODO: Test GetUserByID
+// TODO: Test GetUserByEmail
+// TODO: Test DeleteSession
+// TODO: Test UpdateLastSession
+// TODO: Test GetAdminCount
+// TODO: Test GetSessionCount
