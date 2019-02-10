@@ -7,138 +7,147 @@ import (
 	"github.com/freecloudio/server/models"
 )
 
-func TestStarRepository(t *testing.T) {
-	star0 := &models.Star{FileID: 1, UserID: 1}
-	star1 := &models.Star{FileID: 1, UserID: 2}
-	star2 := &models.Star{FileID: 2, UserID: 2}
-	dbName := "starTest.db"
+var testStarSetupFailed = false
+var testStarDBName = "starTest.db"
+var testStar0 = &models.Star{FileID: 1, UserID: 1}
+var testStar1 = &models.Star{FileID: 1, UserID: 2}
 
-	cleanDBFiles := func() {
-		os.Remove(dbName)
+func testStarCleanup() {
+	os.Remove(testStarDBName)
+}
+
+func testStarSetup() *StarRepository {
+	testStarCleanup()
+	InitDatabaseConnection("", "", "", "", 0, testStarDBName)
+	rep, _ := CreateStarRepository()
+	return rep
+}
+
+func testStarInsert(rep *StarRepository) {
+	rep.Create(testStar0)
+	rep.Create(testStar1)
+}
+
+func TestCreateStarRepository(t *testing.T) {
+	testStarCleanup()
+	defer testStarCleanup()
+
+	err := InitDatabaseConnection("", "", "", "", 0, testStarDBName)
+	if err != nil {
+		t.Fatalf("Failed to connect to gorm database: %v", err)
 	}
 
-	cleanDBFiles()
-	defer cleanDBFiles()
-
-	var rep *StarRepository
-
-	success := t.Run("create connection and repository", func(t *testing.T) {
-		err := InitDatabaseConnection("", "", "", "", 0, dbName)
-		if err != nil {
-			t.Fatalf("Failed to connect to gorm database: %v", err)
-		}
-
-		rep, err = CreateStarRepository()
-		if err != nil {
-			t.Fatalf("Failed to create star repository: %v", err)
-		}
-	})
-	if !success {
-		t.Skip("Further test skipped due to setup failing")
+	_, err = CreateStarRepository()
+	if err != nil {
+		t.Fatalf("Failed to create star repository: %v", err)
 	}
 
-	t.Run("empty repository", func(t *testing.T) {
-		count, err := rep.Count()
-		if err != nil {
-			t.Fatalf("Failed to get count: %v", err)
-		}
-		if count > 0 {
-			t.Errorf("Star count greater than zero for empty star repository: %d", count)
-		}
-	})
+	if t.Failed() {
+		testStarSetupFailed = true
+	}
+}
 
-	success = t.Run("create stars", func(t *testing.T) {
-		err := rep.Create(star0)
-		if err != nil {
-			t.Errorf("Failed to create star0: %v", err)
-		}
-		err = rep.Create(star1)
-		if err != nil {
-			t.Errorf("Failed to create star1: %v", err)
-		}
-		err = rep.Create(star2)
-		if err != nil {
-			t.Errorf("Failed to create star2: %v", err)
-		}
-	})
-	if !success {
-		t.Skip("Skipping further tests due to no created stars")
+func TestCreateStars(t *testing.T) {
+	if testStarSetupFailed {
+		t.Skip("Skipped due to failed setup")
+	}
+	defer testStarCleanup()
+	rep := testStarSetup()
+
+	err := rep.Create(testStar0)
+	if err != nil {
+		t.Errorf("Failed to create star0: %v", err)
 	}
 
-	t.Run("correct count after creating stars", func(t *testing.T) {
-		count, err := rep.Count()
-		if err != nil {
-			t.Fatalf("Failed to get count: %v", err)
-		}
-		if count != 3 {
-			t.Errorf("Total count unequal to 3 for filled star repository: %d", err)
-		}
-	})
+	if t.Failed() {
+		testStarSetupFailed = true
+	}
+}
 
-	t.Run("correct existenz of created stars", func(t *testing.T) {
-		starExists, err := rep.Exists(star0.FileID, star0.UserID)
-		if err != nil {
-			t.Errorf("Failed to read whether star0 exists: %v", err)
-		}
-		if !starExists {
-			t.Error("star0 does not exist but should have been created")
-		}
-		starExists, err = rep.Exists(star1.FileID, star1.UserID)
-		if err != nil {
-			t.Errorf("Failed to read whether star1 exists: %v", err)
-		}
-		if !starExists {
-			t.Error("star1 does not exist but should have been created")
-		}
-		starExists, err = rep.Exists(star2.FileID, star2.UserID)
-		if err != nil {
-			t.Errorf("Failed to read whether star2 exists: %v", err)
-		}
-		if !starExists {
-			t.Error("star2 does not exist but should have been created")
-		}
-	})
+func TestCountStars(t *testing.T) {
+	if testStarSetupFailed {
+		t.Skip("Skipped due to failed setup")
+	}
+	defer testStarCleanup()
+	rep := testStarSetup()
 
-	delSuccess := t.Run("delete star", func(t *testing.T) {
-		err := rep.Delete(star0.FileID, star0.UserID)
-		if err != nil {
-			t.Errorf("Failed to delete star0: %v", err)
-		}
-	})
+	count, err := rep.Count()
+	if err != nil {
+		t.Fatalf("Failed to get count: %v", err)
+	}
+	if count > 0 {
+		t.Errorf("Star count greater than zero for empty star repository: %d", count)
+	}
 
-	if delSuccess {
-		t.Run("correct existenz after deleting star", func(t *testing.T) {
-			starExists, err := rep.Exists(star0.FileID, star0.UserID)
-			if err != nil {
-				t.Errorf("Failed to read whether star0 exists: %v", err)
-			}
-			if starExists {
-				t.Error("star0 does exists but should have been deleted")
-			}
-			starExists, err = rep.Exists(star1.FileID, star1.UserID)
-			if err != nil {
-				t.Errorf("Failed to read whether star1 exists: %v", err)
-			}
-			if !starExists {
-				t.Error("star1 does not exist but should have been created and not deleted")
-			}
-			starExists, err = rep.Exists(star2.FileID, star2.UserID)
-			if err != nil {
-				t.Errorf("Failed to read whether star2 exists: %v", err)
-			}
-			if !starExists {
-				t.Error("star2 does not exist but should have been created and not deleted")
-			}
-		})
+	testStarInsert(rep)
 
-		t.Run("correct count after user deletion", func(t *testing.T) {
-			count, err := rep.Count()
-			if err != nil {
-				t.Fatalf("Failed to count stars after deletion: %v", err)
-			}
-			if count != 2 {
-				t.Errorf("Count unequal to two after deletion: %d", count)
-			}
-		})
+	count, err = rep.Count()
+	if err != nil {
+		t.Fatalf("Failed to get count: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("Total count unequal to 2 for filled star repository: %d", err)
+	}
+}
+
+func TestExistsStar(t *testing.T) {
+	if testStarSetupFailed {
+		t.Skip("Skipped due to failed setup")
+	}
+	defer testStarCleanup()
+	rep := testStarSetup()
+
+	testStarInsert(rep)
+
+	starExists, err := rep.Exists(testStar0.FileID, testStar0.UserID)
+	if err != nil {
+		t.Errorf("Failed to read whether star0 exists: %v", err)
+	}
+	if !starExists {
+		t.Error("star0 does not exist but should have been created")
+	}
+	starExists, err = rep.Exists(testStar1.FileID, testStar1.UserID)
+	if err != nil {
+		t.Errorf("Failed to read whether star1 exists: %v", err)
+	}
+	if !starExists {
+		t.Error("star1 does not exist but should have been created")
+	}
+}
+
+func TestDeleteStar(t *testing.T) {
+	if testStarSetupFailed {
+		t.Skip("Skipped due to failed setup")
+	}
+	defer testStarCleanup()
+	rep := testStarSetup()
+	testStarInsert(rep)
+
+	err := rep.Delete(testStar0.FileID, testStar0.UserID)
+	if err != nil {
+		t.Fatalf("Failed to delete star0: %v", err)
+	}
+
+	starExists, err := rep.Exists(testStar0.FileID, testStar0.UserID)
+	if err != nil {
+		t.Errorf("Failed to read whether star0 exists: %v", err)
+	}
+	if starExists {
+		t.Error("star0 does exists but should have been deleted")
+	}
+	starExists, err = rep.Exists(testStar1.FileID, testStar1.UserID)
+	if err != nil {
+		t.Errorf("Failed to read whether star1 exists: %v", err)
+	}
+	if !starExists {
+		t.Error("star1 does not exist but should have been created and not deleted")
+	}
+
+	count, err := rep.Count()
+	if err != nil {
+		t.Fatalf("Failed to count stars after deletion: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Count unequal to two after deletion: %d", count)
 	}
 }
