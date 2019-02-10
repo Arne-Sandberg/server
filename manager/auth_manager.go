@@ -9,6 +9,7 @@ import (
 	"github.com/freecloudio/server/crypt"
 	"github.com/freecloudio/server/models"
 	"github.com/freecloudio/server/repository"
+	"github.com/freecloudio/server/restapi/fcerrors"
 	"github.com/freecloudio/server/utils"
 )
 
@@ -77,25 +78,29 @@ func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 func (mgr *AuthManager) NewSession(email string, password string) (*models.Session, error) {
 	// First, do some sanity checks so we can reduce calls to the credentials provider with obviously wrong data.
 	if !utils.ValidateEmail(email) || !utils.ValidatePassword(password) {
-		return nil, ErrMissingCredentials
+		return nil, fcerrors.New("Missing credentials", fcerrors.MissingCredentials)
 	}
 
 	email = utils.ConvertToCleanEmail(email)
 
 	user, err := mgr.userRep.GetByEmail(email)
-	if err != nil {
+	if repository.IsRecordNotFoundError(err) {
+		log.Warn("User not found by email %s", email)
+		// we intentionally don't tell the user whether the error was due to bad credentials or the user being nonexistant
+		return nil, fcerrors.New("Wrong credentials or user does not exist", fcerrors.BadCredentials)
+	} else if err != nil {
 		log.Error(0, "Could not get user via email %s: %v", email, err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 	valid, err := crypt.ValidateScryptPassword(password, user.Password)
 	if err != nil {
 		log.Error(0, "Password verification failed for user %s: %v", user.Email, err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.HashingFailed)
 	}
 	if valid {
 		return mgr.newUnverifiedSession(user.ID)
 	}
-	return &models.Session{}, ErrInvalidCredentials
+	return &models.Session{}, fcerrors.New("Wrong credentials or user does not exist", fcerrors.BadCredentials)
 }
 
 func (mgr *AuthManager) newUnverifiedSession(userID int64) (*models.Session, error) {
@@ -108,13 +113,13 @@ func (mgr *AuthManager) newUnverifiedSession(userID int64) (*models.Session, err
 	err := mgr.sessionRep.Create(session)
 	if err != nil {
 		log.Error(0, "Could not store session: %v", err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
 	err = mgr.UpdateLastSession(userID)
 	if err != nil {
 		log.Error(0, "Could not store the session as user's latest: %v", err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
 	return session, nil
@@ -127,7 +132,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		!utils.ValidatePassword(user.Password) ||
 		!utils.ValidateFirstName(user.FirstName) ||
 		!utils.ValidateLastName(user.LastName) {
-		return nil, ErrInvalidUserData
+		return nil, fcerrors.New("Invalid user data", fcerrors.InvalidUserData)
 	}
 
 	user.Email = utils.ConvertToCleanEmail(user.Email)
@@ -137,13 +142,13 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		// Don't bail out here, since this will be checked again when creating the user in repository
 		log.Warn("Could not validate whether user with email %s already exists", user.Email)
 	} else if err == nil && existingUser != nil && existingUser.ID > 0 {
-		return nil, ErrUserAlreadyExists
+		return nil, fcerrors.New("A user with this email already exists", fcerrors.UserExists)
 	}
 
 	user.Password, err = crypt.HashScrypt(user.Password)
 	if err != nil {
 		log.Error(0, "Password hashing failed: %v", err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.HashingFailed)
 	}
 	user.IsAdmin = false
 
@@ -151,7 +156,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 	err = mgr.userRep.Create(user)
 	if err != nil {
 		log.Error(0, "Creating user failed: %v", err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
 	// If this is the first user (ID 1) they will become an admin
@@ -162,14 +167,14 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		if err != nil {
 			log.Error(0, "Could not make first user an admin: %v", err)
 			// Since a system without an admin won't properly work, bail out
-			return nil, err
+			return nil, fcerrors.Wrap(err, fcerrors.Database)
 		}
 	}
 
 	err = GetFileManager().ScanUserFolderForChanges(user)
 	if err != nil {
 		log.Error(0, "Failed to scan folder for new user: %v", err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Filesystem)
 	}
 
 	// Now, create a session for the user
@@ -179,15 +184,17 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 	if err = mgr.sessionRep.DeleteAllForUser(userID); err != nil {
-		// TODO: log me
+		log.Error(0, "Could not delete all sessions for user %d: %v", userID, err)
+		err = fcerrors.New("Could not delete sessions for this user", fcerrors.DeleteSession)
 		return
 	}
 
+	// TODO: this may be a not found error? If so, return 404
 	if err = mgr.userRep.Delete(userID); err != nil {
-		// TODO: log me
+		log.Error(0, "Deleting the user with ID %d failed: %v", userID, err)
+		err = fcerrors.New("Could not delete this user", fcerrors.Database)
 		return
 	}
-
 	// Delete data?!
 
 	return
@@ -227,7 +234,13 @@ func (mgr *AuthManager) ValidateSession(sess *models.Session) (valid bool) {
 }
 
 func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
-	return mgr.userRep.GetByID(userID)
+	user, err := mgr.userRep.GetByID(userID)
+	if repository.IsRecordNotFoundError(err) {
+		return nil, fcerrors.New("User not found", fcerrors.UserNotFound)
+	} else if err != nil {
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
+	}
+	return user, nil
 }
 
 func (mgr *AuthManager) GetUserByEmail(email string) (*models.User, error) {
@@ -235,9 +248,9 @@ func (mgr *AuthManager) GetUserByEmail(email string) (*models.User, error) {
 	return mgr.userRep.GetByEmail(email)
 }
 
-// RemoveSession removes the session from the session provider
+// DeleteSession removes the session from the session provider
 func (mgr *AuthManager) DeleteSession(session *models.Session) (err error) {
-	return mgr.sessionRep.Delete(session)
+	return fcerrors.Wrap(mgr.sessionRep.Delete(session), fcerrors.Database)
 }
 
 func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
