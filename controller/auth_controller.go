@@ -15,7 +15,7 @@ import (
 func AuthSignupHandler(params authAPI.SignupParams) middleware.Responder {
 	session, err := manager.GetAuthManager().CreateUser(params.User)
 	if err != nil {
-		return authAPI.NewSignupDefault(fcerrors.GetStatusCode(err)).WithPayload(&models.Error{Message: err.Error()})
+		return authAPI.NewSignupDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
@@ -27,7 +27,7 @@ func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
 
 	session, err := manager.GetAuthManager().NewSession(email, password)
 	if err != nil {
-		return authAPI.NewLoginDefault(fcerrors.GetStatusCode(err)).WithPayload(&models.Error{Message: err.Error()})
+		return authAPI.NewLoginDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
@@ -38,7 +38,7 @@ func AuthLogoutHandler(params authAPI.LogoutParams, principal *models.Principal)
 	err := manager.GetAuthManager().DeleteSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
-		return authAPI.NewLogoutDefault(fcerrors.GetStatusCode(err)).WithPayload(&models.Error{Message: err.Error()})
+		return authAPI.NewLogoutDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return authAPI.NewLogoutOK()
@@ -51,7 +51,7 @@ func AuthGetCurrentUserHandler(params userAPI.GetCurrentUserParams, principal *m
 func AuthGetUserByIDHandler(params userAPI.GetUserByIDParams, principal *models.Principal) middleware.Responder {
 	user, err := manager.GetAuthManager().GetUserByID(params.ID)
 	if err != nil {
-		return userAPI.NewGetUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(&models.Error{Message: err.Error()})
+		return userAPI.NewGetUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return userAPI.NewGetUserByIDOK().WithPayload(user)
@@ -60,7 +60,7 @@ func AuthGetUserByIDHandler(params userAPI.GetUserByIDParams, principal *models.
 func AuthDeleteCurrentUserHandler(params userAPI.DeleteCurrentUserParams, principal *models.Principal) middleware.Responder {
 	err := manager.GetAuthManager().DeleteUser(principal.User.ID)
 	if err != nil {
-		return userAPI.NewDeleteCurrentUserDefault(fcerrors.GetStatusCode(err)).WithPayload(&models.Error{Message: err.Error()})
+		return userAPI.NewDeleteCurrentUserDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return userAPI.NewDeleteCurrentUserOK()
@@ -69,7 +69,7 @@ func AuthDeleteCurrentUserHandler(params userAPI.DeleteCurrentUserParams, princi
 func AuthDeleteUserByIDHandler(params userAPI.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
 	err := manager.GetAuthManager().DeleteUser(params.ID)
 	if err != nil {
-		return userAPI.NewDeleteUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(&models.Error{Message: err.Error()})
+		return userAPI.NewDeleteUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return userAPI.NewDeleteUserByIDOK()

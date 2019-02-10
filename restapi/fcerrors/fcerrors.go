@@ -1,31 +1,38 @@
 package fcerrors
 
-import "net/http"
+import (
+	"net/http"
 
-// Code is a specific error code
-type Code string
+	"github.com/freecloudio/server/models"
+)
 
-const (
+// Code is a specific error code, containing an error message
+type Code struct {
+	Msg        string
+	StatusCode int
+}
+
+var (
 	// Internal Server Error, this should only be used as a fallback
-	Internal = Code("Internal")
+	Internal = Code{"Internal Server Error", http.StatusInternalServerError}
 	// InvalidUserData is thrown when user data validation fails on signup
-	InvalidUserData = Code("InvalidUserData")
+	InvalidUserData = Code{"Invalid user data", http.StatusBadRequest}
 	// UserExists is thrown when a user already exists on signup
-	UserExists = Code("UserExists")
+	UserExists = Code{"A user with the same email already exists", http.StatusBadRequest}
 	// UserNotFound is pretty clear
-	UserNotFound = Code("UserNotFound")
+	UserNotFound = Code{"User cannot be found", http.StatusNotFound}
 	// HashingFailed is thrown when a password hash operation failed
-	HashingFailed = Code("HashingFailed")
-	// Database is thrown when a DB operation failed
-	Database = Code("Database")
+	HashingFailed = Code{"Password hashing failed", http.StatusInternalServerError}
+	// Database is thrown when a DB operation failed - Try to use more fine-grained errors
+	Database = Code{"Database error", http.StatusInternalServerError}
 	// Filesystem operation failed
-	Filesystem = Code("Filesystem")
+	Filesystem = Code{"Filesystem error", http.StatusInternalServerError}
 	// BadCredentials for login
-	BadCredentials = Code("BadCredentials")
+	BadCredentials = Code{"Email or Password incorrect", http.StatusUnauthorized}
 	// MissingCredentials from the request
-	MissingCredentials = Code("MissingData")
+	MissingCredentials = Code{"Email or Password are missing", http.StatusBadRequest}
 	// DeleteSession failed
-	DeleteSession = Code("DeleteSession")
+	DeleteSession = Code{"Could not delete session", http.StatusInternalServerError}
 )
 
 // FCError is a struct implementing the Error interface, which should be used on all internal errors.
@@ -36,9 +43,14 @@ type FCError struct {
 	Code Code
 }
 
-// New returns a new FCError with the given message and code
-func New(message string, code Code) *FCError {
-	return &FCError{message, code}
+// New returns a new FCError with the given code and its default message
+func New(code Code) *FCError {
+	return &FCError{Message: code.Msg, Code: code}
+}
+
+// NewMsg returns a new FCError with the given code and message
+func NewMsg(code Code, message string) *FCError {
+	return &FCError{Message: message, Code: code}
 }
 
 // Wrap any error with the given code. Useful for wrapping database errors etc.
@@ -56,28 +68,7 @@ func (err *FCError) Error() string {
 
 // GetStatusCode returns the HTTP status code associated with the given error, or 500 if it is unknown
 func (err *FCError) GetStatusCode() int {
-	switch err.Code {
-	case Internal:
-		return http.StatusInternalServerError
-	case InvalidUserData:
-		return http.StatusBadRequest
-	case UserExists:
-		return http.StatusBadRequest
-	case UserNotFound:
-		return http.StatusNotFound
-	case HashingFailed:
-		return http.StatusInternalServerError
-	case Database:
-		return http.StatusInternalServerError
-	case Filesystem:
-		return http.StatusInternalServerError
-	case BadCredentials:
-		return http.StatusUnauthorized
-	case MissingCredentials:
-		return http.StatusBadRequest
-	default:
-		return http.StatusInternalServerError
-	}
+	return err.Code.StatusCode
 }
 
 // GetStatusCode returns the HTTP status code associated with the given error
@@ -88,4 +79,9 @@ func GetStatusCode(err error) int {
 		return e.GetStatusCode()
 	}
 	return http.StatusInternalServerError
+}
+
+// GetAPIError returns an Error model, as defined by the API
+func GetAPIError(err error) *models.Error {
+	return &models.Error{Message: err.Error()}
 }

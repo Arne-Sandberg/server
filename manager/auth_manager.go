@@ -78,7 +78,7 @@ func (mgr *AuthManager) cleanupExpiredSessionsRoutine(interval time.Duration) {
 func (mgr *AuthManager) NewSession(email string, password string) (*models.Session, error) {
 	// First, do some sanity checks so we can reduce calls to the credentials provider with obviously wrong data.
 	if !utils.ValidateEmail(email) || !utils.ValidatePassword(password) {
-		return nil, fcerrors.New("Missing credentials", fcerrors.MissingCredentials)
+		return nil, fcerrors.New(fcerrors.MissingCredentials)
 	}
 
 	email = utils.ConvertToCleanEmail(email)
@@ -87,7 +87,7 @@ func (mgr *AuthManager) NewSession(email string, password string) (*models.Sessi
 	if repository.IsRecordNotFoundError(err) {
 		log.Warn("User not found by email %s", email)
 		// we intentionally don't tell the user whether the error was due to bad credentials or the user being nonexistant
-		return nil, fcerrors.New("Wrong credentials or user does not exist", fcerrors.BadCredentials)
+		return nil, fcerrors.New(fcerrors.BadCredentials)
 	} else if err != nil {
 		log.Error(0, "Could not get user via email %s: %v", email, err)
 		return nil, fcerrors.Wrap(err, fcerrors.Database)
@@ -100,7 +100,7 @@ func (mgr *AuthManager) NewSession(email string, password string) (*models.Sessi
 	if valid {
 		return mgr.newUnverifiedSession(user.ID)
 	}
-	return &models.Session{}, fcerrors.New("Wrong credentials or user does not exist", fcerrors.BadCredentials)
+	return &models.Session{}, fcerrors.New(fcerrors.BadCredentials)
 }
 
 func (mgr *AuthManager) newUnverifiedSession(userID int64) (*models.Session, error) {
@@ -132,7 +132,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		!utils.ValidatePassword(user.Password) ||
 		!utils.ValidateFirstName(user.FirstName) ||
 		!utils.ValidateLastName(user.LastName) {
-		return nil, fcerrors.New("Invalid user data", fcerrors.InvalidUserData)
+		return nil, fcerrors.New(fcerrors.InvalidUserData)
 	}
 
 	user.Email = utils.ConvertToCleanEmail(user.Email)
@@ -142,7 +142,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 		// Don't bail out here, since this will be checked again when creating the user in repository
 		log.Warn("Could not validate whether user with email %s already exists", user.Email)
 	} else if err == nil && existingUser != nil && existingUser.ID > 0 {
-		return nil, fcerrors.New("A user with this email already exists", fcerrors.UserExists)
+		return nil, fcerrors.New(fcerrors.UserExists)
 	}
 
 	user.Password, err = crypt.HashScrypt(user.Password)
@@ -185,18 +185,21 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 	if err = mgr.sessionRep.DeleteAllForUser(userID); err != nil {
 		log.Error(0, "Could not delete all sessions for user %d: %v", userID, err)
-		err = fcerrors.New("Could not delete sessions for this user", fcerrors.DeleteSession)
+		err = fcerrors.New(fcerrors.DeleteSession)
 		return
 	}
 
-	// TODO: this may be a not found error? If so, return 404
 	if err = mgr.userRep.Delete(userID); err != nil {
 		log.Error(0, "Deleting the user with ID %d failed: %v", userID, err)
-		err = fcerrors.New("Could not delete this user", fcerrors.Database)
+		if repository.IsRecordNotFoundError(err) {
+			err = fcerrors.New(fcerrors.UserNotFound)
+		} else {
+			err = fcerrors.New(fcerrors.Database)
+		}
 		return
 	}
-	// Delete data?!
 
+	// TODO: Should we delete any data here?
 	return
 }
 
@@ -204,7 +207,7 @@ func (mgr *AuthManager) GetAllUsers(isAdmin bool) ([]*models.User, error) {
 	users, err := mgr.userRep.GetAll()
 	if err != nil {
 		log.Error(0, "Could not get all users, %v:", err)
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 	for _, user := range users {
 		// Mask out the password
@@ -236,7 +239,7 @@ func (mgr *AuthManager) ValidateSession(sess *models.Session) (valid bool) {
 func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
 	user, err := mgr.userRep.GetByID(userID)
 	if repository.IsRecordNotFoundError(err) {
-		return nil, fcerrors.New("User not found", fcerrors.UserNotFound)
+		return nil, fcerrors.New(fcerrors.UserNotFound)
 	} else if err != nil {
 		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
@@ -245,7 +248,13 @@ func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
 
 func (mgr *AuthManager) GetUserByEmail(email string) (*models.User, error) {
 	email = utils.ConvertToCleanEmail(email)
-	return mgr.userRep.GetByEmail(email)
+	user, err := mgr.userRep.GetByEmail(email)
+	if repository.IsRecordNotFoundError(err) {
+		return nil, fcerrors.New(fcerrors.UserNotFound)
+	} else if err != nil {
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
+	}
+	return user, nil
 }
 
 // DeleteSession removes the session from the session provider
@@ -256,11 +265,12 @@ func (mgr *AuthManager) DeleteSession(session *models.Session) (err error) {
 func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
 	user, err := mgr.GetUserByID(userID)
 	if err != nil {
+		err = fcerrors.Wrap(err, fcerrors.Database)
 		return
 	}
 
 	user.LastSessionAt = time.Now().UTC().Unix()
-	err = mgr.userRep.Update(user)
+	err = fcerrors.Wrap(mgr.userRep.Update(user), fcerrors.Database)
 
 	return
 }
@@ -268,10 +278,11 @@ func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
 // GetAdminCount returns the count of admin users
 func (mgr *AuthManager) GetAdminCount() (int, error) {
 	count, err := mgr.userRep.AdminCount()
-	return int(count), err
+	return int(count), fcerrors.Wrap(err, fcerrors.Database)
 }
 
 // GetSessionCount return the count of active sessions
 func (mgr *AuthManager) GetSessionCount() (int, error) {
-	return mgr.sessionRep.Count()
+	count, err := mgr.sessionRep.Count()
+	return count, fcerrors.Wrap(err, fcerrors.Database)
 }
