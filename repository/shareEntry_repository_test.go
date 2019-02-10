@@ -156,8 +156,6 @@ func TestShareEntryRepository(t *testing.T) {
 		}
 	})
 
-	t.Skip("")
-
 	delSuccess := t.Run("delete share entry", func(t *testing.T) {
 		err := rep.Delete(shareEntry2.ID)
 		if err != nil {
