@@ -8,183 +8,234 @@ import (
 	"github.com/freecloudio/server/models"
 )
 
-func TestUserRepository(t *testing.T) {
-	adminUser := &models.User{Email: "admin.user@example.com", IsAdmin: true}
-	user1 := &models.User{Email: "user1@example.com"}
-	user2 := &models.User{Email: "user2@example.com"}
-	dbName := "userTest.db"
+var testUserSetupFailed = false
+var testUserDBName = "userTest.db"
+var testUserAdmin = &models.User{Email: "admin.user@example.com", IsAdmin: true}
+var testUser0 = &models.User{Email: "user1@example.com"}
+var testUser1 = &models.User{Email: "user2@example.com"}
 
-	cleanDBFiles := func() {
-		os.Remove(dbName)
+func testUserCleanup() {
+	os.Remove(testUserDBName)
+}
+
+func testUserSetup() *UserRepository {
+	testUserCleanup()
+	InitDatabaseConnection("", "", "", "", 0, testUserDBName)
+	rep, _ := CreateUserRepository()
+	return rep
+}
+
+func testUserInsert(rep *UserRepository) {
+	rep.Create(testUserAdmin)
+	rep.Create(testUser0)
+	rep.Create(testUser1)
+}
+
+func TestCreateUserRepository(t *testing.T) {
+	testUserCleanup()
+	defer testUserCleanup()
+
+	err := InitDatabaseConnection("", "", "", "", 0, testUserDBName)
+	if err != nil {
+		t.Fatalf("Failed to connect to gorm database: %v", err)
 	}
 
-	cleanDBFiles()
-	defer cleanDBFiles()
-
-	var rep *UserRepository
-
-	success := t.Run("create connection and repository", func(t *testing.T) {
-		err := InitDatabaseConnection("", "", "", "", 0, dbName)
-		if err != nil {
-			t.Fatalf("Failed to connect to gorm database: %v", err)
-		}
-
-		rep, err = CreateUserRepository()
-		if err != nil {
-			t.Fatalf("Failed to create user repository: %v", err)
-		}
-	})
-	if !success {
-		t.Skip("Further test skipped due to setup failing")
+	_, err = CreateUserRepository()
+	if err != nil {
+		t.Fatalf("Failed to create user repository: %v", err)
 	}
 
-	t.Run("empty repository", func(t *testing.T) {
-		adminCount, err := rep.AdminCount()
-		if err != nil {
-			t.Errorf("Failed to get admin count: %v", err)
-		}
-		if adminCount > 0 {
-			t.Errorf("Admin count greater than zero for empty user repository: %d", adminCount)
-		}
-		totalCount, err := rep.TotalCount()
-		if err != nil {
-			t.Errorf("Failed to get total count: %v", err)
-		}
-		if totalCount > 0 {
-			t.Errorf("Total count greater than zero for empty user repository: %d", totalCount)
-		}
-	})
-
-	success = t.Run("create users", func(t *testing.T) {
-		err := rep.Create(adminUser)
-		if err != nil {
-			t.Errorf("Failed to create admin user: %v", err)
-		}
-		err = rep.Create(user1)
-		if err != nil {
-			t.Errorf("Failed to create user1: %v", err)
-		}
-		err = rep.Create(user2)
-		if err != nil {
-			t.Errorf("Failed to create user2: %v", err)
-		}
-	})
-	if !success {
-		t.Skip("Skipping further tests due to no created users")
+	if t.Failed() {
+		testUserSetupFailed = true
 	}
 
-	t.Run("correct counts after creating users", func(t *testing.T) {
-		adminCount, err := rep.AdminCount()
-		if err != nil {
-			t.Errorf("Failed to get admin count: %v", err)
-		}
-		if adminCount != 1 {
-			t.Errorf("Admin count unequal to 1 for filled user repository: %d", adminCount)
-		}
-		totalCount, err := rep.TotalCount()
-		if err != nil {
-			t.Errorf("Failed to get total count: %v", err)
-		}
-		if totalCount != 3 {
-			t.Errorf("Total count unequal to 3 for filled user repository: %d", totalCount)
-		}
-	})
+}
 
-	t.Run("correct read back of created users", func(t *testing.T) {
-		readBackUser, err := rep.GetByID(adminUser.ID)
-		if err != nil {
-			t.Errorf("Failed to read back admin user by ID: %v", err)
-		}
-		if !reflect.DeepEqual(readBackUser, adminUser) {
-			t.Error("Read back admin user and admin user not deeply equal")
-		}
-		readBackUser, err = rep.GetByEmail(user1.Email)
-		if err != nil {
-			t.Errorf("Failed to read back user1 by Email: %v", err)
-		}
-		if !reflect.DeepEqual(readBackUser, user1) {
-			t.Error("Read back user1 and user1 not deeply equal")
-		}
-		allUsers, err := rep.GetAll()
-		if err != nil {
-			t.Errorf("Failed to get all users: %v", err)
-		}
-		if len(allUsers) != 3 {
-			t.Errorf("Length of read back users unequal to 3: %d", len(allUsers))
-		}
-	})
+func TestCreateUser(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
 
-	delSuccess := t.Run("deleting user", func(t *testing.T) {
-		err := rep.Delete(user1.ID)
-		if err != nil {
-			t.Errorf("Failed to delete user1: %v", err)
-		}
-	})
-
-	if delSuccess {
-		t.Run("correct read back after deleting user", func(t *testing.T) {
-			_, err := rep.GetByID(user1.ID)
-			if err == nil || !IsRecordNotFoundError(err) {
-				t.Errorf("Succeeded to read deleted user by ID or error is not 'record not found': %v", err)
-			}
-			_, err = rep.GetByEmail(user1.Email)
-			if err == nil || !IsRecordNotFoundError(err) {
-				t.Errorf("Succeeded to read deleted user by Email or error is not 'record not found': %v", err)
-			}
-			allUsers, err := rep.GetAll()
-			if err != nil {
-				t.Errorf("Failed to get all users: %v", err)
-			}
-			if len(allUsers) != 2 {
-				t.Errorf("Length of read back users unequal to 2 after deletion of user1: %d", len(allUsers))
-			}
-		})
+	err := rep.Create(testUserAdmin)
+	if err != nil {
+		t.Errorf("Failed to create admin user: %v", err)
 	}
 
-	if delSuccess {
-		t.Run("correct counts after user deletion", func(t *testing.T) {
-			adminCount, err := rep.AdminCount()
-			if err != nil {
-				t.Errorf("Failed to get admin count: %v", err)
-			}
-			if adminCount != 1 {
-				t.Errorf("Admin count unequal to 1 for filled user repository: %d", adminCount)
-			}
+	if t.Failed() {
+		testUserSetupFailed = true
+	}
+}
 
-			totalCount, err := rep.TotalCount()
-			if err != nil {
-				t.Errorf("Failed to get total count: %v", err)
-			}
-			if totalCount != 2 {
-				t.Errorf("Total count unequal to 2 for filled user repository: %d", totalCount)
-			}
-		})
+func TestCountUsers(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	adminCount, err := rep.AdminCount()
+	if err != nil {
+		t.Errorf("Failed to get admin count: %v", err)
+	}
+	if adminCount > 0 {
+		t.Errorf("Admin count greater than zero for empty user repository: %d", adminCount)
+	}
+	totalCount, err := rep.TotalCount()
+	if err != nil {
+		t.Errorf("Failed to get total count: %v", err)
+	}
+	if totalCount > 0 {
+		t.Errorf("Total count greater than zero for empty user repository: %d", totalCount)
 	}
 
-	user2.Email = "updatedEmail@example.com"
-	updSuccess := t.Run("updating user", func(t *testing.T) {
-		err := rep.Update(user2)
-		if err != nil {
-			t.Errorf("Failed to update user2: %v", err)
-		}
-	})
+	testUserInsert(rep)
 
-	if updSuccess {
-		t.Run("correct read back after updating user", func(t *testing.T) {
-			readBackUser, err := rep.GetByID(user2.ID)
-			if err != nil {
-				t.Errorf("Failed to read back updated user2 by ID: %v", err)
-			}
-			if !reflect.DeepEqual(readBackUser, user2) {
-				t.Error("Read back updated user2 by ID and user2 are not deeply equal")
-			}
-			readBackUser, err = rep.GetByEmail(user2.Email)
-			if err != nil {
-				t.Errorf("Failed to read back updated user2 by Email: %v", err)
-			}
-			if !reflect.DeepEqual(readBackUser, user2) {
-				t.Error("Read back updated user2 by Email and user2 are not deeply equal")
-			}
-		})
+	adminCount, err = rep.AdminCount()
+	if err != nil {
+		t.Errorf("Failed to get admin count: %v", err)
+	}
+	if adminCount != 1 {
+		t.Errorf("Admin count unequal to 1 for filled user repository: %d", adminCount)
+	}
+	totalCount, err = rep.TotalCount()
+	if err != nil {
+		t.Errorf("Failed to get total count: %v", err)
+	}
+	if totalCount != 3 {
+		t.Errorf("Total count unequal to 3 for filled user repository: %d", totalCount)
+	}
+}
+
+func TestUserGetByID(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	readBackUser, err := rep.GetByID(testUserAdmin.ID)
+	if err != nil {
+		t.Fatalf("Failed to read back admin user by ID: %v", err)
+	}
+	if !reflect.DeepEqual(readBackUser, testUserAdmin) {
+		t.Errorf("Read back admin user and admin user not deeply equal: %v != %v", readBackUser, testUserAdmin)
+	}
+}
+
+func TestUserGetByEmail(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	readBackUser, err := rep.GetByEmail(testUser0.Email)
+	if err != nil {
+		t.Fatalf("Failed to read back user0 by Email: %v", err)
+	}
+	if !reflect.DeepEqual(readBackUser, testUser0) {
+		t.Errorf("Read back user0 and user0 not deeply equal: %v != %v", readBackUser, testUser0)
+	}
+}
+
+func TestGetAllUsers(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	allUsers, err := rep.GetAll()
+	if err != nil {
+		t.Errorf("Failed to get all users: %v", err)
+	}
+	if len(allUsers) != 3 {
+		t.Errorf("Length of read back users unequal to 3: %d", len(allUsers))
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	err := rep.Delete(testUser0.ID)
+	if err != nil {
+		t.Errorf("Failed to delete user1: %v", err)
+	}
+
+	_, err = rep.GetByID(testUser0.ID)
+	if err == nil || !IsRecordNotFoundError(err) {
+		t.Errorf("Succeeded to read deleted user by ID or error is not 'record not found': %v", err)
+	}
+	_, err = rep.GetByEmail(testUser0.Email)
+	if err == nil || !IsRecordNotFoundError(err) {
+		t.Errorf("Succeeded to read deleted user by Email or error is not 'record not found': %v", err)
+	}
+	allUsers, err := rep.GetAll()
+	if err != nil {
+		t.Errorf("Failed to get all users: %v", err)
+	}
+	if len(allUsers) != 2 {
+		t.Errorf("Length of read back users unequal to 2 after deletion of user1: %d", len(allUsers))
+	}
+
+	adminCount, err := rep.AdminCount()
+	if err != nil {
+		t.Errorf("Failed to get admin count: %v", err)
+	}
+	if adminCount != 1 {
+		t.Errorf("Admin count unequal to 1 for filled user repository: %d", adminCount)
+	}
+
+	totalCount, err := rep.TotalCount()
+	if err != nil {
+		t.Errorf("Failed to get total count: %v", err)
+	}
+	if totalCount != 2 {
+		t.Errorf("Total count unequal to 2 for filled user repository: %d", totalCount)
+	}
+}
+
+func TestUpdateUser(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	testUser1.Email = "updatedEmail@example.com"
+	err := rep.Update(testUser1)
+	if err != nil {
+		t.Errorf("Failed to update testUser1: %v", err)
+	}
+
+	readBackUser, err := rep.GetByID(testUser1.ID)
+	if err != nil {
+		t.Errorf("Failed to read back updated testUser1 by ID: %v", err)
+	}
+	if !reflect.DeepEqual(readBackUser, testUser1) {
+		t.Error("Read back updated testUser1 by ID and testUser1 are not deeply equal")
+	}
+	readBackUser, err = rep.GetByEmail(testUser1.Email)
+	if err != nil {
+		t.Errorf("Failed to read back updated testUser1 by Email: %v", err)
+	}
+	if !reflect.DeepEqual(readBackUser, testUser1) {
+		t.Error("Read back updated testUser1 by Email and testUser1 are not deeply equal")
 	}
 }
