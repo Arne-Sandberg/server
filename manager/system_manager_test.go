@@ -58,6 +58,6 @@ func TestGetSystemStats(t *testing.T) {
 	mgr := CreateSystemManager(testSystemVersion)
 	_, err := mgr.GetSystemStats()
 	if err != nil {
-		t.Fatalf("Failed to get system stats: %v", err)
+		t.Fatalf("Failed to get system stats: %#v", err)
 	}
 }

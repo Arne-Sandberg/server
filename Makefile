@@ -9,7 +9,7 @@ run: freecloud-server
 depensure:
 	dep ensure
 
-testunit:
+test:
 	go test ./...
 
 validateswagger:
@@ -19,4 +19,9 @@ generateswagger: validateswagger
 	swagger generate server -A freecloud -P models.Principal -f ./api/freecloud.yml
 
 cleardb:
-	rm freecloud.db
+	-rm freecloud.db
+
+cleardata:
+	-rm -r data
+
+clearall:	cleardb	cleardata
