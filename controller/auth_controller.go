@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"net/http"
+	"github.com/freecloudio/server/restapi/fcerrors"
 
 	"github.com/go-openapi/runtime/middleware"
 	log "gopkg.in/clog.v1"
@@ -14,12 +14,8 @@ import (
 
 func AuthSignupHandler(params authAPI.SignupParams) middleware.Responder {
 	session, err := manager.GetAuthManager().CreateUser(params.User)
-	if err == manager.ErrInvalidUserData {
-		return authAPI.NewSignupDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: "Invalid user data"})
-	} else if err == manager.ErrUserAlreadyExists {
-		return authAPI.NewSignupDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: "User already exists"})
-	} else if err != nil {
-		return authAPI.NewSignupDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: err.Error()})
+	if err != nil {
+		return authAPI.NewSignupDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
@@ -31,10 +27,7 @@ func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
 
 	session, err := manager.GetAuthManager().NewSession(email, password)
 	if err != nil {
-		if err != manager.ErrInvalidCredentials {
-			log.Warn("Login failed without wrong credentials for user %v: %v", email, err)
-		}
-		return authAPI.NewLoginDefault(http.StatusUnauthorized).WithPayload(&models.Error{Message: "Wrong credentials or account does not exist"})
+		return authAPI.NewLoginDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
@@ -45,7 +38,7 @@ func AuthLogoutHandler(params authAPI.LogoutParams, principal *models.Principal)
 	err := manager.GetAuthManager().DeleteSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
-		return authAPI.NewLogoutDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: "Failed to delete session"})
+		return authAPI.NewLogoutDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return authAPI.NewLogoutOK()
@@ -58,7 +51,7 @@ func AuthGetCurrentUserHandler(params userAPI.GetCurrentUserParams, principal *m
 func AuthGetUserByIDHandler(params userAPI.GetUserByIDParams, principal *models.Principal) middleware.Responder {
 	user, err := manager.GetAuthManager().GetUserByID(params.ID)
 	if err != nil {
-		return userAPI.NewGetUserByIDDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: "Could not get user with id"})
+		return userAPI.NewGetUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return userAPI.NewGetUserByIDOK().WithPayload(user)
@@ -67,7 +60,7 @@ func AuthGetUserByIDHandler(params userAPI.GetUserByIDParams, principal *models.
 func AuthDeleteCurrentUserHandler(params userAPI.DeleteCurrentUserParams, principal *models.Principal) middleware.Responder {
 	err := manager.GetAuthManager().DeleteUser(principal.User.ID)
 	if err != nil {
-		return userAPI.NewDeleteCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: "Could not delete own user"})
+		return userAPI.NewDeleteCurrentUserDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return userAPI.NewDeleteCurrentUserOK()
@@ -76,7 +69,7 @@ func AuthDeleteCurrentUserHandler(params userAPI.DeleteCurrentUserParams, princi
 func AuthDeleteUserByIDHandler(params userAPI.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
 	err := manager.GetAuthManager().DeleteUser(params.ID)
 	if err != nil {
-		return userAPI.NewDeleteUserByIDDefault(http.StatusInternalServerError).WithPayload(&models.Error{Message: "Could not delete user by id"})
+		return userAPI.NewDeleteUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
 	return userAPI.NewDeleteUserByIDOK()
