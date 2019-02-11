@@ -60,12 +60,12 @@ func TestCreateShareEntryRepository(t *testing.T) {
 
 	err := InitDatabaseConnection("", "", "", "", 0, testShareEntryDBName)
 	if err != nil {
-		t.Fatalf("Failed to connect to gorm database: %v", err)
+		t.Errorf("Failed to connect to gorm database: %v", err)
 	}
 
 	_, err = CreateShareEntryRepository()
 	if err != nil {
-		t.Fatalf("Failed to create share entry repository: %v", err)
+		t.Errorf("Failed to create share entry repository: %v", err)
 	}
 
 	if t.Failed() {

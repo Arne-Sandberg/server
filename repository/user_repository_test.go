@@ -37,12 +37,12 @@ func TestCreateUserRepository(t *testing.T) {
 
 	err := InitDatabaseConnection("", "", "", "", 0, testUserDBName)
 	if err != nil {
-		t.Fatalf("Failed to connect to gorm database: %v", err)
+		t.Errorf("Failed to connect to gorm database: %v", err)
 	}
 
 	_, err = CreateUserRepository()
 	if err != nil {
-		t.Fatalf("Failed to create user repository: %v", err)
+		t.Errorf("Failed to create user repository: %v", err)
 	}
 
 	if t.Failed() {

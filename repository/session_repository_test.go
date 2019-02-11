@@ -42,12 +42,12 @@ func TestCreateSessionRepository(t *testing.T) {
 
 	err := InitDatabaseConnection("", "", "", "", 0, testSessionDBName)
 	if err != nil {
-		t.Fatalf("Failed to connect to gorm database: %v", err)
+		t.Errorf("Failed to connect to gorm database: %v", err)
 	}
 
 	_, err = CreateSessionRepository()
 	if err != nil {
-		t.Fatalf("Failed to create session repository: %v", err)
+		t.Errorf("Failed to create session repository: %v", err)
 	}
 
 	if t.Failed() {
