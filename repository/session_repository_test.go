@@ -183,7 +183,7 @@ func TestDeleteExpiredSessions(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	//defer testSessionCleanup()
+	defer testSessionCleanup()
 	rep := testSessionSetup()
 
 	testSessionInsert(rep)
