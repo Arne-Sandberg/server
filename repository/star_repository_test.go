@@ -34,12 +34,12 @@ func TestCreateStarRepository(t *testing.T) {
 
 	err := InitDatabaseConnection("", "", "", "", 0, testStarDBName)
 	if err != nil {
-		t.Fatalf("Failed to connect to gorm database: %v", err)
+		t.Errorf("Failed to connect to gorm database: %v", err)
 	}
 
 	_, err = CreateStarRepository()
 	if err != nil {
-		t.Fatalf("Failed to create star repository: %v", err)
+		t.Errorf("Failed to create star repository: %v", err)
 	}
 
 	if t.Failed() {
