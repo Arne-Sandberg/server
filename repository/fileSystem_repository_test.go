@@ -1,11 +1,11 @@
 package repository
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/freecloudio/server/models"
 )
@@ -28,19 +28,17 @@ func testFileSystemSetup() *FileSystemRepository {
 }
 
 func testFileSystemInsertDir(rep *FileSystemRepository) {
-	_, err := rep.CreateDirectory("1/.tmp")
-	fmt.Printf("1/.tmp: %v\n", err)
-	_, err = rep.CreateDirectory("/2")
-	fmt.Printf("2/: %v\n", err)
+	rep.CreateDirectory("1/.tmp")
+	rep.CreateDirectory("/2")
+	time.Sleep(200 * time.Millisecond)
 }
 
 func testFileSystemInsertFile(rep *FileSystemRepository) {
-	file, err := rep.CreateHandle("1/.tmp/testfile.txt")
-	fmt.Printf("1/.tmp/testfile.txt: %v\n", err)
+	file, _ := rep.CreateHandle("1/.tmp/testfile.txt")
 	file.Close()
-	file, err = rep.CreateHandle("2/anotherFile.txt")
-	fmt.Printf("2/anotherFile.txt: %v\n", err)
+	file, _ = rep.CreateHandle("2/anotherFile.txt")
 	file.Close()
+	time.Sleep(200 * time.Millisecond)
 }
 
 func testFileSystemInsertComplete(rep *FileSystemRepository) {
