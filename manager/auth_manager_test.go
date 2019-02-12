@@ -162,6 +162,8 @@ func TestGetUserByID(t *testing.T) {
 		t.Errorf("Failed to get admin user by ID: %v", err)
 	}
 	readBackUser.LastSessionAt = 0
+	readBackUser.UpdatedAt = 0
+	testAuthUserAdmin.UpdatedAt = 0
 	if !reflect.DeepEqual(readBackUser, testAuthUserAdmin) {
 		t.Errorf("Read back admin user by ID and admin user not deeply equal: %v != %v", readBackUser, testAuthUserAdmin)
 	}
@@ -186,6 +188,8 @@ func TestGetUserByMail(t *testing.T) {
 		t.Errorf("Failed to get user by email: %v", err)
 	}
 	readBackUser.LastSessionAt = 0
+	readBackUser.UpdatedAt = 0
+	testAuthUser.UpdatedAt = 0
 	if !reflect.DeepEqual(readBackUser, testAuthUser) {
 		t.Errorf("Read back user by email and user not deeply equal: %v != %v", readBackUser, testAuthUser)
 	}
