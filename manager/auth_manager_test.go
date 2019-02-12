@@ -221,13 +221,11 @@ func TestGetAllUsers(t *testing.T) {
 		user.UpdatedAt = 0
 		if user.ID == testAuthUserAdmin.ID {
 			testAuthUserAdmin.UpdatedAt = 0
-			testAuthUserAdmin.Password = ""
 			if !reflect.DeepEqual(user, testAuthUserAdmin) {
 				t.Errorf("Read admin user from all users not deeply equal to admin user: %v != %v", user, testAuthUserAdmin)
 			}
 		} else if user.ID == testAuthUser.ID {
 			testAuthUser.UpdatedAt = 0
-			testAuthUser.Password = ""
 			if !reflect.DeepEqual(user, testAuthUser) {
 				t.Errorf("Read user from all user not deeply equal to user: %v != %v", user, testAuthUser)
 			}

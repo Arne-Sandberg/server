@@ -203,9 +203,6 @@ func (mgr *AuthManager) GetAllUsers() ([]*models.User, error) {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
-	for _, user := range users {
-		user.Password = ""
-	}
 	return users, nil
 }
 
