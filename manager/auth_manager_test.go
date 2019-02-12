@@ -200,6 +200,69 @@ func TestGetUserByMail(t *testing.T) {
 	}
 }
 
+func TestGetAllUsers(t *testing.T) {
+	if testAuthSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	mgr := testAuthSetup()
+	defer testAuthCleanup(mgr)
+
+	testAuthInsert(mgr)
+
+	users, err := mgr.GetAllUsers()
+	if err != nil {
+		t.Errorf("Failed to get all users: %v", err)
+	}
+	if len(users) != 2 {
+		t.Errorf("Lenght of all users unequal to two: %d", len(users))
+	}
+	for _, user := range users {
+		user.LastSessionAt = 0
+		user.UpdatedAt = 0
+		if user.ID == testAuthUserAdmin.ID {
+			testAuthUserAdmin.UpdatedAt = 0
+			testAuthUserAdmin.Password = ""
+			if !reflect.DeepEqual(user, testAuthUserAdmin) {
+				t.Errorf("Read admin user from all users not deeply equal to admin user: %v != %v", user, testAuthUserAdmin)
+			}
+		} else if user.ID == testAuthUser.ID {
+			testAuthUser.UpdatedAt = 0
+			testAuthUser.Password = ""
+			if !reflect.DeepEqual(user, testAuthUser) {
+				t.Errorf("Read user from all user not deeply equal to user: %v != %v", user, testAuthUser)
+			}
+		}
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	if testAuthSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	mgr := testAuthSetup()
+	defer testAuthCleanup(mgr)
+
+	testAuthInsert(mgr)
+	sess, _ := mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+
+	err := mgr.DeleteUser(testAuthUser.ID)
+	if err != nil {
+		t.Errorf("Failed to delete user: %v", err)
+	}
+	_, err = mgr.GetUserByID(testAuthUser.ID)
+	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.UserNotFound {
+		t.Errorf("Getting deleted user was successfull or error is unequal to 'user not found': %v", err)
+	}
+	_, err = mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.BadCredentials {
+		t.Errorf("Creating new session for deleted user succeeded or error is unequal to 'bad credentials': %v", err)
+	}
+	valid := mgr.ValidateSession(sess)
+	if valid {
+		t.Error("Session valid for deleted user")
+	}
+}
+
 func TestValidateSession(t *testing.T) {
 	if testAuthSetupFailed {
 		t.Skip("Skip due to failed setup")
@@ -246,8 +309,82 @@ func TestUpdateLastSession(t *testing.T) {
 	}
 }
 
-// TODO: Test DeleteUser
-// TODO: Test GetAllUsers
-// TODO: Test DeleteSession
-// TODO: Test GetAdminCount
-// TODO: Test GetSessionCount
+func TestGetSessionCount(t *testing.T) {
+	if testAuthSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	mgr := testAuthSetup()
+	defer testAuthCleanup(mgr)
+
+	testAuthInsert(mgr)
+
+	count, err := mgr.GetSessionCount()
+	if err != nil {
+		t.Errorf("Failed to get session count: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("Session count unequal to two: %d", count)
+	}
+	mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	count, err = mgr.GetSessionCount()
+	if err != nil {
+		t.Errorf("Failed to get session count after new session: %v", err)
+	}
+	if count != 3 {
+		t.Errorf("Session count unequal to three after new session: %d", count)
+	}
+}
+
+func TestDeleteSession(t *testing.T) {
+	if testAuthSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	mgr := testAuthSetup()
+	defer testAuthCleanup(mgr)
+
+	testAuthInsert(mgr)
+
+	count, _ := mgr.GetSessionCount()
+	if count != 2 {
+		t.Errorf("Session count unequal to two: %d", count)
+	}
+	sess, _ := mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	count, _ = mgr.GetSessionCount()
+	if count != 3 {
+		t.Errorf("Session count unequal to three after new session: %d", count)
+	}
+	err := mgr.DeleteSession(sess)
+	if err != nil {
+		t.Errorf("Failed to delete session: %v", err)
+	}
+	count, _ = mgr.GetSessionCount()
+	if count != 2 {
+		t.Errorf("Session count unequal to two after deleting session: %d", count)
+	}
+}
+
+func TestGetAdminCount(t *testing.T) {
+	if testAuthSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	mgr := testAuthSetup()
+	defer testAuthCleanup(mgr)
+
+	testAuthInsert(mgr)
+
+	count, err := mgr.GetAdminCount()
+	if err != nil {
+		t.Errorf("Failed to get admin count: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Admin count unequal to one: %d", count)
+	}
+	mgr.DeleteUser(testAuthUserAdmin.ID)
+	count, err = mgr.GetAdminCount()
+	if err != nil {
+		t.Errorf("Failed to get admin count after deleting admin: %v", err)
+	}
+	if count != 0 {
+		t.Errorf("Admin count unequal to one after deleting admin: %d", count)
+	}
+}
