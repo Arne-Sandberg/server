@@ -12,18 +12,18 @@ import (
 var testSystemVersion = "v0.0.0"
 var testSystemDBName = "systemTest.db"
 
-func testSystemSetup() {
+func testSystemCleanup() {
+	systemManager = nil
+	authManager = nil
+	os.Remove(testSystemDBName)
+}
+
+func testSystemReq() {
 	repository.InitDatabaseConnection("", "", "", "", 0, testSystemDBName)
 	sessionRep, _ := repository.CreateSessionRepository()
 	userRep, _ := repository.CreateUserRepository()
 
 	CreateAuthManager(sessionRep, userRep)
-}
-
-func testSystemCleanup() {
-	systemManager = nil
-	authManager = nil
-	os.Remove(testSystemDBName)
 }
 
 func TestCreateSystemManager(t *testing.T) {
@@ -53,7 +53,7 @@ func TestGetSystemManager(t *testing.T) {
 
 func TestGetSystemStats(t *testing.T) {
 	defer testSystemCleanup()
-	testSystemSetup()
+	testSystemReq()
 
 	mgr := CreateSystemManager(testSystemVersion)
 	_, err := mgr.GetSystemStats()

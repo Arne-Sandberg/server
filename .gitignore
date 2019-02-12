@@ -19,10 +19,8 @@ data/
 
 # VS Code
 .vscode/
+debug.test
 
 # Vim
 *.vim
 *.swp
-
-testData/
-test.db
