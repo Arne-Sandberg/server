@@ -24,5 +24,8 @@ data/
 *.vim
 *.swp
 
+# Sonar scanner
+.scannerwork/
+
 testData/
 test.db
