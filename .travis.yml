@@ -1,11 +1,20 @@
 language: go
+addons:
+  sonarcloud:
+    organization: "freecloudio"
+    token:
+      secure: "N0e4mzUJncFnm+i9LZ2dKxNRID7/itLbAA6QxkkijnfkElq2lMj9q6gJqBRueb449Z1xVV61hR6IGVnmo0DEiDSVTYEzuKr9JCIVfSn/qcgZcJsAfejiMTxH7B84JIIxxXwCfTj/gO41dMdm6fk32LY3SQe88NAlW7lOFSX/cISxJilJbbS2kBhcRectSXjBlsQ3KZmlY2W6AkRA1AqSbE9ogNmSdIxWf9R14qSO1RMXpixKu4FrrTc6J4NHxzdGvkSas+KVVLqGvvF8T24CmEu5YJvDpzO51328gRVzxtWgBx45285E6PNHW9tZqsVTGfx6BXPpxSkIayfonrfFIbizrVEJ4z76lRq0H6loYj12FQH3+PZfln7/DWZYK2VV1GQ2s0C8byJlFHZPqkWZUAyjMIK6n3nxP/GirFMdoh67jBoqPqsg0FpfdV80IndM/qbwzl5ZJ7jk2hwTTWS8ZlzjDIMe+YTmaHUOAAysw/AIPXVx7Mi4E2nOURpjkV9Pjnl877AX5BL+TQz527ev6vsoZDKGgLpyKg/zZ85ooMkqdZ0TSw2W4H+ZtBRyN2IVgRJ35t+ah15c+c0v5sOP196AD98iY5mWE2Ul6bvEKrTRfohG7bGAZMc3hU6oeYSDUdv1wx8UH8EwZ+GGg3l0vVH8lnGbQqoKBTBfp+WR1sM=" 
 go:
 - "1.x"
 - "1.10.x"
 - "1.10"
 before_script:
-- go vet ./...
-script: go test -race -v ./...
+- git fetch origin master:refs/remotes/origin/master
+script:
+- go vet ./... 2> vet_report.out
+- go build ./cmd/freecloud-server
+- go test -coverprofile=test_coverage.out -json -race ./... > test_report.json
+- sonar-scanner
 notifications:
   email: false
   slack:
