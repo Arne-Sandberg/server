@@ -27,6 +27,3 @@ debug.test
 
 # Sonar scanner
 .scannerwork/
-
-testData/
-test.db
