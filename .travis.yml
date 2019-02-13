@@ -8,6 +8,8 @@ go:
 - "1.x"
 - "1.10.x"
 - "1.10"
+before_script:
+- git fetch origin master:refs/remotes/origin/master
 script:
 - go vet ./... 2> vet_report.out
 - go build ./cmd/freecloud-server
