@@ -8,12 +8,11 @@ go:
 - "1.x"
 - "1.10.x"
 - "1.10"
-before_script:
-- go vet ./...
 script:
-  - go build ./cmd/freecloud-server
-  - go test -race -v ./...
-  - sonar-scanner
+- go vet ./... 2> vet_report.out
+- go build ./cmd/freecloud-server
+- go test -coverprofile=test_coverage.out -json -race ./... > test_report.json
+- sonar-scanner
 notifications:
   email: false
   slack:
