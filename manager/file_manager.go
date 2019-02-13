@@ -59,7 +59,7 @@ func GetFileManager() *FileManager {
 func (mgr *FileManager) Close() {}
 
 func (mgr *FileManager) ScanFSForChanges() (err error) {
-	existingUsers, err := GetAuthManager().GetAllUsers(true)
+	existingUsers, err := GetAuthManager().GetAllUsers()
 	if err != nil {
 		log.Error(0, "Could not get exising users: %v", err)
 		return

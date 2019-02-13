@@ -174,6 +174,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (session *models.Session, 
 
 }
 
+// DeleteUser deletes a user from db and maybe his files
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 	if err = mgr.sessionRep.DeleteAllForUser(userID); err != nil {
 		log.Error(0, "Could not delete all sessions for user %d: %v", userID, err)
@@ -195,22 +196,12 @@ func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 	return
 }
 
-func (mgr *AuthManager) GetAllUsers(isAdmin bool) ([]*models.User, error) {
+// GetAllUsers returns all existing users with masked out password
+func (mgr *AuthManager) GetAllUsers() ([]*models.User, error) {
 	users, err := mgr.userRep.GetAll()
 	if err != nil {
 		log.Error(0, "Could not get all users, %v:", err)
 		return nil, fcerrors.Wrap(err, fcerrors.Database)
-	}
-	for _, user := range users {
-		// Mask out the password
-		user.Password = ""
-
-		// For normal users also mask out created, updated and lastSession
-		if !isAdmin {
-			user.CreatedAt = 0
-			user.UpdatedAt = 0
-			user.LastSessionAt = 0
-		}
 	}
 	return users, nil
 }
@@ -228,6 +219,7 @@ func (mgr *AuthManager) ValidateSession(sess *models.Session) (valid bool) {
 	return false
 }
 
+// GetUserByID returns a user by ID
 func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
 	user, err := mgr.userRep.GetByID(userID)
 	if repository.IsRecordNotFoundError(err) {
@@ -238,6 +230,7 @@ func (mgr *AuthManager) GetUserByID(userID int64) (*models.User, error) {
 	return user, nil
 }
 
+// GetUserByEmail returns a user by email
 func (mgr *AuthManager) GetUserByEmail(email string) (*models.User, error) {
 	email = utils.ConvertToCleanEmail(email)
 	user, err := mgr.userRep.GetByEmail(email)
@@ -254,6 +247,7 @@ func (mgr *AuthManager) DeleteSession(session *models.Session) (err error) {
 	return fcerrors.Wrap(mgr.sessionRep.Delete(session), fcerrors.Database)
 }
 
+// UpdateLastSession updates the timestamp of last session of the user to now
 func (mgr *AuthManager) UpdateLastSession(userID int64) (err error) {
 	user, err := mgr.GetUserByID(userID)
 	if err != nil {
