@@ -156,7 +156,7 @@ func (mgr *AuthManager) LoginUser(email string, password string) (*models.Sessio
 	return &models.Session{}, fcerrors.New(fcerrors.BadCredentials)
 }
 
-// DeleteUser deletes a user from db and maybe his files
+// DeleteUser deletes a user from db and his files depending on the settings
 func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 	user, err := mgr.userRep.GetByID(userID)
 	if err != nil {
@@ -172,13 +172,8 @@ func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 		}
 	}
 
-	if err = mgr.sessionRep.DeleteAllForUser(userID); err != nil {
-		log.Error(0, "Could not delete all sessions for user %d: %v", userID, err)
-		err = fcerrors.New(fcerrors.DeleteSession)
-		return
-	}
-
-	if err = mgr.userRep.Delete(userID); err != nil {
+	err = mgr.userRep.Delete(userID)
+	if err != nil {
 		log.Error(0, "Deleting the user with ID %d failed: %v", userID, err)
 		if repository.IsRecordNotFoundError(err) {
 			err = fcerrors.New(fcerrors.UserNotFound)
@@ -186,6 +181,11 @@ func (mgr *AuthManager) DeleteUser(userID int64) (err error) {
 			err = fcerrors.New(fcerrors.Database)
 		}
 		return
+	}
+
+	err = mgr.sessionRep.DeleteAllForUser(userID)
+	if err != nil { // Ignore errors regarding deleting sessions as the user cannot do anything
+		log.Warn("Could not delete all sessions for user %d: %v", userID, err)
 	}
 
 	return
