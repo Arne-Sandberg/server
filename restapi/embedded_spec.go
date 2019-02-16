@@ -1192,7 +1192,7 @@ func init() {
           "format": "int64",
           "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
         },
-        "createdAt": {
+        "created": {
           "type": "integer",
           "format": "int64"
         },
@@ -1203,23 +1203,23 @@ func init() {
         "firstName": {
           "type": "string"
         },
-        "hasAvatar": {
-          "type": "boolean"
-        },
         "isAdmin": {
           "type": "boolean"
         },
         "lastName": {
           "type": "string"
         },
-        "lastSessionAt": {
+        "lastSession": {
           "type": "integer",
           "format": "int64"
         },
         "password": {
           "type": "string"
         },
-        "updatedAt": {
+        "retainFilesAfterDeletion": {
+          "type": "boolean"
+        },
+        "updated": {
           "type": "integer",
           "format": "int64"
         }
@@ -1233,7 +1233,7 @@ func init() {
           "format": "int64",
           "x-nullable": true
         },
-        "createdAt": {
+        "created": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -1246,10 +1246,6 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "hasAvatar": {
-          "type": "boolean",
-          "x-nullable": true
-        },
         "isAdmin": {
           "type": "boolean",
           "x-nullable": true
@@ -1258,7 +1254,7 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "lastSessionAt": {
+        "lastSession": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -1267,7 +1263,11 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "updatedAt": {
+        "retainFilesAfterDeletion": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "updated": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -2481,7 +2481,7 @@ func init() {
           "format": "int64",
           "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
         },
-        "createdAt": {
+        "created": {
           "type": "integer",
           "format": "int64"
         },
@@ -2492,23 +2492,23 @@ func init() {
         "firstName": {
           "type": "string"
         },
-        "hasAvatar": {
-          "type": "boolean"
-        },
         "isAdmin": {
           "type": "boolean"
         },
         "lastName": {
           "type": "string"
         },
-        "lastSessionAt": {
+        "lastSession": {
           "type": "integer",
           "format": "int64"
         },
         "password": {
           "type": "string"
         },
-        "updatedAt": {
+        "retainFilesAfterDeletion": {
+          "type": "boolean"
+        },
+        "updated": {
           "type": "integer",
           "format": "int64"
         }
@@ -2522,7 +2522,7 @@ func init() {
           "format": "int64",
           "x-nullable": true
         },
-        "createdAt": {
+        "created": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -2535,10 +2535,6 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "hasAvatar": {
-          "type": "boolean",
-          "x-nullable": true
-        },
         "isAdmin": {
           "type": "boolean",
           "x-nullable": true
@@ -2547,7 +2543,7 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "lastSessionAt": {
+        "lastSession": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -2556,7 +2552,11 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "updatedAt": {
+        "retainFilesAfterDeletion": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "updated": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true

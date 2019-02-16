@@ -18,8 +18,8 @@ type User struct {
 	// ID
 	ID int64 `json:"ID,omitempty" gorm:"primary_key;auto_increment"`
 
-	// created at
-	CreatedAt int64 `json:"createdAt,omitempty"`
+	// created
+	Created int64 `json:"created,omitempty"`
 
 	// email
 	Email string `json:"email,omitempty" gorm:"unique_index"`
@@ -27,23 +27,23 @@ type User struct {
 	// first name
 	FirstName string `json:"firstName,omitempty"`
 
-	// has avatar
-	HasAvatar bool `json:"hasAvatar,omitempty"`
-
 	// is admin
 	IsAdmin bool `json:"isAdmin,omitempty"`
 
 	// last name
 	LastName string `json:"lastName,omitempty"`
 
-	// last session at
-	LastSessionAt int64 `json:"lastSessionAt,omitempty"`
+	// last session
+	LastSession int64 `json:"lastSession,omitempty"`
 
 	// password
 	Password string `json:"password,omitempty"`
 
-	// updated at
-	UpdatedAt int64 `json:"updatedAt,omitempty"`
+	// retain files after deletion
+	RetainFilesAfterDeletion bool `json:"retainFilesAfterDeletion,omitempty"`
+
+	// updated
+	Updated int64 `json:"updated,omitempty"`
 }
 
 // Validate validates this user

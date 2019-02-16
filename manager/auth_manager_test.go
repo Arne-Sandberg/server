@@ -4,7 +4,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/freecloudio/server/restapi/fcerrors"
 
@@ -42,7 +41,7 @@ func testAuthReq() (sessionRep *repository.SessionRepository, userRep *repositor
 
 func testAuthSetup() *AuthManager {
 	sessionRep, userRep := testAuthReq()
-	mgr := CreateAuthManager(sessionRep, userRep)
+	mgr := CreateAuthManager(sessionRep, userRep, 24, 1)
 	shareRep, _ := repository.CreateShareEntryRepository()
 	fileInfoRep, _ := repository.CreateFileInfoRepository()
 	fileSystemRep, _ := repository.CreateFileSystemRepository(testAuthDataFolder, ".tmp", 1, 1)
@@ -58,10 +57,12 @@ func testAuthInsert(mgr *AuthManager) {
 func TestCreateAuthManager(t *testing.T) {
 	sessionRep, userRep := testAuthReq()
 
-	mgr := CreateAuthManager(sessionRep, userRep)
+	mgr := CreateAuthManager(sessionRep, userRep, 24, 1)
 	expMgr := &AuthManager{
-		sessionRep: sessionRep,
-		userRep:    userRep,
+		sessionRep:             sessionRep,
+		userRep:                userRep,
+		sessionExpiry:          24,
+		sessionCleanupInterval: 1,
 	}
 	mgr.Close()
 	mgr.done = nil
@@ -83,7 +84,7 @@ func TestGetAuthManager(t *testing.T) {
 	}
 	sessionRep, userRep := testAuthReq()
 
-	mgr := CreateAuthManager(sessionRep, userRep)
+	mgr := CreateAuthManager(sessionRep, userRep, 24, 1)
 	mgrGet := GetAuthManager()
 
 	if !reflect.DeepEqual(mgr, mgrGet) {
@@ -125,7 +126,7 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
-func TestNewSession(t *testing.T) {
+func TestUserLogin(t *testing.T) {
 	if testAuthSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
@@ -134,7 +135,7 @@ func TestNewSession(t *testing.T) {
 
 	testAuthInsert(mgr)
 
-	sess, err := mgr.NewSession(testAuthUserAdmin.Email, testAuthUserAdminPW)
+	sess, err := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
 	if err != nil {
 		t.Errorf("Failed to verify and get new session for admin user: %v", err)
 	}
@@ -142,7 +143,7 @@ func TestNewSession(t *testing.T) {
 		t.Errorf("New verified session is not for correct user: %v != %v", sess.UserID, testAuthUserAdmin.ID)
 	}
 
-	_, err = mgr.NewSession(testAuthUser.Email, "wrongPassword")
+	_, err = mgr.LoginUser(testAuthUser.Email, "wrongPassword")
 	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.BadCredentials {
 		t.Errorf("Verifying and creating session with wrong user credentials succeeded or error is not 'bad credentials': %v", err)
 	}
@@ -161,9 +162,9 @@ func TestGetUserByID(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to get admin user by ID: %v", err)
 	}
-	readBackUser.LastSessionAt = 0
-	readBackUser.UpdatedAt = 0
-	testAuthUserAdmin.UpdatedAt = 0
+	readBackUser.LastSession = 0
+	readBackUser.Updated = 0
+	testAuthUserAdmin.Updated = 0
 	if !reflect.DeepEqual(readBackUser, testAuthUserAdmin) {
 		t.Errorf("Read back admin user by ID and admin user not deeply equal: %v != %v", readBackUser, testAuthUserAdmin)
 	}
@@ -187,9 +188,9 @@ func TestGetUserByMail(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to get user by email: %v", err)
 	}
-	readBackUser.LastSessionAt = 0
-	readBackUser.UpdatedAt = 0
-	testAuthUser.UpdatedAt = 0
+	readBackUser.LastSession = 0
+	readBackUser.Updated = 0
+	testAuthUser.Updated = 0
 	if !reflect.DeepEqual(readBackUser, testAuthUser) {
 		t.Errorf("Read back user by email and user not deeply equal: %v != %v", readBackUser, testAuthUser)
 	}
@@ -217,15 +218,15 @@ func TestGetAllUsers(t *testing.T) {
 		t.Errorf("Lenght of all users unequal to two: %d", len(users))
 	}
 	for _, user := range users {
-		user.LastSessionAt = 0
-		user.UpdatedAt = 0
+		user.LastSession = 0
+		user.Updated = 0
 		if user.ID == testAuthUserAdmin.ID {
-			testAuthUserAdmin.UpdatedAt = 0
+			testAuthUserAdmin.Updated = 0
 			if !reflect.DeepEqual(user, testAuthUserAdmin) {
 				t.Errorf("Read admin user from all users not deeply equal to admin user: %v != %v", user, testAuthUserAdmin)
 			}
 		} else if user.ID == testAuthUser.ID {
-			testAuthUser.UpdatedAt = 0
+			testAuthUser.Updated = 0
 			if !reflect.DeepEqual(user, testAuthUser) {
 				t.Errorf("Read user from all user not deeply equal to user: %v != %v", user, testAuthUser)
 			}
@@ -241,7 +242,7 @@ func TestDeleteUser(t *testing.T) {
 	defer testAuthCleanup(mgr)
 
 	testAuthInsert(mgr)
-	sess, _ := mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	sess, _ := mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
 
 	err := mgr.DeleteUser(testAuthUser.ID)
 	if err != nil {
@@ -251,7 +252,7 @@ func TestDeleteUser(t *testing.T) {
 	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.UserNotFound {
 		t.Errorf("Getting deleted user was successfull or error is unequal to 'user not found': %v", err)
 	}
-	_, err = mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	_, err = mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
 	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.BadCredentials {
 		t.Errorf("Creating new session for deleted user succeeded or error is unequal to 'bad credentials': %v", err)
 	}
@@ -269,7 +270,7 @@ func TestValidateSession(t *testing.T) {
 	defer testAuthCleanup(mgr)
 
 	testAuthInsert(mgr)
-	sess, _ := mgr.NewSession(testAuthUserAdmin.Email, testAuthUserAdminPW)
+	sess, _ := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
 
 	res := mgr.ValidateSession(sess)
 	if !res {
@@ -289,24 +290,6 @@ func TestValidateSession(t *testing.T) {
 	}
 }
 
-func TestUpdateLastSession(t *testing.T) {
-	if testAuthSetupFailed {
-		t.Skip("Skip due to failed setup")
-	}
-	mgr := testAuthSetup()
-	defer testAuthCleanup(mgr)
-
-	testAuthInsert(mgr)
-
-	before, _ := mgr.GetUserByID(testAuthUserAdmin.ID)
-	time.Sleep(3 * time.Second)
-	mgr.UpdateLastSession(testAuthUserAdmin.ID)
-	after, _ := mgr.GetUserByID(testAuthUserAdmin.ID)
-	if before.LastSessionAt >= after.LastSessionAt {
-		t.Errorf("Last session after update last session not greater than before: %v <= %v", before.LastSessionAt, after.LastSessionAt)
-	}
-}
-
 func TestGetSessionCount(t *testing.T) {
 	if testAuthSetupFailed {
 		t.Skip("Skip due to failed setup")
@@ -323,7 +306,7 @@ func TestGetSessionCount(t *testing.T) {
 	if count != 2 {
 		t.Errorf("Session count unequal to two: %d", count)
 	}
-	mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
 	count, err = mgr.GetSessionCount()
 	if err != nil {
 		t.Errorf("Failed to get session count after new session: %v", err)
@@ -346,7 +329,7 @@ func TestDeleteSession(t *testing.T) {
 	if count != 2 {
 		t.Errorf("Session count unequal to two: %d", count)
 	}
-	sess, _ := mgr.NewSession(testAuthUser.Email, testAuthUserPW)
+	sess, _ := mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
 	count, _ = mgr.GetSessionCount()
 	if count != 3 {
 		t.Errorf("Session count unequal to three after new session: %d", count)

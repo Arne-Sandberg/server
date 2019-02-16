@@ -23,7 +23,7 @@ func testSystemReq() {
 	sessionRep, _ := repository.CreateSessionRepository()
 	userRep, _ := repository.CreateUserRepository()
 
-	CreateAuthManager(sessionRep, userRep)
+	CreateAuthManager(sessionRep, userRep, 24, 1)
 }
 
 func TestCreateSystemManager(t *testing.T) {

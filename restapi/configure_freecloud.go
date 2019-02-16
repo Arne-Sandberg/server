@@ -191,7 +191,7 @@ func initializeServer() {
 		log.Fatal(0, "FileSystemRepository setup failed, bailing out!: %v", err)
 	}
 
-	manager.CreateAuthManager(sessionRep, userRep)
+	manager.CreateAuthManager(sessionRep, userRep, config.GetInt("auth.session_expiry"), config.GetInt("auth.session_cleanup_interval"))
 	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep, tmpName)
 	manager.CreateSystemManager("0.0.1") // TODO: Better place to save version
 }
