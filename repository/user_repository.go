@@ -24,8 +24,8 @@ func CreateUserRepository() (*UserRepository, error) {
 
 // Create stores a new user
 func (rep *UserRepository) Create(user *models.User) (err error) {
-	user.CreatedAt = utils.GetTimestampNow()
-	user.UpdatedAt = utils.GetTimestampNow()
+	user.Created = utils.GetTimestampNow()
+	user.Updated = utils.GetTimestampNow()
 	err = databaseConnection.Create(user).Error
 	if err != nil {
 		log.Error(0, "Could not create user: %v", err)
@@ -46,10 +46,21 @@ func (rep *UserRepository) Delete(userID int64) (err error) {
 
 // Update updates a user by its user.ID
 func (rep *UserRepository) Update(user *models.User) (err error) {
-	user.UpdatedAt = utils.GetTimestampNow()
+	user.Updated = utils.GetTimestampNow()
 	err = databaseConnection.Save(user).Error
 	if err != nil {
 		log.Error(0, "Could not update user: %v", err)
+		return
+	}
+	return
+}
+
+// UpdateLastSession updated the 'updated' and 'last_session' attributes of an user
+func (rep *UserRepository) UpdateLastSession(userID int64) (err error) {
+	timeNow := utils.GetTimestampNow()
+	err = databaseConnection.Model(&models.User{ID: userID}).Update("updated", timeNow).Update("last_session", timeNow).Error
+	if err != nil {
+		log.Error(0, "Could not update users last session: %v", err)
 		return
 	}
 	return

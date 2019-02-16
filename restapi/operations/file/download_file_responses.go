@@ -54,7 +54,6 @@ func (o *DownloadFileOK) WriteResponse(rw http.ResponseWriter, producer runtime.
 	if err := producer.Produce(rw, payload); err != nil {
 		panic(err) // let the recovery middleware deal with this
 	}
-
 }
 
 /*DownloadFileDefault Unexpected error

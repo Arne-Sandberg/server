@@ -16,8 +16,9 @@ func setDefaults() {
 	viper.SetDefault("http.upload_limit", 10)
 
 	viper.SetDefault("auth.session_cookie", "fc-session")
-	// Session expiry is given in hours
+	// Session expiry and cleanup interval are given in hours
 	viper.SetDefault("auth.session_expiry", 24)
+	viper.SetDefault("auth.session_cleanup_interval", 1)
 
 	viper.SetDefault("fs.base_directory", "data")
 	viper.SetDefault("fs.avatar_directory", "avatars")

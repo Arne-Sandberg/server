@@ -25,7 +25,7 @@ func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
 	email := params.Credentials.Email
 	password := params.Credentials.Password
 
-	session, err := manager.GetAuthManager().NewSession(email, password)
+	session, err := manager.GetAuthManager().LoginUser(email, password)
 	if err != nil {
 		return authAPI.NewLoginDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}

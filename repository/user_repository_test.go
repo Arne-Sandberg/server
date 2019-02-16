@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/freecloudio/server/models"
 )
@@ -237,5 +238,33 @@ func TestUpdateUser(t *testing.T) {
 	}
 	if !reflect.DeepEqual(readBackUser, testUser1) {
 		t.Error("Read back updated testUser1 by Email and testUser1 are not deeply equal")
+	}
+}
+
+func TestUpdateLastSession(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testUserCleanup()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	time.Sleep(2 * time.Second)
+
+	err := rep.UpdateLastSession(testUser1.ID)
+	if err != nil {
+		t.Errorf("Failed to update testUser1: %v", err)
+	}
+
+	readBackUser, err := rep.GetByID(testUser1.ID)
+	if err != nil {
+		t.Errorf("Failed to read back updated testUser1 by ID: %v", err)
+	}
+	if testUser1.Updated >= readBackUser.Updated {
+		t.Errorf("Updated not greater after updating last session: %v >= %v", testUser1.Updated, readBackUser.Updated)
+	}
+	if readBackUser.LastSession == 0 || readBackUser.LastSession != readBackUser.Updated {
+		t.Errorf("LastSession not updated or unequal to updated after updating last session: %v != %v", readBackUser.LastSession, readBackUser.Updated)
 	}
 }

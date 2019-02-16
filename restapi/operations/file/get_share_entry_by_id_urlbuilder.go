@@ -48,7 +48,7 @@ func (o *GetShareEntryByIDURL) Build() (*url.URL, error) {
 	if shareID != "" {
 		_path = strings.Replace(_path, "{shareID}", shareID, -1)
 	} else {
-		return nil, errors.New("ShareID is required on GetShareEntryByIDURL")
+		return nil, errors.New("shareId is required on GetShareEntryByIDURL")
 	}
 
 	_basePath := o._basePath
