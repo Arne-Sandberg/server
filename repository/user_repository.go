@@ -10,10 +10,10 @@ import (
 // UserRepository represents the database for storing users
 type UserRepository struct{}
 
-// CreateUserRepository creates a new UserRepository IF gorm has been initialized before
+// CreateUserRepository creates a new UserRepository IF neo4j has been initialized before
 func CreateUserRepository() (*UserRepository, error) {
 	if graphConnection == nil {
-		return nil, ErrGormNotInitialized
+		return nil, ErrNeoNotInitialized
 	}
 	return &UserRepository{}, nil
 }

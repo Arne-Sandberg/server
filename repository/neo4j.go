@@ -9,6 +9,9 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+// ErrNeoNotInitialized is returned if a repository is initialized before the database connection
+var ErrNeoNotInitialized = errors.New("db repository: neo4j repository must be initialized first")
+
 var graphConnection neo4j.Driver
 
 // InitGraphDatabaseConnection connects to the give neo4j server
@@ -23,12 +26,13 @@ func InitGraphDatabaseConnection(url, username, password string) error {
 }
 
 // CloseGraphDatabaseConnection closes the current connection to neo4j
-func CloseGraphDatabaseConnection() error {
-	if err := graphConnection.Close(); err != nil {
+func CloseGraphDatabaseConnection() (err error) {
+	if err = graphConnection.Close(); err != nil {
 		log.Error(0, "Failed to close neo4j connection: %v", err)
+		return
 	}
 
-	return nil
+	return
 }
 
 // getGraphSession return a new neo4j session
@@ -63,11 +67,11 @@ func modelToMap(model interface{}) map[string]interface{} {
 func recordToModel(record neo4j.Record, key string, model interface{}) (interface{}, error) {
 	valInt, ok := record.Get(key)
 	if ok == false {
-		return nil, errors.New("Value not found with key '" + key + "'")
+		return nil, errors.New("value not found with key '" + key + "'")
 	}
 	valNode, ok := valInt.(neo4j.Node)
 	if ok == false {
-		return nil, errors.New("Value with key '" + key + "' could not be converted to 'neo4j.Node'")
+		return nil, errors.New("value with key '" + key + "' could not be converted to 'neo4j.Node'")
 	}
 	valProps := valNode.Props()
 
