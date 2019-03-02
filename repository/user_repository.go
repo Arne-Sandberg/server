@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"errors"
-
 	"github.com/freecloudio/server/models"
 	"github.com/freecloudio/server/utils"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
@@ -41,7 +39,7 @@ func (rep *UserRepository) Create(user *models.User) (err error) {
 
 func (rep *UserRepository) createTxFunc(user *models.User) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("CREATE (:User $user)", map[string]interface{}{"user": rep.userToMap(user)})
+		return tx.Run("CREATE (:User $user)", map[string]interface{}{"user": modelToMap(user)})
 	}
 }
 
@@ -87,7 +85,7 @@ func (rep *UserRepository) Update(user *models.User) (err error) {
 
 func (rep *UserRepository) updateTxFunc(user *models.User) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (u:User {username: $user.username}) SET u += $user", map[string]interface{}{"user": rep.userToMap(user)})
+		return tx.Run("MATCH (u:User {username: $user.username}) SET u += $user", map[string]interface{}{"user": modelToMap(user)})
 	}
 }
 
@@ -138,7 +136,7 @@ func (rep *UserRepository) getByUsernameTxFunc(username string) neo4j.Transactio
 			return nil, err
 		}
 
-		return rep.recordToUser(record, "u")
+		return recordToModel(record, "u", &models.User{})
 	}
 }
 
@@ -166,7 +164,7 @@ func (rep *UserRepository) getByEmailTxFunc(email string) neo4j.TransactionWork 
 			return nil, err
 		}
 
-		return rep.recordToUser(record, "u")
+		return recordToModel(record, "u", &models.User{})
 	}
 }
 
@@ -196,11 +194,11 @@ func (rep *UserRepository) getAllTxFunc() neo4j.TransactionWork {
 
 		var users []*models.User
 		for res.Next() {
-			user, err := rep.recordToUser(res.Record(), "u")
+			user, err := recordToModel(res.Record(), "u", &models.User{})
 			if err != nil {
 				return nil, err
 			}
-			users = append(users, user)
+			users = append(users, user.(*models.User))
 		}
 		if res.Err() != nil {
 			return nil, res.Err()
@@ -265,61 +263,4 @@ func (rep *UserRepository) totalCountTxFunc() neo4j.TransactionWork {
 
 		return record.GetByIndex(0), nil
 	}
-}
-
-func (rep *UserRepository) userToMap(user *models.User) map[string]interface{} {
-	return map[string]interface{}{
-		"username":      user.Username,
-		"email":         user.Email,
-		"firstName":     user.FirstName,
-		"lastName":      user.LastName,
-		"isAdmin":       user.IsAdmin,
-		"password":      user.Password,
-		"createdAt":     user.CreatedAt,
-		"updatedAt":     user.UpdatedAt,
-		"lastSessionAt": user.LastSessionAt,
-	}
-}
-
-func (rep *UserRepository) recordToUser(record neo4j.Record, userKey string) (*models.User, error) {
-	userInt, ok := record.Get(userKey)
-	if ok == false {
-		return nil, errors.New("User interface not found with key '" + userKey + "'")
-	}
-	userNode, ok := userInt.(neo4j.Node)
-	if ok == false {
-		return nil, errors.New("User interface with key '" + userKey + "' could not be converted to 'neo4j.Node'")
-	}
-	userMap := userNode.Props()
-
-	user := &models.User{}
-	if int, ok := userMap["username"]; ok {
-		user.Username = int.(string)
-	}
-	if int, ok := userMap["email"]; ok {
-		user.Email = int.(string)
-	}
-	if int, ok := userMap["firstName"]; ok {
-		user.FirstName = int.(string)
-	}
-	if int, ok := userMap["lastName"]; ok {
-		user.LastName = int.(string)
-	}
-	if int, ok := userMap["isAdmin"]; ok {
-		user.IsAdmin = int.(bool)
-	}
-	if int, ok := userMap["password"]; ok {
-		user.Password = int.(string)
-	}
-	if int, ok := userMap["createdAt"]; ok {
-		user.CreatedAt = int.(int64)
-	}
-	if int, ok := userMap["updatedAt"]; ok {
-		user.UpdatedAt = int.(int64)
-	}
-	if int, ok := userMap["lastSessionAt"]; ok {
-		user.LastSessionAt = int.(int64)
-	}
-
-	return user, nil
 }

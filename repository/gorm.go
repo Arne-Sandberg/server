@@ -72,5 +72,5 @@ func CloseSQLDatabaseConnection() {
 
 // IsRecordNotFoundError checks whether an error is 'record not found'
 func IsRecordNotFoundError(err error) bool {
-	return gorm.IsRecordNotFoundError(err) || err == ErrRecordNotFound
+	return gorm.IsRecordNotFoundError(err)
 }
