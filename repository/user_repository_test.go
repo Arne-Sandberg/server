@@ -184,12 +184,12 @@ func TestDeleteUser(t *testing.T) {
 		t.Errorf("Failed to delete user1: %v", err)
 	}
 
-	/*_, err = rep.GetByID(testUser0.Username)
-	if err == nil || !IsRecordNotFoundError(err) {
+	_, err = rep.GetByUsername(testUser0.Username)
+	if err == nil || !(IsRecordNotFoundError(err) || err.Error() == "result contains no records") {
 		t.Errorf("Succeeded to read deleted user by ID or error is not 'record not found': %v", err)
 	}
 	_, err = rep.GetByEmail(testUser0.Email)
-	if err == nil || !IsRecordNotFoundError(err) {
+	if err == nil || !(IsRecordNotFoundError(err) || err.Error() == "result contains no records") {
 		t.Errorf("Succeeded to read deleted user by Email or error is not 'record not found': %v", err)
 	}
 	allUsers, err := rep.GetAll()
@@ -214,7 +214,7 @@ func TestDeleteUser(t *testing.T) {
 	}
 	if totalCount != 2 {
 		t.Errorf("Total count unequal to 2 for filled user repository: %d", totalCount)
-	}*/
+	}
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -232,7 +232,7 @@ func TestUpdateUser(t *testing.T) {
 		t.Errorf("Failed to update testUser1: %v", err)
 	}
 
-	/*readBackUser, err := rep.GetByID(testUser1.Username)
+	readBackUser, err := rep.GetByUsername(testUser1.Username)
 	if err != nil {
 		t.Errorf("Failed to read back updated testUser1 by ID: %v", err)
 	}
@@ -245,7 +245,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 	if !reflect.DeepEqual(readBackUser, testUser1) {
 		t.Error("Read back updated testUser1 by Email and testUser1 are not deeply equal")
-	}*/
+	}
 }
 
 func TestUpdateLastSession(t *testing.T) {
@@ -264,7 +264,7 @@ func TestUpdateLastSession(t *testing.T) {
 		t.Errorf("Failed to update testUser1: %v", err)
 	}
 
-	/*readBackUser, err := rep.GetByID(testUser1.Username)
+	readBackUser, err := rep.GetByUsername(testUser1.Username)
 	if err != nil {
 		t.Errorf("Failed to read back updated testUser1 by ID: %v", err)
 	}
@@ -273,5 +273,5 @@ func TestUpdateLastSession(t *testing.T) {
 	}
 	if readBackUser.LastSessionAt == 0 || readBackUser.LastSessionAt != readBackUser.UpdatedAt {
 		t.Errorf("LastSession not updated or unequal to updated after updating last session: %v != %v", readBackUser.LastSessionAt, readBackUser.UpdatedAt)
-	}*/
+	}
 }
