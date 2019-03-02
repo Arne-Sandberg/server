@@ -163,8 +163,6 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 }
 
 func initializeServer() {
-	config.Init()
-
 	err := repository.InitSQLDatabaseConnection(config.GetString("db.type"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.name"))
 	if err != nil {
 		log.Fatal(0, "Database setup failed, bailing out!: %v", err)

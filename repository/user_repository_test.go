@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/neo4j"
-
 	"github.com/freecloudio/server/models"
 )
 
@@ -15,22 +13,8 @@ var testUserAdmin = &models.User{Username: "Admin", Email: "admin.user@example.c
 var testUser0 = &models.User{Username: "User0", Email: "user0@example.com"}
 var testUser1 = &models.User{Username: "User1", Email: "user1@example.com"}
 
-func testUserCleanup() {
-	sess, _ := getGraphSession()
-	defer sess.Close()
-	sess.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (n) DETACH DELETE n", nil)
-	})
-}
-
-func testUserClose() {
-	testUserCleanup()
-	CloseGraphDatabaseConnection()
-}
-
 func testUserSetup() *UserRepository {
-	InitGraphDatabaseConnection("bolt://localhost:7687", "neo4j", "freecloud")
-	testUserCleanup()
+	testConnectClearGraph()
 	rep, _ := CreateUserRepository()
 	return rep
 }
@@ -42,14 +26,10 @@ func testUserInsert(rep *UserRepository) {
 }
 
 func TestCreateUserRepository(t *testing.T) {
-	defer testUserClose()
+	defer testCloseClearGraph()
+	testConnectClearGraph()
 
-	err := InitGraphDatabaseConnection("bolt://localhost:7687", "neo4j", "freecloud")
-	if err != nil {
-		t.Errorf("Failed to connect to neo4j database: %v", err)
-	}
-
-	_, err = CreateUserRepository()
+	_, err := CreateUserRepository()
 	if err != nil {
 		t.Errorf("Failed to create user repository: %v", err)
 	}
@@ -63,7 +43,7 @@ func TestCreateUser(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	err := rep.Create(testUserAdmin)
@@ -80,7 +60,7 @@ func TestCountUsers(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	adminCount, err := rep.AdminCount()
@@ -120,7 +100,7 @@ func TestUserGetByUsername(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	testUserInsert(rep)
@@ -138,7 +118,7 @@ func TestUserGetByEmail(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	testUserInsert(rep)
@@ -156,7 +136,7 @@ func TestGetAllUsers(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	testUserInsert(rep)
@@ -174,7 +154,7 @@ func TestDeleteUser(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	testUserInsert(rep)
@@ -221,7 +201,7 @@ func TestUpdateUser(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	testUserInsert(rep)
@@ -252,7 +232,7 @@ func TestUpdateLastSession(t *testing.T) {
 	if testUserSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
-	defer testUserClose()
+	defer testCloseClearGraph()
 	rep := testUserSetup()
 
 	testUserInsert(rep)
