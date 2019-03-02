@@ -324,6 +324,22 @@
   version = "v1.1.2"
 
 [[projects]]
+  digest = "1:60f1099877ce4970e71f6a7334f1c453fd95102902895c119a8189b88e25bf54"
+  name = "github.com/neo4j-drivers/gobolt"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "385098f4a22c282e51f0d83a63a1f97256ef897d"
+  version = "v1.7.2"
+
+[[projects]]
+  digest = "1:f58514978026f31b98c85b1028e5ab2c8da27515f0dfbb0493582a9d23def1b5"
+  name = "github.com/neo4j/neo4j-go-driver"
+  packages = ["neo4j"]
+  pruneopts = "UT"
+  revision = "c0db4cd4bff6cf34d5cfc592618034fa79996827"
+  version = "v1.7.2"
+
+[[projects]]
   digest = "1:b93a939355dc613ca1c23bf39f6d4c207da431a31dd8af001cc334ad24cab9d3"
   name = "github.com/nwaples/rardecode"
   packages = ["."]
@@ -514,6 +530,7 @@
     "github.com/jinzhu/gorm/dialects/postgres",
     "github.com/jinzhu/gorm/dialects/sqlite",
     "github.com/mholt/archiver",
+    "github.com/neo4j/neo4j-go-driver/neo4j",
     "github.com/pkg/errors",
     "github.com/spf13/viper",
     "golang.org/x/crypto/scrypt",

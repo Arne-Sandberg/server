@@ -16,14 +16,14 @@ import (
 // ErrGormNotInitialized is returned if a repository is initialized before the database connection
 var ErrGormNotInitialized = errors.New("db repository: gorm repository must be initialized first")
 
-// databaseConnection is shared between most repositories (session, user, ...)
+// sqlDatabaseConnection is shared between most repositories (session, user, ...)
 var (
-	databaseConnection *gorm.DB
-	databaseModels     []interface{} // Contains pointers to all models that should be automigrated by gorm initialization
+	sqlDatabaseConnection *gorm.DB
+	databaseModels        []interface{} // Contains pointers to all models that should be automigrated by gorm initialization
 )
 
-// InitDatabaseConnection initializes the gorm connection
-func InitDatabaseConnection(databaseType, user, password, host string, port int, name string) error {
+// InitSQLDatabaseConnection initializes the gorm connection
+func InitSQLDatabaseConnection(databaseType, user, password, host string, port int, name string) error {
 	var args string
 
 	switch databaseType {
@@ -55,22 +55,22 @@ func InitDatabaseConnection(databaseType, user, password, host string, port int,
 		log.Error(0, "Failed to auto migrate db structs: %v", err)
 		return err
 	}
-	databaseConnection = db
+	sqlDatabaseConnection = db
 
 	return nil
 }
 
-// CloseDatabaseConnection closes the gorm connection
-func CloseDatabaseConnection() {
-	if err := databaseConnection.Close(); err != nil {
+// CloseSQLDatabaseConnection closes the gorm connection
+func CloseSQLDatabaseConnection() {
+	if err := sqlDatabaseConnection.Close(); err != nil {
 		log.Fatal(0, "Error shutting down gorm: %v", err)
 		return
 	}
 
-	databaseConnection = nil
+	sqlDatabaseConnection = nil
 }
 
 // IsRecordNotFoundError checks whether an error is 'record not found'
 func IsRecordNotFoundError(err error) bool {
-	return gorm.IsRecordNotFoundError(err)
+	return gorm.IsRecordNotFoundError(err) || err == ErrRecordNotFound
 }

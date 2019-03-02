@@ -25,7 +25,7 @@ func testShareEntryCleanup() {
 
 func testShareEntrySetup() *ShareEntryRepository {
 	testShareEntryCleanup()
-	InitDatabaseConnection("", "", "", "", 0, testShareEntryDBName)
+	InitSQLDatabaseConnection("", "", "", "", 0, testShareEntryDBName)
 	rep, _ := CreateShareEntryRepository()
 	return rep
 }
@@ -58,7 +58,7 @@ func TestCreateShareEntryRepository(t *testing.T) {
 	testShareEntryCleanup()
 	defer testShareEntryCleanup()
 
-	err := InitDatabaseConnection("", "", "", "", 0, testShareEntryDBName)
+	err := InitSQLDatabaseConnection("", "", "", "", 0, testShareEntryDBName)
 	if err != nil {
 		t.Errorf("Failed to connect to gorm database: %v", err)
 	}

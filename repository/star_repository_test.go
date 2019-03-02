@@ -18,7 +18,7 @@ func testStarCleanup() {
 
 func testStarSetup() *StarRepository {
 	testStarCleanup()
-	InitDatabaseConnection("", "", "", "", 0, testStarDBName)
+	InitSQLDatabaseConnection("", "", "", "", 0, testStarDBName)
 	rep, _ := CreateStarRepository()
 	return rep
 }
@@ -32,7 +32,7 @@ func TestCreateStarRepository(t *testing.T) {
 	testStarCleanup()
 	defer testStarCleanup()
 
-	err := InitDatabaseConnection("", "", "", "", 0, testStarDBName)
+	err := InitSQLDatabaseConnection("", "", "", "", 0, testStarDBName)
 	if err != nil {
 		t.Errorf("Failed to connect to gorm database: %v", err)
 	}

@@ -15,11 +15,8 @@ import (
 // swagger:model UserUpdate
 type UserUpdate struct {
 
-	// ID
-	ID *int64 `json:"ID,omitempty"`
-
-	// created
-	Created *int64 `json:"created,omitempty"`
+	// created at
+	CreatedAt *int64 `json:"createdAt,omitempty"`
 
 	// email
 	Email *string `json:"email,omitempty"`
@@ -33,8 +30,8 @@ type UserUpdate struct {
 	// last name
 	LastName *string `json:"lastName,omitempty"`
 
-	// last session
-	LastSession *int64 `json:"lastSession,omitempty"`
+	// last session at
+	LastSessionAt *int64 `json:"lastSessionAt,omitempty"`
 
 	// password
 	Password *string `json:"password,omitempty"`
@@ -42,8 +39,11 @@ type UserUpdate struct {
 	// retain files after deletion
 	RetainFilesAfterDeletion *bool `json:"retainFilesAfterDeletion,omitempty"`
 
-	// updated
-	Updated *int64 `json:"updated,omitempty"`
+	// updated at
+	UpdatedAt *int64 `json:"updatedAt,omitempty"`
+
+	// username
+	Username *string `json:"username,omitempty"`
 }
 
 // Validate validates this user update

@@ -15,7 +15,7 @@ type ShareEntryRepository struct{}
 
 // CreateShareEntryRepository creates a new ShareEntryRepository IF gorm has been initialized before
 func CreateShareEntryRepository() (*ShareEntryRepository, error) {
-	if databaseConnection == nil {
+	if sqlDatabaseConnection == nil {
 		return nil, ErrGormNotInitialized
 	}
 
@@ -24,7 +24,7 @@ func CreateShareEntryRepository() (*ShareEntryRepository, error) {
 
 // Create stores a new share entry
 func (rep *ShareEntryRepository) Create(shareEntry *models.ShareEntry) (err error) {
-	err = databaseConnection.Create(shareEntry).Error
+	err = sqlDatabaseConnection.Create(shareEntry).Error
 	if err != nil {
 		log.Error(0, "Could not insert share entry: %v", err)
 		return
@@ -34,7 +34,7 @@ func (rep *ShareEntryRepository) Create(shareEntry *models.ShareEntry) (err erro
 
 // Delete deletes a share entry by its shareID
 func (rep *ShareEntryRepository) Delete(shareID int64) (err error) {
-	err = databaseConnection.Delete(&models.ShareEntry{ID: shareID}).Error
+	err = sqlDatabaseConnection.Delete(&models.ShareEntry{ID: shareID}).Error
 	if err != nil {
 		log.Error(0, "Could not delete share entry with ID %v: %v", shareID, err)
 		return
@@ -45,7 +45,7 @@ func (rep *ShareEntryRepository) Delete(shareID int64) (err error) {
 // GetByID reads and returns a share entry by shareID
 func (rep *ShareEntryRepository) GetByID(shareID int64) (shareEntry *models.ShareEntry, err error) {
 	shareEntry = &models.ShareEntry{}
-	err = databaseConnection.Raw(getByIDQuery, shareID).Scan(shareEntry).Error
+	err = sqlDatabaseConnection.Raw(getByIDQuery, shareID).Scan(shareEntry).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntry for ID %v: %v", shareID, err)
 		return
@@ -55,7 +55,7 @@ func (rep *ShareEntryRepository) GetByID(shareID int64) (shareEntry *models.Shar
 
 // GetByFileID reads and returns a share entry by fileID
 func (rep *ShareEntryRepository) GetByFileID(fileID int64) (shareEntries []*models.ShareEntry, err error) {
-	err = databaseConnection.Raw(getByFileIDQuery, fileID).Scan(&shareEntries).Error
+	err = sqlDatabaseConnection.Raw(getByFileIDQuery, fileID).Scan(&shareEntries).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntries for FileID %v: %v", fileID, err)
 		return
@@ -66,7 +66,7 @@ func (rep *ShareEntryRepository) GetByFileID(fileID int64) (shareEntries []*mode
 // GetByIDForUser reads and returns a share entry by shareID and whether the userID is owner or shared_with
 func (rep *ShareEntryRepository) GetByIDForUser(shareID int64, userID int64) (shareEntry *models.ShareEntry, err error) {
 	shareEntry = &models.ShareEntry{}
-	err = databaseConnection.Raw(getByIDAndUserQuery, shareID, userID, userID).Scan(shareEntry).Error
+	err = sqlDatabaseConnection.Raw(getByIDAndUserQuery, shareID, userID, userID).Scan(shareEntry).Error
 	if err != nil {
 		log.Error(0, "Could not get shareEntry for ID %v and user %v: %v", shareID, userID, err)
 		return
@@ -76,7 +76,7 @@ func (rep *ShareEntryRepository) GetByIDForUser(shareID int64, userID int64) (sh
 
 // Count returns the amount of stored share entries
 func (rep *ShareEntryRepository) Count() (count int64, err error) {
-	err = databaseConnection.Model(&models.ShareEntry{}).Count(&count).Error
+	err = sqlDatabaseConnection.Model(&models.ShareEntry{}).Count(&count).Error
 	if err != nil {
 		log.Error(0, "Error counting share entries: %v", err)
 		return

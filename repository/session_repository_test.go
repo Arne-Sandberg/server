@@ -24,7 +24,7 @@ func testSessionCleanup() {
 
 func testSessionSetup() *SessionRepository {
 	testSessionCleanup()
-	InitDatabaseConnection("", "", "", "", 0, testSessionDBName)
+	InitSQLDatabaseConnection("", "", "", "", 0, testSessionDBName)
 	rep, _ := CreateSessionRepository()
 	return rep
 }
@@ -40,7 +40,7 @@ func TestCreateSessionRepository(t *testing.T) {
 	testSessionCleanup()
 	defer testSessionCleanup()
 
-	err := InitDatabaseConnection("", "", "", "", 0, testSessionDBName)
+	err := InitSQLDatabaseConnection("", "", "", "", 0, testSessionDBName)
 	if err != nil {
 		t.Errorf("Failed to connect to gorm database: %v", err)
 	}

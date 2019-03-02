@@ -60,7 +60,7 @@ func testFileInfoInsertComplete(rep *FileInfoRepository) {
 
 func testFileInfoSetup() *FileInfoRepository {
 	testFileInfoCleanup()
-	InitDatabaseConnection("", "", "", "", 0, testFileInfoDBName)
+	InitSQLDatabaseConnection("", "", "", "", 0, testFileInfoDBName)
 	rep, _ := CreateFileInfoRepository()
 	return rep
 }
@@ -69,7 +69,7 @@ func TestCreateFileInfoRepository(t *testing.T) {
 	testFileInfoCleanup()
 	defer testFileInfoCleanup()
 
-	err := InitDatabaseConnection("", "", "", "", 0, testFileInfoDBName)
+	err := InitSQLDatabaseConnection("", "", "", "", 0, testFileInfoDBName)
 	if err != nil {
 		t.Errorf("Failed to connect to gorm database: %v", err)
 	}

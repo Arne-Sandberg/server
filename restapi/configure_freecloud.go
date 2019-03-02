@@ -165,9 +165,14 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 func initializeServer() {
 	config.Init()
 
-	err := repository.InitDatabaseConnection(config.GetString("db.type"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.name"))
+	err := repository.InitSQLDatabaseConnection(config.GetString("db.type"), config.GetString("db.user"), config.GetString("db.password"), config.GetString("db.host"), config.GetInt("db.port"), config.GetString("db.name"))
 	if err != nil {
 		log.Fatal(0, "Database setup failed, bailing out!: %v", err)
+	}
+
+	err = repository.InitGraphDatabaseConnection(config.GetString("graph.url"), config.GetString("graph.user"), config.GetString("graph.password"))
+	if err != nil {
+		log.Fatal(0, "Database setup failed, bailing out: %v", err)
 	}
 
 	userRep, err := repository.CreateUserRepository()
@@ -198,6 +203,7 @@ func initializeServer() {
 
 func shutdownServer() {
 	manager.GetAuthManager().Close()
-	repository.CloseDatabaseConnection()
+	repository.CloseSQLDatabaseConnection()
+	repository.CloseSQLDatabaseConnection()
 	utils.CloseLogger()
 }

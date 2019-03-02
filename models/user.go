@@ -15,14 +15,11 @@ import (
 // swagger:model User
 type User struct {
 
-	// ID
-	ID int64 `json:"ID,omitempty" gorm:"primary_key;auto_increment"`
-
-	// created
-	Created int64 `json:"created,omitempty"`
+	// created at
+	CreatedAt int64 `json:"createdAt,omitempty"`
 
 	// email
-	Email string `json:"email,omitempty" gorm:"unique_index"`
+	Email string `json:"email,omitempty"`
 
 	// first name
 	FirstName string `json:"firstName,omitempty"`
@@ -33,8 +30,8 @@ type User struct {
 	// last name
 	LastName string `json:"lastName,omitempty"`
 
-	// last session
-	LastSession int64 `json:"lastSession,omitempty"`
+	// last session at
+	LastSessionAt int64 `json:"lastSessionAt,omitempty"`
 
 	// password
 	Password string `json:"password,omitempty"`
@@ -42,8 +39,11 @@ type User struct {
 	// retain files after deletion
 	RetainFilesAfterDeletion bool `json:"retainFilesAfterDeletion,omitempty"`
 
-	// updated
-	Updated int64 `json:"updated,omitempty"`
+	// updated at
+	UpdatedAt int64 `json:"updatedAt,omitempty"`
+
+	// username
+	Username string `json:"username,omitempty"`
 }
 
 // Validate validates this user

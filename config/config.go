@@ -31,6 +31,10 @@ func setDefaults() {
 	viper.SetDefault("db.user", "")
 	viper.SetDefault("db.password", "")
 	viper.SetDefault("db.name", "freecloud.db")
+
+	viper.SetDefault("graph.url", "bolt://localhost:7687")
+	viper.SetDefault("graph.user", "neo4j")
+	viper.SetDefault("graph.password", "freecloud")
 }
 
 func GetString(key string) string {

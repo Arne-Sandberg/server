@@ -33,7 +33,7 @@ func testAuthCleanup(mgr *AuthManager) {
 
 func testAuthReq() (sessionRep *repository.SessionRepository, userRep *repository.UserRepository) {
 	testAuthCleanup(nil)
-	repository.InitDatabaseConnection("", "", "", "", 0, testAuthDBName)
+	repository.InitSQLDatabaseConnection("", "", "", "", 0, testAuthDBName)
 	sessionRep, _ = repository.CreateSessionRepository()
 	userRep, _ = repository.CreateUserRepository()
 	return

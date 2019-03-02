@@ -1187,18 +1187,12 @@ func init() {
     "User": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
-        },
-        "created": {
+        "createdAt": {
           "type": "integer",
           "format": "int64"
         },
         "email": {
-          "type": "string",
-          "x-go-custom-tag": "gorm:\"unique_index\""
+          "type": "string"
         },
         "firstName": {
           "type": "string"
@@ -1209,7 +1203,7 @@ func init() {
         "lastName": {
           "type": "string"
         },
-        "lastSession": {
+        "lastSessionAt": {
           "type": "integer",
           "format": "int64"
         },
@@ -1219,21 +1213,19 @@ func init() {
         "retainFilesAfterDeletion": {
           "type": "boolean"
         },
-        "updated": {
+        "updatedAt": {
           "type": "integer",
           "format": "int64"
+        },
+        "username": {
+          "type": "string"
         }
       }
     },
     "UserUpdate": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
-        "created": {
+        "createdAt": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -1254,7 +1246,7 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "lastSession": {
+        "lastSessionAt": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -1267,9 +1259,13 @@ func init() {
           "type": "boolean",
           "x-nullable": true
         },
-        "updated": {
+        "updatedAt": {
           "type": "integer",
           "format": "int64",
+          "x-nullable": true
+        },
+        "username": {
+          "type": "string",
           "x-nullable": true
         }
       }
@@ -2476,18 +2472,12 @@ func init() {
     "User": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
-        },
-        "created": {
+        "createdAt": {
           "type": "integer",
           "format": "int64"
         },
         "email": {
-          "type": "string",
-          "x-go-custom-tag": "gorm:\"unique_index\""
+          "type": "string"
         },
         "firstName": {
           "type": "string"
@@ -2498,7 +2488,7 @@ func init() {
         "lastName": {
           "type": "string"
         },
-        "lastSession": {
+        "lastSessionAt": {
           "type": "integer",
           "format": "int64"
         },
@@ -2508,21 +2498,19 @@ func init() {
         "retainFilesAfterDeletion": {
           "type": "boolean"
         },
-        "updated": {
+        "updatedAt": {
           "type": "integer",
           "format": "int64"
+        },
+        "username": {
+          "type": "string"
         }
       }
     },
     "UserUpdate": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
-        "created": {
+        "createdAt": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -2543,7 +2531,7 @@ func init() {
           "type": "string",
           "x-nullable": true
         },
-        "lastSession": {
+        "lastSessionAt": {
           "type": "integer",
           "format": "int64",
           "x-nullable": true
@@ -2556,9 +2544,13 @@ func init() {
           "type": "boolean",
           "x-nullable": true
         },
-        "updated": {
+        "updatedAt": {
           "type": "integer",
           "format": "int64",
+          "x-nullable": true
+        },
+        "username": {
+          "type": "string",
           "x-nullable": true
         }
       }
