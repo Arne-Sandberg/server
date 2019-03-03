@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -11,6 +12,16 @@ import (
 
 // ErrNeoNotInitialized is returned if a repository is initialized before the database connection
 var ErrNeoNotInitialized = errors.New("db repository: neo4j repository must be initialized first")
+
+type neoLabelConstraint struct {
+	label       string
+	model       interface{}
+	uniqueProps []string
+	exisProps   []string
+}
+
+// List of constraints filled in 'init' functions of each repository
+var neoLabelConstraints []*neoLabelConstraint
 
 var graphConnection neo4j.Driver
 
@@ -22,6 +33,60 @@ func InitGraphDatabaseConnection(url, username, password string) error {
 	}
 	graphConnection = driver
 
+	for _, labelConstraint := range neoLabelConstraints {
+		createConstraintForLabel(labelConstraint)
+	}
+
+	return nil
+}
+
+func createConstraintForLabel(labelConstraint *neoLabelConstraint) error {
+	modelValue := reflect.ValueOf(labelConstraint.model).Elem()
+	modelType := modelValue.Type()
+
+	for it := 0; it < modelType.NumField(); it++ {
+		typeField := modelType.Field(it)
+		dbNamePtr := getDBFieldName(typeField)
+		if dbNamePtr == nil {
+			continue
+		}
+		dbName := *dbNamePtr
+		_, isUnique := typeField.Tag.Lookup("fc_neo_unique")
+
+		labelConstraint.exisProps = append(labelConstraint.exisProps, dbName)
+		if isUnique {
+			labelConstraint.uniqueProps = append(labelConstraint.uniqueProps, dbName)
+		}
+	}
+
+	session, err := getGraphSession()
+	if err != nil {
+		return err
+	}
+
+	uniqueQuery := "CREATE CONSTRAINT ON (c:%s) ASSERT c.%s IS UNIQUE"
+	for _, uniqueProp := range labelConstraint.uniqueProps {
+		_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return tx.Run(fmt.Sprintf(uniqueQuery, labelConstraint.label, uniqueProp), nil)
+		})
+		if err != nil {
+			log.Error(0, "Failed to create unique constraint on label %s with property %s: %v", labelConstraint.label, uniqueProp, err)
+			continue
+		}
+	}
+
+	exisQuery := "CREATE CONSTRAINT ON (c:%s) ASSERT exists(c.%s)"
+	for _, exisProp := range labelConstraint.exisProps {
+		_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			return tx.Run(fmt.Sprintf(exisQuery, labelConstraint.label, exisProp), nil)
+		})
+		if err != nil {
+			log.Error(0, "Failed to create exist constraint on label %s with property %s: %v", labelConstraint.label, exisProp, err)
+			log.Info("Don't create other exist constraints as we probably are on the community edition")
+			break
+		}
+	}
+
 	return nil
 }
 
@@ -32,6 +97,26 @@ func CloseGraphDatabaseConnection() (err error) {
 		return
 	}
 
+	return
+}
+
+func GetGraphDatabaseVersion() (version string, err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+
+	res, err := session.Run("RETURN 0", nil)
+	if err != nil {
+		log.Error(0, "Failed to run probe query for database version: %v", err)
+		return
+	}
+	summary, err := res.Summary()
+	if err != nil {
+		log.Error(0, "Failed to get summary or result of probe query for database version: %v", err)
+		return
+	}
+	version = summary.Server().Version()
 	return
 }
 

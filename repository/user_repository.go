@@ -7,6 +7,13 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+func init() {
+	neoLabelConstraints = append(neoLabelConstraints, &neoLabelConstraint{
+		label: "User",
+		model: &models.User{},
+	})
+}
+
 // UserRepository represents the database for storing users
 type UserRepository struct{}
 

@@ -8,6 +8,13 @@ import (
 	log "gopkg.in/clog.v1"
 )
 
+func init() {
+	neoLabelConstraints = append(neoLabelConstraints, &neoLabelConstraint{
+		label: "Session",
+		model: &models.Session{},
+	})
+}
+
 // SessionRepository represents the database for storing sessions
 type SessionRepository struct{}
 

@@ -1184,7 +1184,8 @@ func init() {
           "format": "int64"
         },
         "email": {
-          "type": "string"
+          "type": "string",
+          "x-go-custom-tag": "fc_neo_unique:\"\""
         },
         "firstName": {
           "type": "string"
@@ -1210,7 +1211,8 @@ func init() {
           "format": "int64"
         },
         "username": {
-          "type": "string"
+          "type": "string",
+          "x-go-custom-tag": "fc_neo_unique:\"\""
         }
       }
     },
@@ -2461,7 +2463,8 @@ func init() {
           "format": "int64"
         },
         "email": {
-          "type": "string"
+          "type": "string",
+          "x-go-custom-tag": "fc_neo_unique:\"\""
         },
         "firstName": {
           "type": "string"
@@ -2487,7 +2490,8 @@ func init() {
           "format": "int64"
         },
         "username": {
-          "type": "string"
+          "type": "string",
+          "x-go-custom-tag": "fc_neo_unique:\"\""
         }
       }
     },

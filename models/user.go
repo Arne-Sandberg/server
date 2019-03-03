@@ -19,7 +19,7 @@ type User struct {
 	CreatedAt int64 `json:"createdAt,omitempty"`
 
 	// email
-	Email string `json:"email,omitempty"`
+	Email string `json:"email,omitempty" fc_neo_unique:""`
 
 	// first name
 	FirstName string `json:"firstName,omitempty"`
@@ -43,7 +43,7 @@ type User struct {
 	UpdatedAt int64 `json:"updatedAt,omitempty"`
 
 	// username
-	Username string `json:"username,omitempty"`
+	Username string `json:"username,omitempty" fc_neo_unique:""`
 }
 
 // Validate validates this user
