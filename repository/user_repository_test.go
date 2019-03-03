@@ -165,11 +165,11 @@ func TestDeleteUser(t *testing.T) {
 	}
 
 	_, err = rep.GetByUsername(testUser0.Username)
-	if err == nil || !(IsRecordNotFoundError(err) || err.Error() == "result contains no records") {
+	if err == nil || err.Error() != "result contains no records" {
 		t.Errorf("Succeeded to read deleted user by ID or error is not 'record not found': %v", err)
 	}
 	_, err = rep.GetByEmail(testUser0.Email)
-	if err == nil || !(IsRecordNotFoundError(err) || err.Error() == "result contains no records") {
+	if err == nil || err.Error() != "result contains no records" {
 		t.Errorf("Succeeded to read deleted user by Email or error is not 'record not found': %v", err)
 	}
 	allUsers, err := rep.GetAll()

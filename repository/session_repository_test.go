@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -13,39 +12,36 @@ var testSessionSetupFailed = false
 var testSessionDBName = "sessionTest.db"
 var testSessionNotExpiring = time.Now().UTC().Unix() + 99999999
 var testSessionExpiring = time.Now().UTC().Unix() - 99999999
-var testSession0 = &models.Session{UserID: 0, Token: "aabbccddeeff", ExpiresAt: testSessionNotExpiring}
-var testSession1 = &models.Session{UserID: 0, Token: "ffeeddccbbaa", ExpiresAt: testSessionNotExpiring}
-var testSession2 = &models.Session{UserID: 1, Token: "112233445566", ExpiresAt: testSessionNotExpiring}
-var testSession3 = &models.Session{UserID: 1, Token: "665544332211", ExpiresAt: testSessionExpiring}
-
-func testSessionCleanup() {
-	os.Remove(testSessionDBName)
-}
+var testSession0User = &models.User{Username: "0"}
+var testSession0 = &models.Session{Token: "aabbccddeeff", ExpiresAt: testSessionNotExpiring}
+var testSession1User = &models.User{Username: "1"}
+var testSession1 = &models.Session{Token: "ffeeddccbbaa", ExpiresAt: testSessionNotExpiring}
+var testSession2 = &models.Session{Token: "112233445566", ExpiresAt: testSessionNotExpiring}
+var testSession3 = &models.Session{Token: "665544332211", ExpiresAt: testSessionExpiring}
 
 func testSessionSetup() *SessionRepository {
-	testSessionCleanup()
-	InitSQLDatabaseConnection("", "", "", "", 0, testSessionDBName)
+	testConnectClearGraph()
+
+	userRep, _ := CreateUserRepository()
+	userRep.Create(testSession0User)
+	userRep.Create(testSession1User)
+
 	rep, _ := CreateSessionRepository()
 	return rep
 }
 
 func testSessionInsert(rep *SessionRepository) {
-	rep.Create(testSession0)
-	rep.Create(testSession1)
-	rep.Create(testSession2)
-	rep.Create(testSession3)
+	rep.Create(testSession0, testSession0User.Username)
+	rep.Create(testSession1, testSession0User.Username)
+	rep.Create(testSession2, testSession1User.Username)
+	rep.Create(testSession3, testSession1User.Username)
 }
 
 func TestCreateSessionRepository(t *testing.T) {
-	testSessionCleanup()
-	defer testSessionCleanup()
+	defer testConnectClearGraph()
+	testConnectClearGraph()
 
-	err := InitSQLDatabaseConnection("", "", "", "", 0, testSessionDBName)
-	if err != nil {
-		t.Errorf("Failed to connect to gorm database: %v", err)
-	}
-
-	_, err = CreateSessionRepository()
+	_, err := CreateSessionRepository()
 	if err != nil {
 		t.Errorf("Failed to create session repository: %v", err)
 	}
@@ -59,10 +55,10 @@ func TestCreateSession(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	defer testSessionCleanup()
+	defer testCloseClearGraph()
 	rep := testSessionSetup()
 
-	err := rep.Create(testSession0)
+	err := rep.Create(testSession0, testSession0User.Username)
 	if err != nil {
 		t.Errorf("Failed to create session: %v", err)
 	}
@@ -76,7 +72,7 @@ func TestCountSessions(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	defer testSessionCleanup()
+	defer testCloseClearGraph()
 	rep := testSessionSetup()
 
 	count, err := rep.Count()
@@ -102,24 +98,30 @@ func TestSessionGetByToken(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	defer testSessionCleanup()
+	defer testCloseClearGraph()
 	rep := testSessionSetup()
 
 	testSessionInsert(rep)
 
-	readBackSession, err := rep.GetByToken(testSession0.Token)
+	readBackSession, readBackUser, err := rep.GetWithUserByToken(testSession0.Token)
 	if err != nil {
 		t.Errorf("Failed to read back session0: %v", err)
 	}
 	if !reflect.DeepEqual(readBackSession, testSession0) {
 		t.Errorf("Read back session0 and session0 not deeply equal: %v != %v", readBackSession, testSession0)
 	}
-	readBackSession, err = rep.GetByToken(testSession1.Token)
-	if err != nil {
-		t.Errorf("Failed to read back session1: %v", err)
+	if !reflect.DeepEqual(readBackUser, testSession0User) {
+		t.Errorf("Read back session0 user and session0 user are not deeply equal: %v != %v", readBackUser, testSession0User)
 	}
-	if !reflect.DeepEqual(readBackSession, testSession1) {
-		t.Errorf("Read back session1 and session1 not deeply equal: %v != %v", readBackSession, testSession1)
+	readBackSession, readBackUser, err = rep.GetWithUserByToken(testSession2.Token)
+	if err != nil {
+		t.Errorf("Failed to read back session2: %v", err)
+	}
+	if !reflect.DeepEqual(readBackSession, testSession2) {
+		t.Errorf("Read back session2 and session2 not deeply equal: %v != %v", readBackSession, testSession2)
+	}
+	if !reflect.DeepEqual(readBackUser, testSession1User) {
+		t.Errorf("Read back session2 user and session1 user are not deeply equal: %v != %v", readBackUser, testSession1User)
 	}
 }
 
@@ -127,7 +129,7 @@ func TestDeleteSession(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	defer testSessionCleanup()
+	defer testCloseClearGraph()
 	rep := testSessionSetup()
 
 	testSessionInsert(rep)
@@ -137,8 +139,8 @@ func TestDeleteSession(t *testing.T) {
 		t.Errorf("Failed to delete session0: %v", err)
 	}
 
-	_, err = rep.GetByToken(testSession0.Token)
-	if err == nil || !IsRecordNotFoundError(err) {
+	_, _, err = rep.GetWithUserByToken(testSession0.Token)
+	if err == nil || err.Error() != "result contains no records" {
 		t.Errorf("Succeeded to read deleted session or error is not 'record not found': %v", err)
 	}
 
@@ -155,18 +157,18 @@ func TestDeleteAllForUserSessions(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	defer testSessionCleanup()
+	defer testCloseClearGraph()
 	rep := testSessionSetup()
 
 	testSessionInsert(rep)
 
-	err := rep.DeleteAllForUser(testSession1.UserID)
+	err := rep.DeleteAllForUser(testSession0User.Username)
 	if err != nil {
 		t.Errorf("Failed to delete all sessions for user of session1: %v", err)
 	}
 
-	_, err = rep.GetByToken(testSession1.Token)
-	if err == nil || !IsRecordNotFoundError(err) {
+	_, _, err = rep.GetWithUserByToken(testSession1.Token)
+	if err == nil || err.Error() != "result contains no records" {
 		t.Errorf("Succeeded to read deleted session or error is not 'record not found': %v", err)
 	}
 
@@ -183,7 +185,7 @@ func TestDeleteExpiredSessions(t *testing.T) {
 	if testSessionSetupFailed {
 		t.Skip("Skipped due to failed setup")
 	}
-	defer testSessionCleanup()
+	defer testCloseClearGraph()
 	rep := testSessionSetup()
 
 	testSessionInsert(rep)
@@ -193,8 +195,8 @@ func TestDeleteExpiredSessions(t *testing.T) {
 		t.Errorf("Failed to delete expired sessions: %v", err)
 	}
 
-	_, err = rep.GetByToken(testSession3.Token)
-	if err == nil || !IsRecordNotFoundError(err) {
+	_, _, err = rep.GetWithUserByToken(testSession3.Token)
+	if err == nil || err.Error() != "result contains no records" {
 		t.Errorf("Succeeded to read expired session or error is not 'record not found': %v", err)
 	}
 
