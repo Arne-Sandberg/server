@@ -34,7 +34,7 @@ func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
 }
 
 func AuthLogoutHandler(params authAPI.LogoutParams, principal *models.Principal) middleware.Responder {
-	session := &models.Session{Token: string(principal.Token)}
+	session := &models.Session{Token: principal.Token.Token}
 	err := manager.GetAuthManager().DeleteSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)

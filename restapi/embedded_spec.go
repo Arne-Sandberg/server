@@ -1174,7 +1174,12 @@ func init() {
       }
     },
     "Token": {
-      "type": "string"
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
     },
     "User": {
       "type": "object",
@@ -2453,7 +2458,12 @@ func init() {
       }
     },
     "Token": {
-      "type": "string"
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
     },
     "User": {
       "type": "object",

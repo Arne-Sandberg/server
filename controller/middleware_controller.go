@@ -23,7 +23,7 @@ func FileServerMiddleware(next http.Handler) http.Handler {
 }
 
 func ValidateToken(token string, scopes []string) (principal *models.Principal, err error) {
-	principal = &models.Principal{Token: models.Token(token)}
+	principal = &models.Principal{Token: &models.Token{Token: token}}
 
 	if len(scopes) > 0 {
 		session := &models.Session{Token: token}

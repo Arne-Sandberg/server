@@ -71,13 +71,13 @@ func (mgr *AuthManager) cleanupExpiredSessionsRoutine() {
 
 // CreateUser validates a new user's data, hashes his password and then stores them.
 // Also, a new session is returned for the given user.
-func (mgr *AuthManager) CreateUser(user *models.User) (token models.Token, err error) {
+func (mgr *AuthManager) CreateUser(user *models.User) (token *models.Token, err error) {
 	if !utils.ValidateUsername(user.Username) ||
 		!utils.ValidateEmail(user.Email) ||
 		!utils.ValidatePassword(user.Password) ||
 		!utils.ValidateFirstName(user.FirstName) ||
 		!utils.ValidateLastName(user.LastName) {
-		return "", fcerrors.New(fcerrors.InvalidUserData)
+		return nil, fcerrors.New(fcerrors.InvalidUserData)
 	}
 
 	user.Email = utils.ConvertToCleanEmail(user.Email)
@@ -87,13 +87,13 @@ func (mgr *AuthManager) CreateUser(user *models.User) (token models.Token, err e
 		// Don't bail out here, since this will be checked again when creating the user in repository
 		log.Warn("Could not validate whether user with email %s already exists", user.Email)
 	} else if err == nil && existingUser != nil {
-		return "", fcerrors.New(fcerrors.UserExists)
+		return nil, fcerrors.New(fcerrors.UserExists)
 	}
 
 	user.Password, err = crypt.HashScrypt(user.Password)
 	if err != nil {
 		log.Error(0, "Password hashing failed: %v", err)
-		return "", fcerrors.Wrap(err, fcerrors.HashingFailed)
+		return nil, fcerrors.Wrap(err, fcerrors.HashingFailed)
 	}
 	user.IsAdmin = false
 
@@ -101,7 +101,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (token models.Token, err e
 	err = mgr.userRep.Create(user)
 	if err != nil {
 		log.Error(0, "Creating user failed: %v", err)
-		return "", fcerrors.Wrap(err, fcerrors.Database)
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
 	adminCount, err := mgr.userRep.AdminCount()
@@ -118,30 +118,30 @@ func (mgr *AuthManager) CreateUser(user *models.User) (token models.Token, err e
 		if err != nil {
 			log.Error(0, "Could not make first user an admin: %v", err)
 			// Since a system without an admin won't properly work, bail out
-			return "", fcerrors.Wrap(err, fcerrors.Database)
+			return nil, fcerrors.Wrap(err, fcerrors.Database)
 		}
 	}
 
 	err = GetFileManager().ScanUserFolderForChanges(user)
 	if err != nil {
 		log.Error(0, "Failed to scan folder for new user: %v", err)
-		return "", fcerrors.Wrap(err, fcerrors.Filesystem)
+		return nil, fcerrors.Wrap(err, fcerrors.Filesystem)
 	}
 
 	// Now, create a session for the user
 	session, err := mgr.createUserSession(user.Username)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return models.Token(session.Token), nil
+	return &models.Token{Token: session.Token}, nil
 }
 
 // LoginUser verifies the user's credentials and then returns a new session.
-func (mgr *AuthManager) LoginUser(usernameOrEmail string, password string) (models.Token, error) {
+func (mgr *AuthManager) LoginUser(usernameOrEmail string, password string) (*models.Token, error) {
 	// First, do some sanity checks so we can reduce calls to the credentials provider with obviously wrong data.
 	if !(utils.ValidateEmail(usernameOrEmail) || utils.ValidateUsername(usernameOrEmail)) || !utils.ValidatePassword(password) {
-		return "", fcerrors.New(fcerrors.MissingCredentials)
+		return nil, fcerrors.New(fcerrors.MissingCredentials)
 	}
 
 	email := utils.ConvertToCleanEmail(usernameOrEmail)
@@ -151,27 +151,27 @@ func (mgr *AuthManager) LoginUser(usernameOrEmail string, password string) (mode
 	if repository.IsRecordNotFoundError(err) {
 		log.Warn("User not found by username '%s' or email '%s'", username, email)
 		// we intentionally don't tell the user whether the error was due to bad credentials or the user being nonexistant
-		return "", fcerrors.New(fcerrors.BadCredentials)
+		return nil, fcerrors.New(fcerrors.BadCredentials)
 	} else if err != nil {
 		log.Error(0, "Could not get user via email %s: %v", email, err)
-		return "", fcerrors.Wrap(err, fcerrors.Database)
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
 	valid, err := crypt.ValidateScryptPassword(password, user.Password)
 	if err != nil {
 		log.Error(0, "Password verification failed for user %s: %v", user.Email, err)
-		return "", fcerrors.Wrap(err, fcerrors.HashingFailed)
+		return nil, fcerrors.Wrap(err, fcerrors.HashingFailed)
 	}
 	if !valid {
-		return "", fcerrors.New(fcerrors.BadCredentials)
+		return nil, fcerrors.New(fcerrors.BadCredentials)
 	}
 
 	sess, err := mgr.createUserSession(user.Username)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return models.Token(sess.Token), nil
+	return &models.Token{Token: sess.Token}, nil
 }
 
 // DeleteUser deletes a user from db and his files depending on the settings
