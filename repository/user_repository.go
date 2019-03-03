@@ -39,7 +39,11 @@ func (rep *UserRepository) Create(user *models.User) (err error) {
 
 func (rep *UserRepository) createTxFunc(user *models.User) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("CREATE (:User $user)", map[string]interface{}{"user": modelToMap(user)})
+		query := "CREATE (:User $user)"
+		params := map[string]interface{}{
+			"user": modelToMap(user),
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -61,7 +65,11 @@ func (rep *UserRepository) Delete(username string) (err error) {
 
 func (rep *UserRepository) deleteTxFunc(username string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (u:User {username: $username}) DETACH DELETE u", map[string]interface{}{"username": username})
+		query := "MATCH (u:User {username: $username}) DETACH DELETE u"
+		params := map[string]interface{}{
+			"username": username,
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -85,7 +93,11 @@ func (rep *UserRepository) Update(user *models.User) (err error) {
 
 func (rep *UserRepository) updateTxFunc(user *models.User) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (u:User {username: $user.username}) SET u += $user", map[string]interface{}{"user": modelToMap(user)})
+		query := "MATCH (u:User {username: $user.username}) SET u += $user"
+		params := map[string]interface{}{
+			"user": modelToMap(user),
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -108,7 +120,12 @@ func (rep *UserRepository) UpdateLastSession(username string) (err error) {
 
 func (rep *UserRepository) updateLastSessionTxFunc(username string, currTime int64) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (u:User {username: $username}) SET u.updatedAt = $currTime, u.lastSessionAt = $currTime", map[string]interface{}{"username": username, "currTime": currTime})
+		query := "MATCH (u:User {username: $username}) SET u.updatedAt = $currTime, u.lastSessionAt = $currTime"
+		params := map[string]interface{}{
+			"username": username,
+			"currTime": currTime,
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -131,7 +148,11 @@ func (rep *UserRepository) GetByUsername(username string) (user *models.User, er
 
 func (rep *UserRepository) getByUsernameTxFunc(username string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		record, err := neo4j.Single(tx.Run("MATCH (u:User {username: $username}) RETURN u", map[string]interface{}{"username": username}))
+		query := "MATCH (u:User {username: $username}) RETURN u"
+		params := map[string]interface{}{
+			"username": username,
+		}
+		record, err := neo4j.Single(tx.Run(query, params))
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +180,11 @@ func (rep *UserRepository) GetByEmail(email string) (user *models.User, err erro
 
 func (rep *UserRepository) getByEmailTxFunc(email string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		record, err := neo4j.Single(tx.Run("MATCH (u:User {email: $email}) RETURN u", map[string]interface{}{"email": email}))
+		query := "MATCH (u:User {email: $email}) RETURN u"
+		params := map[string]interface{}{
+			"email": email,
+		}
+		record, err := neo4j.Single(tx.Run(query, params))
 		if err != nil {
 			return nil, err
 		}

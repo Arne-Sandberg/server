@@ -36,7 +36,12 @@ func (rep *SessionRepository) Create(session *models.Session, username string) (
 
 func (rep *SessionRepository) createTxFunc(session *models.Session, username string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (u:User {username: $username}) CREATE (u)-[:AUTHENTICATES_WITH]->(:Session $session)", map[string]interface{}{"session": modelToMap(session), "username": username})
+		query := "MATCH (u:User {username: $username}) CREATE (u)-[:AUTHENTICATES_WITH]->(:Session $session)"
+		params := map[string]interface{}{
+			"session":  modelToMap(session),
+			"username": username,
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -84,7 +89,11 @@ func (rep *SessionRepository) Delete(session *models.Session) (err error) {
 
 func (rep *SessionRepository) deleteTxFunc(sessionToken string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (s:Session {token: $token}) DETACH DELETE s", map[string]interface{}{"token": sessionToken})
+		query := "MATCH (s:Session {token: $token}) DETACH DELETE s"
+		params := map[string]interface{}{
+			"token": sessionToken,
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -105,7 +114,11 @@ func (rep *SessionRepository) DeleteAllForUser(username string) (err error) {
 
 func (rep *SessionRepository) deleteAllForUserTxFunc(username string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (s:Session)<-[:AUTHENTICATES_WITH]-(u:User {username: $username}) DETACH DELETE s", map[string]interface{}{"username": username})
+		query := "MATCH (s:Session)<-[:AUTHENTICATES_WITH]-(u:User {username: $username}) DETACH DELETE s"
+		params := map[string]interface{}{
+			"username": username,
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -128,7 +141,11 @@ func (rep *SessionRepository) DeleteExpired() (err error) {
 
 func (rep *SessionRepository) deleteExpiredTxFunc(currTime int64) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		return tx.Run("MATCH (s:Session) WHERE s.expires_at < $currTime DETACH DELETE s", map[string]interface{}{"currTime": currTime})
+		query := "MATCH (s:Session) WHERE s.expires_at < $currTime DETACH DELETE s"
+		params := map[string]interface{}{
+			"currTime": currTime,
+		}
+		return tx.Run(query, params)
 	}
 }
 
@@ -153,7 +170,11 @@ func (rep *SessionRepository) GetWithUserByToken(token string) (session *models.
 
 func (rep *SessionRepository) getByTokenTxFunc(token string) neo4j.TransactionWork {
 	return func(tx neo4j.Transaction) (interface{}, error) {
-		record, err := neo4j.Single(tx.Run("MATCH (s:Session {token: $token})<-[:AUTHENTICATES_WITH]-(u:User) RETURN s, u", map[string]interface{}{"token": token}))
+		query := "MATCH (s:Session {token: $token})<-[:AUTHENTICATES_WITH]-(u:User) RETURN s, u"
+		params := map[string]interface{}{
+			"token": token,
+		}
+		record, err := neo4j.Single(tx.Run(query, params))
 		if err != nil {
 			return nil, err
 		}

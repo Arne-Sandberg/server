@@ -140,7 +140,7 @@ func TestDeleteSession(t *testing.T) {
 	}
 
 	_, _, err = rep.GetWithUserByToken(testSession0.Token)
-	if err == nil || err.Error() != "result contains no records" {
+	if err == nil || !IsRecordNotFoundError(err) {
 		t.Errorf("Succeeded to read deleted session or error is not 'record not found': %v", err)
 	}
 
@@ -168,7 +168,7 @@ func TestDeleteAllForUserSessions(t *testing.T) {
 	}
 
 	_, _, err = rep.GetWithUserByToken(testSession1.Token)
-	if err == nil || err.Error() != "result contains no records" {
+	if err == nil || !IsRecordNotFoundError(err) {
 		t.Errorf("Succeeded to read deleted session or error is not 'record not found': %v", err)
 	}
 
@@ -196,7 +196,7 @@ func TestDeleteExpiredSessions(t *testing.T) {
 	}
 
 	_, _, err = rep.GetWithUserByToken(testSession3.Token)
-	if err == nil || err.Error() != "result contains no records" {
+	if err == nil || !IsRecordNotFoundError(err) {
 		t.Errorf("Succeeded to read expired session or error is not 'record not found': %v", err)
 	}
 

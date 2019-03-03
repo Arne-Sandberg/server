@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/freecloudio/server/config"
@@ -37,6 +38,73 @@ func TestCloseGraphDatabaseConnection(t *testing.T) {
 	err := CloseGraphDatabaseConnection()
 	if err != nil {
 		t.Fatalf("Failed to close graph database connection: %v", err)
+	}
+}
+
+type testStruct struct {
+	First  string `fc_neo:"other_first"`
+	Second string `fc_neo:"-"`
+	Third  string `json:"other_third"`
+	Fourth string `json:"-"`
+	Fifth  string
+}
+
+var testMap = map[string]interface{}{
+	"other_first": "first_value",
+	"other_third": "third_value",
+	"Fifth":       "fifth_value",
+}
+
+func TestModelToMap(t *testing.T) {
+	val := &testStruct{
+		First:  "first_value",
+		Second: "second_value",
+		Third:  "third_value",
+		Fourth: "fourth_value",
+		Fifth:  "fifth_value",
+	}
+
+	resMap := modelToMap(val)
+
+	if !reflect.DeepEqual(resMap, testMap) {
+		t.Errorf("Result map and expected map not deeply equal: %v != %v", resMap, testMap)
+	}
+}
+
+type testNode struct{}
+
+func (node *testNode) Id() int64                     { return 0 }
+func (node *testNode) Labels() []string              { return nil }
+func (node *testNode) Props() map[string]interface{} { return testMap }
+
+type testRecord struct{}
+
+func (rec *testRecord) Keys() []string                   { return nil }
+func (rec *testRecord) Values() []interface{}            { return nil }
+func (rec *testRecord) GetByIndex(index int) interface{} { return nil }
+func (rec *testRecord) Get(key string) (interface{}, bool) {
+	switch key {
+	case "t":
+		return &testNode{}, true
+	default:
+		return nil, false
+	}
+}
+
+func TestRecordToModel(t *testing.T) {
+	expVal := &testStruct{
+		First: "first_value",
+		Third: "third_value",
+		Fifth: "fifth_value",
+	}
+
+	resVal, err := recordToModel(&testRecord{}, "t", &testStruct{})
+	if err != nil {
+		t.Fatalf("Failed to convert record to model: %v", err)
+	}
+
+	if !reflect.DeepEqual(resVal, expVal) {
+		t.Errorf("Result model value and expected model value not deeply equal: %v != %v", resVal, expVal)
 	}
 }
 
