@@ -17,7 +17,7 @@ import (
 type Principal struct {
 
 	// token
-	Token *Token `json:"token,omitempty"`
+	Token Token `json:"token,omitempty"`
 
 	// user
 	User *User `json:"user,omitempty"`
@@ -47,13 +47,11 @@ func (m *Principal) validateToken(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if m.Token != nil {
-		if err := m.Token.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("token")
-			}
-			return err
+	if err := m.Token.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("token")
 		}
+		return err
 	}
 
 	return nil

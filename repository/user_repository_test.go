@@ -125,10 +125,36 @@ func TestUserGetByEmail(t *testing.T) {
 
 	readBackUser, err := rep.GetByEmail(testUser0.Email)
 	if err != nil {
-		t.Fatalf("Failed to read back user0 by Email: %v", err)
+		t.Fatalf("Failed to read back user0 by email: %v", err)
 	}
 	if !reflect.DeepEqual(readBackUser, testUser0) {
 		t.Errorf("Read back user0 and user0 not deeply equal: %v != %v", readBackUser, testUser0)
+	}
+}
+
+func TestUserGetByUsernameOrEmail(t *testing.T) {
+	if testUserSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testCloseClearGraph()
+	rep := testUserSetup()
+
+	testUserInsert(rep)
+
+	readBackUser, err := rep.GetByUsernameOrEmail("", testUser0.Email)
+	if err != nil {
+		t.Fatalf("Failed to read back user0 by username or *email*: %v", err)
+	}
+	if !reflect.DeepEqual(readBackUser, testUser0) {
+		t.Errorf("Read back user0 by username or *email* and user0 not deeply equal: %v != %v", readBackUser, testUser0)
+	}
+
+	readBackUser, err = rep.GetByUsernameOrEmail(testUser0.Username, "")
+	if err != nil {
+		t.Fatalf("Failed to read back user0 by *username* or email: %v", err)
+	}
+	if !reflect.DeepEqual(readBackUser, testUser0) {
+		t.Errorf("Read back user0 by *username* or email and user0 not deeply equal: %v != %v", readBackUser, testUser0)
 	}
 }
 

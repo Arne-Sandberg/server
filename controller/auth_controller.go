@@ -13,28 +13,28 @@ import (
 )
 
 func AuthSignupHandler(params authAPI.SignupParams) middleware.Responder {
-	session, err := manager.GetAuthManager().CreateUser(params.User)
+	token, err := manager.GetAuthManager().CreateUser(params.User)
 	if err != nil {
 		return authAPI.NewSignupDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
-	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
+	return authAPI.NewSignupOK().WithPayload(token)
 }
 
 func AuthLoginHandler(params authAPI.LoginParams) middleware.Responder {
-	email := params.Credentials.Email
+	email := params.Credentials.UsernameOrEmail
 	password := params.Credentials.Password
 
-	session, err := manager.GetAuthManager().LoginUser(email, password)
+	token, err := manager.GetAuthManager().LoginUser(email, password)
 	if err != nil {
 		return authAPI.NewLoginDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
-	return authAPI.NewSignupOK().WithPayload(&models.Token{Token: session.GetSessionString()})
+	return authAPI.NewSignupOK().WithPayload(token)
 }
 
 func AuthLogoutHandler(params authAPI.LogoutParams, principal *models.Principal) middleware.Responder {
-	session, _ := models.ParseSessionString(principal.Token.Token)
+	session := &models.Session{Token: string(principal.Token)}
 	err := manager.GetAuthManager().DeleteSession(session)
 	if err != nil {
 		log.Error(0, "Failed to remove session during logout: %v", err)
@@ -48,17 +48,17 @@ func AuthGetCurrentUserHandler(params userAPI.GetCurrentUserParams, principal *m
 	return userAPI.NewGetCurrentUserOK().WithPayload(principal.User)
 }
 
-func AuthGetUserByIDHandler(params userAPI.GetUserByIDParams, principal *models.Principal) middleware.Responder {
-	user, err := manager.GetAuthManager().GetUserByID(params.ID)
+func AuthGetUserByUsernameHandler(params userAPI.GetUserByUsernameParams, principal *models.Principal) middleware.Responder {
+	user, err := manager.GetAuthManager().GetUserByUsername(params.Username)
 	if err != nil {
-		return userAPI.NewGetUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
+		return userAPI.NewGetUserByUsernameDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
-	return userAPI.NewGetUserByIDOK().WithPayload(user)
+	return userAPI.NewGetUserByUsernameOK().WithPayload(user)
 }
 
 func AuthDeleteCurrentUserHandler(params userAPI.DeleteCurrentUserParams, principal *models.Principal) middleware.Responder {
-	err := manager.GetAuthManager().DeleteUser(principal.User.ID)
+	err := manager.GetAuthManager().DeleteUser(principal.User.Username)
 	if err != nil {
 		return userAPI.NewDeleteCurrentUserDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
@@ -66,11 +66,11 @@ func AuthDeleteCurrentUserHandler(params userAPI.DeleteCurrentUserParams, princi
 	return userAPI.NewDeleteCurrentUserOK()
 }
 
-func AuthDeleteUserByIDHandler(params userAPI.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
-	err := manager.GetAuthManager().DeleteUser(params.ID)
+func AuthDeleteUserByUsernameHandler(params userAPI.DeleteUserByUsernameParams, principal *models.Principal) middleware.Responder {
+	err := manager.GetAuthManager().DeleteUser(params.Username)
 	if err != nil {
-		return userAPI.NewDeleteUserByIDDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
+		return userAPI.NewDeleteUserByUsernameDefault(fcerrors.GetStatusCode(err)).WithPayload(fcerrors.GetAPIError(err))
 	}
 
-	return userAPI.NewDeleteUserByIDOK()
+	return userAPI.NewDeleteUserByUsernameOK()
 }

@@ -1,15 +1,6 @@
 package controller
 
-import (
-	"net/http"
-
-	"github.com/freecloudio/server/manager"
-	"github.com/freecloudio/server/models"
-	fileAPI "github.com/freecloudio/server/restapi/operations/file"
-	"github.com/go-openapi/runtime/middleware"
-)
-
-func FileGetPathInfoHandler(params fileAPI.GetPathInfoParams, principal *models.Principal) middleware.Responder {
+/*func FileGetPathInfoHandler(params fileAPI.GetPathInfoParams, principal *models.Principal) middleware.Responder {
 	pathInfo, err := manager.GetFileManager().GetPathInfo(principal.User, params.Path)
 	if err != nil {
 		return fileAPI.NewGetPathInfoDefault(http.StatusBadRequest).WithPayload(&models.Error{Message: err.Error()})
@@ -102,4 +93,4 @@ func FileDeleteShareEntryByIDHandler(params fileAPI.DeleteShareEntryByIDParams, 
 	}
 
 	return fileAPI.NewDeleteShareEntryByIDOK()
-}
+}*/

@@ -15,11 +15,11 @@ import (
 // swagger:model LoginData
 type LoginData struct {
 
-	// email
-	Email string `json:"email,omitempty"`
-
 	// password
 	Password string `json:"password,omitempty"`
+
+	// username or email
+	UsernameOrEmail string `json:"usernameOrEmail,omitempty"`
 }
 
 // Validate validates this login data

@@ -1,8 +1,16 @@
 package utils
 
 import (
+	"regexp"
 	"strings"
 )
+
+var usernameRegex = regexp.MustCompile(`^([a-zA-Z0-9\-_]+\.?)*$`)
+
+// ValidateUsername checks whether the username does not contain illegal characters
+func ValidateUsername(username string) bool {
+	return usernameRegex.MatchString(username)
+}
 
 // ValidateEmail uses simple checks to validate the email
 func ValidateEmail(email string) bool {

@@ -782,7 +782,7 @@ func init() {
         }
       }
     },
-    "/user/{id}": {
+    "/user/{username}": {
       "get": {
         "security": [
           {
@@ -794,14 +794,13 @@ func init() {
         "tags": [
           "user"
         ],
-        "summary": "Get specific user by id",
-        "operationId": "getUserByID",
+        "summary": "Get specific user by username",
+        "operationId": "getUserByUsername",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username",
+            "name": "username",
             "in": "path",
             "required": true
           }
@@ -832,14 +831,13 @@ func init() {
         "tags": [
           "user"
         ],
-        "summary": "Delete user by id",
-        "operationId": "deleteUserByID",
+        "summary": "Delete user by username",
+        "operationId": "deleteUserByUsername",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username",
+            "name": "username",
             "in": "path",
             "required": true
           }
@@ -867,14 +865,13 @@ func init() {
         "tags": [
           "user"
         ],
-        "summary": "Modify user by id",
-        "operationId": "updateUserByID",
+        "summary": "Modify user by username",
+        "operationId": "updateUserByUsername",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username",
+            "name": "username",
             "in": "path",
             "required": true
           },
@@ -1038,10 +1035,10 @@ func init() {
     "LoginData": {
       "type": "object",
       "properties": {
-        "email": {
+        "password": {
           "type": "string"
         },
-        "password": {
+        "usernameOrEmail": {
           "type": "string"
         }
       }
@@ -1177,12 +1174,7 @@ func init() {
       }
     },
     "Token": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "type": "string"
-        }
-      }
+      "type": "string"
     },
     "User": {
       "type": "object",
@@ -2067,7 +2059,7 @@ func init() {
         }
       }
     },
-    "/user/{id}": {
+    "/user/{username}": {
       "get": {
         "security": [
           {
@@ -2079,14 +2071,13 @@ func init() {
         "tags": [
           "user"
         ],
-        "summary": "Get specific user by id",
-        "operationId": "getUserByID",
+        "summary": "Get specific user by username",
+        "operationId": "getUserByUsername",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username",
+            "name": "username",
             "in": "path",
             "required": true
           }
@@ -2117,14 +2108,13 @@ func init() {
         "tags": [
           "user"
         ],
-        "summary": "Delete user by id",
-        "operationId": "deleteUserByID",
+        "summary": "Delete user by username",
+        "operationId": "deleteUserByUsername",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username",
+            "name": "username",
             "in": "path",
             "required": true
           }
@@ -2152,14 +2142,13 @@ func init() {
         "tags": [
           "user"
         ],
-        "summary": "Modify user by id",
-        "operationId": "updateUserByID",
+        "summary": "Modify user by username",
+        "operationId": "updateUserByUsername",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username",
+            "name": "username",
             "in": "path",
             "required": true
           },
@@ -2323,10 +2312,10 @@ func init() {
     "LoginData": {
       "type": "object",
       "properties": {
-        "email": {
+        "password": {
           "type": "string"
         },
-        "password": {
+        "usernameOrEmail": {
           "type": "string"
         }
       }
@@ -2462,12 +2451,7 @@ func init() {
       }
     },
     "Token": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "type": "string"
-        }
-      }
+      "type": "string"
     },
     "User": {
       "type": "object",

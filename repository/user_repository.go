@@ -193,6 +193,39 @@ func (rep *UserRepository) getByEmailTxFunc(email string) neo4j.TransactionWork 
 	}
 }
 
+// GetByUsernameOrEmail reads and return an user by email
+func (rep *UserRepository) GetByUsernameOrEmail(username, email string) (user *models.User, err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	userInt, err := session.ReadTransaction(rep.getByUsernameOrEmailTxFunc(username, email))
+	if err != nil {
+		log.Error(0, "Failed to read user by username '%s' or email '%s': %v", username, email, err)
+		return
+	}
+	user = userInt.(*models.User)
+	return
+}
+
+func (rep *UserRepository) getByUsernameOrEmailTxFunc(username, email string) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		query := "MATCH (u:User) WHERE u.username = $username OR u.email = $email RETURN u"
+		params := map[string]interface{}{
+			"username": username,
+			"email":    email,
+		}
+		record, err := neo4j.Single(tx.Run(query, params))
+		if err != nil {
+			return nil, err
+		}
+
+		return recordToModel(record, "u", &models.User{})
+	}
+}
+
 // GetAll reads and returns all stored users
 func (rep *UserRepository) GetAll() (users []*models.User, err error) {
 	session, err := getGraphSession()

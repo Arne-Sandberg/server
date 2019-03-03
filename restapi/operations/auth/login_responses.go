@@ -25,7 +25,7 @@ type LoginOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.Token `json:"body,omitempty"`
+	Payload models.Token `json:"body,omitempty"`
 }
 
 // NewLoginOK creates LoginOK with default headers values
@@ -35,13 +35,13 @@ func NewLoginOK() *LoginOK {
 }
 
 // WithPayload adds the payload to the login o k response
-func (o *LoginOK) WithPayload(payload *models.Token) *LoginOK {
+func (o *LoginOK) WithPayload(payload models.Token) *LoginOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the login o k response
-func (o *LoginOK) SetPayload(payload *models.Token) {
+func (o *LoginOK) SetPayload(payload models.Token) {
 	o.Payload = payload
 }
 
@@ -49,11 +49,9 @@ func (o *LoginOK) SetPayload(payload *models.Token) {
 func (o *LoginOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
 }
 

@@ -61,8 +61,8 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		FileDeleteShareEntryByIDHandler: file.DeleteShareEntryByIDHandlerFunc(func(params file.DeleteShareEntryByIDParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileDeleteShareEntryByID has not yet been implemented")
 		}),
-		UserDeleteUserByIDHandler: user.DeleteUserByIDHandlerFunc(func(params user.DeleteUserByIDParams, principal *models.Principal) middleware.Responder {
-			return middleware.NotImplemented("operation UserDeleteUserByID has not yet been implemented")
+		UserDeleteUserByUsernameHandler: user.DeleteUserByUsernameHandlerFunc(func(params user.DeleteUserByUsernameParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation UserDeleteUserByUsername has not yet been implemented")
 		}),
 		FileDownloadFileHandler: file.DownloadFileHandlerFunc(func(params file.DownloadFileParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileDownloadFile has not yet been implemented")
@@ -82,8 +82,8 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		SystemGetSystemStatsHandler: system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SystemGetSystemStats has not yet been implemented")
 		}),
-		UserGetUserByIDHandler: user.GetUserByIDHandlerFunc(func(params user.GetUserByIDParams, principal *models.Principal) middleware.Responder {
-			return middleware.NotImplemented("operation UserGetUserByID has not yet been implemented")
+		UserGetUserByUsernameHandler: user.GetUserByUsernameHandlerFunc(func(params user.GetUserByUsernameParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation UserGetUserByUsername has not yet been implemented")
 		}),
 		AuthLoginHandler: auth.LoginHandlerFunc(func(params auth.LoginParams) middleware.Responder {
 			return middleware.NotImplemented("operation AuthLogin has not yet been implemented")
@@ -112,8 +112,8 @@ func NewFreecloudAPI(spec *loads.Document) *FreecloudAPI {
 		FileUpdateFileHandler: file.UpdateFileHandlerFunc(func(params file.UpdateFileParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileUpdateFile has not yet been implemented")
 		}),
-		UserUpdateUserByIDHandler: user.UpdateUserByIDHandlerFunc(func(params user.UpdateUserByIDParams, principal *models.Principal) middleware.Responder {
-			return middleware.NotImplemented("operation UserUpdateUserByID has not yet been implemented")
+		UserUpdateUserByUsernameHandler: user.UpdateUserByUsernameHandlerFunc(func(params user.UpdateUserByUsernameParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation UserUpdateUserByUsername has not yet been implemented")
 		}),
 		FileUploadFileHandler: file.UploadFileHandlerFunc(func(params file.UploadFileParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation FileUploadFile has not yet been implemented")
@@ -178,8 +178,8 @@ type FreecloudAPI struct {
 	FileDeleteFileHandler file.DeleteFileHandler
 	// FileDeleteShareEntryByIDHandler sets the operation handler for the delete share entry by ID operation
 	FileDeleteShareEntryByIDHandler file.DeleteShareEntryByIDHandler
-	// UserDeleteUserByIDHandler sets the operation handler for the delete user by ID operation
-	UserDeleteUserByIDHandler user.DeleteUserByIDHandler
+	// UserDeleteUserByUsernameHandler sets the operation handler for the delete user by username operation
+	UserDeleteUserByUsernameHandler user.DeleteUserByUsernameHandler
 	// FileDownloadFileHandler sets the operation handler for the download file operation
 	FileDownloadFileHandler file.DownloadFileHandler
 	// UserGetCurrentUserHandler sets the operation handler for the get current user operation
@@ -192,8 +192,8 @@ type FreecloudAPI struct {
 	FileGetStarredFileInfosHandler file.GetStarredFileInfosHandler
 	// SystemGetSystemStatsHandler sets the operation handler for the get system stats operation
 	SystemGetSystemStatsHandler system.GetSystemStatsHandler
-	// UserGetUserByIDHandler sets the operation handler for the get user by ID operation
-	UserGetUserByIDHandler user.GetUserByIDHandler
+	// UserGetUserByUsernameHandler sets the operation handler for the get user by username operation
+	UserGetUserByUsernameHandler user.GetUserByUsernameHandler
 	// AuthLoginHandler sets the operation handler for the login operation
 	AuthLoginHandler auth.LoginHandler
 	// AuthLogoutHandler sets the operation handler for the logout operation
@@ -212,8 +212,8 @@ type FreecloudAPI struct {
 	UserUpdateCurrentUserHandler user.UpdateCurrentUserHandler
 	// FileUpdateFileHandler sets the operation handler for the update file operation
 	FileUpdateFileHandler file.UpdateFileHandler
-	// UserUpdateUserByIDHandler sets the operation handler for the update user by ID operation
-	UserUpdateUserByIDHandler user.UpdateUserByIDHandler
+	// UserUpdateUserByUsernameHandler sets the operation handler for the update user by username operation
+	UserUpdateUserByUsernameHandler user.UpdateUserByUsernameHandler
 	// FileUploadFileHandler sets the operation handler for the upload file operation
 	FileUploadFileHandler file.UploadFileHandler
 	// FileZipFilesHandler sets the operation handler for the zip files operation
@@ -309,8 +309,8 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "file.DeleteShareEntryByIDHandler")
 	}
 
-	if o.UserDeleteUserByIDHandler == nil {
-		unregistered = append(unregistered, "user.DeleteUserByIDHandler")
+	if o.UserDeleteUserByUsernameHandler == nil {
+		unregistered = append(unregistered, "user.DeleteUserByUsernameHandler")
 	}
 
 	if o.FileDownloadFileHandler == nil {
@@ -337,8 +337,8 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "system.GetSystemStatsHandler")
 	}
 
-	if o.UserGetUserByIDHandler == nil {
-		unregistered = append(unregistered, "user.GetUserByIDHandler")
+	if o.UserGetUserByUsernameHandler == nil {
+		unregistered = append(unregistered, "user.GetUserByUsernameHandler")
 	}
 
 	if o.AuthLoginHandler == nil {
@@ -377,8 +377,8 @@ func (o *FreecloudAPI) Validate() error {
 		unregistered = append(unregistered, "file.UpdateFileHandler")
 	}
 
-	if o.UserUpdateUserByIDHandler == nil {
-		unregistered = append(unregistered, "user.UpdateUserByIDHandler")
+	if o.UserUpdateUserByUsernameHandler == nil {
+		unregistered = append(unregistered, "user.UpdateUserByUsernameHandler")
 	}
 
 	if o.FileUploadFileHandler == nil {
@@ -528,7 +528,7 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/user/{id}"] = user.NewDeleteUserByID(o.context, o.UserDeleteUserByIDHandler)
+	o.handlers["DELETE"]["/user/{username}"] = user.NewDeleteUserByUsername(o.context, o.UserDeleteUserByUsernameHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -563,7 +563,7 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/user/{id}"] = user.NewGetUserByID(o.context, o.UserGetUserByIDHandler)
+	o.handlers["GET"]["/user/{username}"] = user.NewGetUserByUsername(o.context, o.UserGetUserByUsernameHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -613,7 +613,7 @@ func (o *FreecloudAPI) initHandlerCache() {
 	if o.handlers["PATCH"] == nil {
 		o.handlers["PATCH"] = make(map[string]http.Handler)
 	}
-	o.handlers["PATCH"]["/user/{id}"] = user.NewUpdateUserByID(o.context, o.UserUpdateUserByIDHandler)
+	o.handlers["PATCH"]["/user/{username}"] = user.NewUpdateUserByUsername(o.context, o.UserUpdateUserByUsernameHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)

@@ -1,22 +1,10 @@
 package manager
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
-
-	"github.com/freecloudio/server/config"
-	"github.com/freecloudio/server/repository"
-	"github.com/freecloudio/server/utils"
-
 	"errors"
-	"mime"
 
 	"github.com/freecloudio/server/models"
-	log "gopkg.in/clog.v1"
+	"github.com/freecloudio/server/repository"
 )
 
 var (
@@ -59,7 +47,7 @@ func GetFileManager() *FileManager {
 func (mgr *FileManager) Close() {}
 
 func (mgr *FileManager) ScanFSForChanges() (err error) {
-	existingUsers, err := GetAuthManager().GetAllUsers()
+	/*existingUsers, err := GetAuthManager().GetAllUsers()
 	if err != nil {
 		log.Error(0, "Could not get exising users: %v", err)
 		return
@@ -70,12 +58,12 @@ func (mgr *FileManager) ScanFSForChanges() (err error) {
 		if err != nil {
 			continue
 		}
-	}
+	}*/
 	return
 }
 
 func (mgr *FileManager) ScanUserFolderForChanges(user *models.User) (err error) {
-	err = mgr.CreateUserFolders(user.ID)
+	/*err = mgr.CreateUserFolders(user.ID)
 	if err != nil {
 		log.Error(0, "Could not create user folders for %v: %v", user.ID, err)
 		return err
@@ -85,10 +73,11 @@ func (mgr *FileManager) ScanUserFolderForChanges(user *models.User) (err error) 
 	if err != nil {
 		log.Error(0, "Could not scan directory for user %v: %v", user.ID, err)
 		return err
-	}
+	}*/
 	return
 }
 
+/*
 func (mgr *FileManager) scanDirForChanges(user *models.User, path, name string) (folderSize int64, err error) {
 	fsPath := filepath.Join(path, name)
 
@@ -527,7 +516,6 @@ func (mgr *FileManager) ZipFiles(user *models.User, paths []string) (zipPath str
 }
 
 func (mgr *FileManager) UpdateFile(user *models.User, path string, updatedFileInfo *models.FileInfoUpdate) (fileInfo *models.FileInfo, err error) {
-	/*
 		fileInfo, err = vfs.GetFileInfo(user, path)
 		if err != nil {
 			return
@@ -593,7 +581,6 @@ func (mgr *FileManager) UpdateFile(user *models.User, path string, updatedFileIn
 		}
 
 		//TODO: Make asynchronus scan call for dir sizes?!?
-	*/
 	return
 }
 
@@ -751,9 +738,9 @@ func (mgr *FileManager) SearchForFiles(user *models.User, path string) (results 
 	filePath, fileName := utils.SplitPath(path)
 	return mgr.fileInfoRep.Search(user.ID, filePath, fileName)
 }
-
+*/
 func (mgr *FileManager) DeleteUserFiles(user *models.User) (err error) {
-	err = mgr.fileInfoRep.DeleteUserFileInfos(user.ID)
+	/*err = mgr.fileInfoRep.DeleteUserFileInfos(user.ID)
 	if err != nil {
 		return
 	}
@@ -761,10 +748,11 @@ func (mgr *FileManager) DeleteUserFiles(user *models.User) (err error) {
 	err = mgr.fileSystemRep.Delete(mgr.getUserPath(user))
 	if err != nil {
 		return
-	}
+	}*/
 	return
 }
 
+/*
 func (mgr *FileManager) ShareFiles(fromUser *models.User, toUserIDs []int64, paths []string) error {
 	type failedShareStruct struct {
 		toUserMail string
@@ -918,3 +906,4 @@ func (mgr *FileManager) DeleteShareEntryByID(shareID int64, user *models.User) e
 	// TODO: Delete file of shared_with user
 	return nil
 }
+*/
