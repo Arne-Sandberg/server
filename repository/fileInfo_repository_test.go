@@ -125,3 +125,21 @@ func TestGetDirectoryContentByPath(t *testing.T) {
 		t.Errorf("Read back directory content and content are not deeply equal: %v != %v", fileInfos[0], testFileInfoUser0Dir0)
 	}
 }
+
+func TestCountFiles(t *testing.T) {
+	if testFileInfoSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testCloseClearGraph()
+	rep := testFileInfoSetup()
+
+	testFileInfoInsert(rep)
+
+	count, err := rep.Count()
+	if err != nil {
+		t.Fatalf("Failed to get count of file infos: %v", err)
+	}
+	if count != 4 {
+		t.Errorf("Count of file infos unequal to four: %d", count)
+	}
+}

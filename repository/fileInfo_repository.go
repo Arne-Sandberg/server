@@ -261,6 +261,34 @@ func (rep *FileInfoRepository) getDirectoryContentByPathTxFunc(username, path st
 	}
 }
 
+// Count returns the count of file infos
+func (rep *FileInfoRepository) Count() (count int64, err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	countInt, err := session.ReadTransaction(rep.countTxFunc())
+	if err != nil {
+		log.Error(0, "Could not get count of file infos: %v", err)
+		return
+	}
+	count = countInt.(int64)
+	return
+}
+
+func (rep *FileInfoRepository) countTxFunc() neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		record, err := neo4j.Single(tx.Run("MATCH (f:FSInfo) RETURN count(*)", nil))
+		if err != nil {
+			return nil, err
+		}
+
+		return record.GetByIndex(0), nil
+	}
+}
+
 /*
 // Delete deletes a file info by its fileInfoID
 func (rep *FileInfoRepository) Delete(fileInfoID int64) (err error) {
@@ -338,16 +366,6 @@ func (rep *FileInfoRepository) DeleteUserFileInfos(userID int64) (err error) {
 		}
 	}
 
-	return
-}
-
-// Count returns the count of file infos
-func (rep *FileInfoRepository) Count() (count int64, err error) {
-	err = sqlDatabaseConnection.Model(&models.FileInfo{}).Count(&count).Error
-	if err != nil {
-		log.Error(0, "Could not get count of file infos: %v", err)
-		return
-	}
 	return
 }
 */
