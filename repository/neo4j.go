@@ -100,6 +100,7 @@ func CloseGraphDatabaseConnection() (err error) {
 	return
 }
 
+// GetGraphDatabaseVersion returns the neo4j version we are connected to
 func GetGraphDatabaseVersion() (version string, err error) {
 	session, err := getGraphSession()
 	if err != nil {

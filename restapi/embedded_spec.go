@@ -922,13 +922,9 @@ func init() {
     "FileInfo": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
-        },
         "isDir": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-go-custom-tag": "fc_neo:\"-\""
         },
         "lastChanged": {
           "type": "integer",
@@ -938,23 +934,15 @@ func init() {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "ownerUsername": {
           "type": "string",
-          "x-go-custom-tag": "gorm:\"index:fullPath\""
-        },
-        "ownerID": {
-          "type": "integer"
-        },
-        "parentID": {
-          "type": "integer",
-          "format": "int64"
+          "x-go-custom-tag": "fc_neo:\"-\""
         },
         "path": {
           "type": "string",
-          "x-go-custom-tag": "gorm:\"index:fullPath\""
-        },
-        "shareID": {
-          "type": "integer",
-          "format": "int64"
+          "x-go-custom-tag": "fc_neo:\"-\""
         },
         "size": {
           "type": "integer",
@@ -962,18 +950,13 @@ func init() {
         },
         "starred": {
           "type": "boolean",
-          "x-go-custom-tag": "gorm:\"-\""
+          "x-go-custom-tag": "fc_neo:\"-\""
         }
       }
     },
     "FileInfoUpdate": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
         "isDir": {
           "type": "boolean",
           "x-nullable": true
@@ -992,22 +975,11 @@ func init() {
           "x-nullable": true
         },
         "ownerID": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
-        "parentID": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "x-nullable": true
         },
         "path": {
           "type": "string",
-          "x-nullable": true
-        },
-        "shareID": {
-          "type": "integer",
-          "format": "int64",
           "x-nullable": true
         },
         "size": {
@@ -2206,13 +2178,9 @@ func init() {
     "FileInfo": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
-        },
         "isDir": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-go-custom-tag": "fc_neo:\"-\""
         },
         "lastChanged": {
           "type": "integer",
@@ -2222,23 +2190,15 @@ func init() {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "ownerUsername": {
           "type": "string",
-          "x-go-custom-tag": "gorm:\"index:fullPath\""
-        },
-        "ownerID": {
-          "type": "integer"
-        },
-        "parentID": {
-          "type": "integer",
-          "format": "int64"
+          "x-go-custom-tag": "fc_neo:\"-\""
         },
         "path": {
           "type": "string",
-          "x-go-custom-tag": "gorm:\"index:fullPath\""
-        },
-        "shareID": {
-          "type": "integer",
-          "format": "int64"
+          "x-go-custom-tag": "fc_neo:\"-\""
         },
         "size": {
           "type": "integer",
@@ -2246,18 +2206,13 @@ func init() {
         },
         "starred": {
           "type": "boolean",
-          "x-go-custom-tag": "gorm:\"-\""
+          "x-go-custom-tag": "fc_neo:\"-\""
         }
       }
     },
     "FileInfoUpdate": {
       "type": "object",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
         "isDir": {
           "type": "boolean",
           "x-nullable": true
@@ -2276,22 +2231,11 @@ func init() {
           "x-nullable": true
         },
         "ownerID": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
-        "parentID": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "x-nullable": true
         },
         "path": {
           "type": "string",
-          "x-nullable": true
-        },
-        "shareID": {
-          "type": "integer",
-          "format": "int64",
           "x-nullable": true
         },
         "size": {

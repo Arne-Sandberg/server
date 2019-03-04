@@ -15,9 +15,6 @@ import (
 // swagger:model FileInfoUpdate
 type FileInfoUpdate struct {
 
-	// ID
-	ID *int64 `json:"ID,omitempty"`
-
 	// is dir
 	IsDir *bool `json:"isDir,omitempty"`
 
@@ -31,16 +28,10 @@ type FileInfoUpdate struct {
 	Name *string `json:"name,omitempty"`
 
 	// owner ID
-	OwnerID *int64 `json:"ownerID,omitempty"`
-
-	// parent ID
-	ParentID *int64 `json:"parentID,omitempty"`
+	OwnerID *string `json:"ownerID,omitempty"`
 
 	// path
 	Path *string `json:"path,omitempty"`
-
-	// share ID
-	ShareID *int64 `json:"shareID,omitempty"`
 
 	// size
 	Size *int64 `json:"size,omitempty"`

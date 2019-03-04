@@ -1,33 +1,79 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/freecloudio/server/models"
+	"github.com/freecloudio/server/utils"
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 	log "gopkg.in/clog.v1"
 )
 
-// Add used models to enable auto migration for them
 func init() {
-	databaseModels = append(databaseModels, &models.FileInfo{})
+	neoLabelConstraints = append(neoLabelConstraints, &neoLabelConstraint{
+		label: "FSInfo",
+		model: &models.FileInfo{},
+	})
 }
-
-// fileListOrder is the order in which to sort file and directory lists.
-// Directories first, otherwise sorted by name.
-const fileListOrder = "is_dir, name"
 
 // FileInfoRepository represents a the database for storing file infos
 type FileInfoRepository struct{}
 
-// CreateFileInfoRepository creates a new FileInfoRepository IF gorm has been inizialized
+// CreateFileInfoRepository creates a new FileInfoRepository IF neo4j has been inizialized
 func CreateFileInfoRepository() (*FileInfoRepository, error) {
-	if sqlDatabaseConnection == nil {
-		return nil, ErrGormNotInitialized
+	if graphConnection == nil {
+		return nil, ErrNeoNotInitialized
 	}
 	return &FileInfoRepository{}, nil
 }
 
+// CreateRootFolder creates the root folder for an username, does not fail if it already exists
+func (rep *FileInfoRepository) CreateRootFolder(username string) (err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	rootFolderInfo := &models.FileInfo{
+		OwnerUsername: username,
+		Name:          "/",
+		LastChanged:   utils.GetTimestampNow(),
+	}
+
+	_, err = session.WriteTransaction(rep.createRootFolderTxFunc(rootFolderInfo))
+	if err != nil {
+		log.Error(0, "Could not create root folder for '%s': %v", username, err)
+		return
+	}
+	return
+}
+
+func (rep *FileInfoRepository) createRootFolderTxFunc(rootFolderInfo *models.FileInfo) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		query := `
+		MATCH (u:User {username: $username})
+		MERGE (u)-[:HAS_ROOT_FOLDER]->(f:Folder:FSInfo {name: $fileInfo.name})
+		ON CREATE SET f += $fileInfo`
+		params := map[string]interface{}{
+			"username": rootFolderInfo.OwnerUsername,
+			"fileInfo": modelToMap(rootFolderInfo),
+		}
+		return tx.Run(query, params)
+	}
+}
+
 // Create stores a new file info
 func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {
-	err = sqlDatabaseConnection.Create(fileInfo).Error
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	_, err = session.WriteTransaction(rep.createTxFunc(fileInfo))
 	if err != nil {
 		log.Error(0, "Could not insert file: %v", err)
 		return
@@ -35,6 +81,187 @@ func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
+func (rep *FileInfoRepository) createTxFunc(fileInfo *models.FileInfo) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		pathElements := rep.pathToElements(fileInfo.Path)
+		numPathElements := len(pathElements)
+		parQueryTemplate := `
+			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(dir:Folder)
+			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
+			OPTIONAL MATCH (dir)-[:CONTAINS|CONTAINS_SHARED]->(exis:FSInfo {name: $filename})
+			RETURN id(dir) as parent_id, id(exis) as existing
+		`
+		parQuery := fmt.Sprintf(parQueryTemplate, numPathElements)
+		parParams := map[string]interface{}{
+			"username":     fileInfo.OwnerUsername,
+			"pathElements": pathElements,
+			"filename":     fileInfo.Name,
+		}
+		record, err := neo4j.Single(tx.Run(parQuery, parParams))
+		if err != nil {
+			return nil, err
+		}
+
+		if existing, ok := record.Get("existing"); !ok || existing != nil {
+			return nil, errors.New("file already exists")
+		}
+		parentIDInt, ok := record.Get("parent_id")
+		if !ok {
+			return nil, errors.New("parent id not found")
+		}
+
+		insQueryTemplate := `
+			MATCH (f:Folder)
+			WHERE id(f) = $parentID
+			CREATE (f)-[:CONTAINS]->(:%s:FSInfo $fileInfo)`
+		label := "File"
+		if fileInfo.IsDir {
+			label = "Folder"
+		}
+		insQuery := fmt.Sprintf(insQueryTemplate, label)
+		insParams := map[string]interface{}{
+			"parentID": parentIDInt,
+			"fileInfo": modelToMap(fileInfo),
+		}
+		return tx.Run(insQuery, insParams)
+	}
+}
+
+// GetByPath returns a file info by username and path
+func (rep *FileInfoRepository) GetByPath(username, path string) (fileInfo *models.FileInfo, err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	fileInfoInt, err := session.ReadTransaction(rep.getByPathTxFunc(username, path))
+	if err != nil {
+		log.Error(0, "Could not get fileInfo for '%s' for user %s: %v", path, username, err)
+		return
+	}
+	fileInfo = fileInfoInt.(*models.FileInfo)
+	return
+}
+
+func (rep *FileInfoRepository) getByPathTxFunc(username, path string) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		pathElements := rep.pathToElements(path)
+		numPathElements := len(pathElements)
+		queryTemlate := `
+			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(f:FSInfo)
+			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
+			RETURN f, "Folder" IN labels(f) AS isDir
+		`
+		query := fmt.Sprintf(queryTemlate, numPathElements)
+		params := map[string]interface{}{
+			"username":     username,
+			"pathElements": pathElements,
+		}
+		record, err := neo4j.Single(tx.Run(query, params))
+		if err != nil {
+			return nil, err
+		}
+
+		fileInfoInt, err := recordToModel(record, "f", &models.FileInfo{})
+		if err != nil {
+			return nil, err
+		}
+		fileInfo := fileInfoInt.(*models.FileInfo)
+		isDirInt, ok := record.Get("isDir")
+		if !ok {
+			return nil, errors.New("isDir not part of getByPath record")
+		}
+		fileInfo.IsDir = isDirInt.(bool)
+		fileInfo.OwnerUsername = username
+		fileInfo.Path, _ = utils.SplitPath(path)
+
+		return fileInfo, nil
+	}
+}
+
+func (rep *FileInfoRepository) pathToElements(path string) []string {
+	pathElements := strings.Split(path, "/")
+	if len(pathElements) > 0 && pathElements[0] == "" {
+		pathElements = pathElements[1:]
+	}
+	if length := len(pathElements); length > 0 && pathElements[length-1] == "" {
+		pathElements = pathElements[:length-1]
+	}
+	return append([]string{"/"}, pathElements...)
+}
+
+// GetDirectoryContentByPath returns all child files of a directory
+func (rep *FileInfoRepository) GetDirectoryContentByPath(username, path string) (content []*models.FileInfo, err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	contentInt, err := session.ReadTransaction(rep.getDirectoryContentByPathTxFunc(username, path))
+	if err != nil && IsRecordNotFoundError(err) {
+		err = nil
+	} else if err != nil {
+		log.Error(0, "Could not get dir content for path '%s' for user '%s': %v", path, username, err)
+		return
+	}
+	content = contentInt.([]*models.FileInfo)
+	return
+}
+
+func (rep *FileInfoRepository) getDirectoryContentByPathTxFunc(username, path string) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		pathElements := rep.pathToElements(path)
+		numPathElements := len(pathElements)
+		queryTemplate := `
+			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(dir:Folder)
+			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
+			MATCH (dir)-[:CONTAINS|CONTAINS_SHARED]->(f:FSInfo)
+			MATCH (f)<-[:CONTAINS|HAS_ROOT_FOLDER*]-(o:User)
+			RETURN f, "Folder" IN labels(f) AS isDir, o.username as ownerUsername ORDER BY isDir, f.name`
+		query := fmt.Sprintf(queryTemplate, numPathElements)
+		params := map[string]interface{}{
+			"username":     username,
+			"pathElements": pathElements,
+		}
+		res, err := tx.Run(query, params)
+		if err != nil {
+			return nil, err
+		}
+
+		var fileInfos []*models.FileInfo
+		for res.Next() {
+			fileInfoInt, err := recordToModel(res.Record(), "f", &models.FileInfo{})
+			if err != nil {
+				log.Error(0, "Failed to get fileInfo from record: %v", err)
+				continue
+			}
+			fileInfo := fileInfoInt.(*models.FileInfo)
+			isDirInt, ok := res.Record().Get("isDir")
+			if !ok {
+				log.Error(0, "isDir not part of getDirectoryContentByPath record")
+				continue
+			}
+			fileInfo.IsDir = isDirInt.(bool)
+			ownerUsernameInt, ok := res.Record().Get("ownerUsername")
+			if !ok {
+				log.Error(0, "ownerUsername not part of getDirectoryContentByPath record")
+				continue
+			}
+			fileInfo.OwnerUsername = ownerUsernameInt.(string)
+			fileInfo.Path = path
+			fileInfos = append(fileInfos, fileInfo)
+		}
+		if res.Err() != nil {
+			return nil, res.Err()
+		}
+
+		return fileInfos, nil
+	}
+}
+
+/*
 // Delete deletes a file info by its fileInfoID
 func (rep *FileInfoRepository) Delete(fileInfoID int64) (err error) {
 	err = sqlDatabaseConnection.Delete(&models.FileInfo{ID: fileInfoID}).Error
@@ -76,45 +303,6 @@ func (rep *FileInfoRepository) GetSharedWithFileInfosByUser(userID int64) (share
 
 // GetSharedFileInfosByUser returns all file infos a user shared with someone else
 func (rep *FileInfoRepository) GetSharedFileInfosByUser(userID int64) (sharedFilesForUser []*models.FileInfo, err error) {
-	return
-}
-
-// GetDirectoryContentByID returns all direct child files of a directory with stars for an user; for no stars use userID '0'
-func (rep *FileInfoRepository) GetDirectoryContentByID(userID, directoryID int64) (content []*models.FileInfo, err error) {
-	if userID > 0 {
-		err = sqlDatabaseConnection.Raw(getDirectoryContent, directoryID, userID).Order(fileListOrder).Scan(&content).Error
-	} else {
-		err = sqlDatabaseConnection.Where(&models.FileInfo{ParentID: directoryID}).Order(fileListOrder).Order(fileListOrder).Find(&content).Error
-	}
-	if err != nil && IsRecordNotFoundError(err) {
-		err = nil
-	} else if err != nil {
-		log.Error(0, "Could not get dir content for dirID %v for user %v: %v", directoryID, userID, err)
-		return
-	}
-
-	return
-}
-
-// GetByPath returns a file info by userID, path and name AND the owner is the user
-func (rep *FileInfoRepository) GetByPath(userID int64, path, name string) (fileInfo *models.FileInfo, err error) {
-	fileInfo = &models.FileInfo{}
-	err = sqlDatabaseConnection.Raw(getByPath, path, name, userID, userID).Scan(fileInfo).Error
-	if err != nil {
-		log.Error(0, "Could not get fileInfo for %v%v for user %v: %v", path, name, userID, err)
-		return
-	}
-	return
-}
-
-// GetByID returns a file by its fileID AND the owner is the user
-func (rep *FileInfoRepository) GetByID(fileID int64) (fileInfo *models.FileInfo, err error) {
-	fileInfo = &models.FileInfo{}
-	err = sqlDatabaseConnection.First(fileInfo, "id = ?", fileID).Error
-	if err != nil {
-		log.Error(0, "Could not get fileInfo for ID %v: %v", fileID, err)
-		return
-	}
 	return
 }
 
@@ -162,14 +350,4 @@ func (rep *FileInfoRepository) Count() (count int64, err error) {
 	}
 	return
 }
-
-var (
-	selectPart             = "select file.id, file.is_dir, file.last_changed, file.mime_type, file.name, file.owner_id, file.parent_id, file.path, file.share_id, file.size, (stars.file_id is not null) as starred"
-	joinStarsPart          = " join stars on stars.file_id = file.id and stars.user_id = ?"
-	leftOuterJoinStarsPart = " left outer" + joinStarsPart
-
-	getStarredFilesByUserID = selectPart + " from file_infos as file" + joinStarsPart
-	getDirectoryContent     = selectPart + " from (select * from file_infos where parent_id = ?) as file" + leftOuterJoinStarsPart                                // ParentID and userID
-	getByPath               = selectPart + " from (select * from file_infos where path = ? and name = ? and owner_id = ?) as file" + leftOuterJoinStarsPart       // Path, name and two times userID
-	getSearch               = selectPart + " from (select * from file_infos where path LIKE ? and name LIKE ? and owner_id = ?) as file" + leftOuterJoinStarsPart // PathMatch, FileMatch and two times userID
-)
+*/

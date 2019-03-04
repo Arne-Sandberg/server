@@ -15,11 +15,8 @@ import (
 // swagger:model FileInfo
 type FileInfo struct {
 
-	// ID
-	ID int64 `json:"ID,omitempty" gorm:"primary_key;auto_increment"`
-
 	// is dir
-	IsDir bool `json:"isDir,omitempty"`
+	IsDir bool `json:"isDir,omitempty" fc_neo:"-"`
 
 	// last changed
 	LastChanged int64 `json:"lastChanged,omitempty"`
@@ -28,25 +25,19 @@ type FileInfo struct {
 	MimeType string `json:"mimeType,omitempty"`
 
 	// name
-	Name string `json:"name,omitempty" gorm:"index:fullPath"`
+	Name string `json:"name,omitempty"`
 
-	// owner ID
-	OwnerID int64 `json:"ownerID,omitempty"`
-
-	// parent ID
-	ParentID int64 `json:"parentID,omitempty"`
+	// owner username
+	OwnerUsername string `json:"ownerUsername,omitempty" fc_neo:"-"`
 
 	// path
-	Path string `json:"path,omitempty" gorm:"index:fullPath"`
-
-	// share ID
-	ShareID int64 `json:"shareID,omitempty"`
+	Path string `json:"path,omitempty" fc_neo:"-"`
 
 	// size
 	Size int64 `json:"size,omitempty"`
 
 	// starred
-	Starred bool `json:"starred,omitempty" gorm:"-"`
+	Starred bool `json:"starred,omitempty" fc_neo:"-"`
 }
 
 // Validate validates this file info
