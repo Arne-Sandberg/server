@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/freecloudio/server/models"
@@ -219,7 +220,7 @@ func (rep *FileInfoRepository) getDirectoryContentByPathTxFunc(username, path st
 			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
 			MATCH (dir)-[:CONTAINS|CONTAINS_SHARED]->(f:FSInfo)
 			MATCH (f)<-[:CONTAINS|HAS_ROOT_FOLDER*]-(o:User)
-			RETURN f, "Folder" IN labels(f) AS isDir, o.username as ownerUsername ORDER BY isDir, f.name`
+			RETURN f, "Folder" IN labels(f) AS isDir, o.username as ownerUsername ORDER BY NOT isDir, f.name`
 		query := fmt.Sprintf(queryTemplate, numPathElements)
 		params := map[string]interface{}{
 			"username":     username,
@@ -261,6 +262,119 @@ func (rep *FileInfoRepository) getDirectoryContentByPathTxFunc(username, path st
 	}
 }
 
+// Delete deletes a file info by its path
+func (rep *FileInfoRepository) Delete(username, path string) (err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	_, err = session.WriteTransaction(rep.deleteTxFunc(username, path))
+	if err != nil {
+		log.Error(0, "Could not delete fileInfo: %v", err)
+		return
+	}
+	return
+}
+
+func (rep *FileInfoRepository) deleteTxFunc(username, path string) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		pathElements := rep.pathToElements(path)
+		numPathElements := len(pathElements)
+		queryTemplate := `
+			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(f:FSInfo)
+			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
+			MATCH (f)-[:CONTAINS|CONTAINS_SHARED]->(c:FSInfo)
+			DETACH DELETE f, c
+		`
+		query := fmt.Sprintf(queryTemplate, numPathElements)
+		params := map[string]interface{}{
+			"username":     username,
+			"pathElements": pathElements,
+		}
+		return tx.Run(query, params)
+	}
+}
+
+// Search returns a list of file infos for a path and name search term
+func (rep *FileInfoRepository) Search(username, path, term string) (results []*models.FileInfo, err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	resultsInt, err := session.ReadTransaction(rep.searchTxFunc(username, path, term))
+	if err != nil && IsRecordNotFoundError(err) {
+		err = nil
+	} else if err != nil {
+		log.Error(0, "Could not get search result for term '%s' in path '%s' for user '%s': %v", term, path, username, err)
+		return
+	}
+	results = resultsInt.([]*models.FileInfo)
+	return
+}
+
+func (rep *FileInfoRepository) searchTxFunc(username, path, term string) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		pathElements := rep.pathToElements(path)
+		numPathElements := len(pathElements)
+		queryTemplate := `
+			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(f:Folder)
+			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
+			MATCH fp = (f)-[:CONTAINS|CONTAINS_SHARED*]->(r:FSInfo)
+			WHERE toLower(r.name) CONTAINS toLower($term)
+			MATCH (r)<-[:CONTAINS|HAS_ROOT_FOLDER*]-(o:User)
+			RETURN r, "Folder" IN labels(r) AS isDir, o.username as ownerUsername,
+				reduce(path = "", x IN nodes(fp)[1..size(nodes(fp)) - 1] | path + "/" + x.name) as relPath ORDER BY NOT isDir, r.name`
+		query := fmt.Sprintf(queryTemplate, numPathElements)
+		params := map[string]interface{}{
+			"username":     username,
+			"pathElements": pathElements,
+			"term":         term,
+		}
+		res, err := tx.Run(query, params)
+		if err != nil {
+			return nil, err
+		}
+
+		var results []*models.FileInfo
+		for res.Next() {
+			resultInt, err := recordToModel(res.Record(), "r", &models.FileInfo{})
+			if err != nil {
+				log.Error(0, "Failed to get fileInfo from search record: %v", err)
+				continue
+			}
+			result := resultInt.(*models.FileInfo)
+			isDirInt, ok := res.Record().Get("isDir")
+			if !ok {
+				log.Error(0, "isDir not part of search record")
+				continue
+			}
+			result.IsDir = isDirInt.(bool)
+			ownerUsernameInt, ok := res.Record().Get("ownerUsername")
+			if !ok {
+				log.Error(0, "ownerUsername not part of search record")
+				continue
+			}
+			result.OwnerUsername = ownerUsernameInt.(string)
+			relPathInt, ok := res.Record().Get("relPath")
+			if !ok {
+				log.Error(0, "relPath not part of search record")
+				continue
+			}
+			result.Path = filepath.Join(path, relPathInt.(string))
+			results = append(results, result)
+		}
+		if res.Err() != nil {
+			return nil, res.Err()
+		}
+
+		return results, nil
+	}
+}
+
 // Count returns the count of file infos
 func (rep *FileInfoRepository) Count() (count int64, err error) {
 	session, err := getGraphSession()
@@ -290,16 +404,6 @@ func (rep *FileInfoRepository) countTxFunc() neo4j.TransactionWork {
 }
 
 /*
-// Delete deletes a file info by its fileInfoID
-func (rep *FileInfoRepository) Delete(fileInfoID int64) (err error) {
-	err = sqlDatabaseConnection.Delete(&models.FileInfo{ID: fileInfoID}).Error
-	if err != nil {
-		log.Error(0, "Could not delete fileInfo: %v", err)
-		return
-	}
-	return
-}
-
 // Update updates a stored file info
 func (rep *FileInfoRepository) Update(fileInfo *models.FileInfo) (err error) {
 	err = sqlDatabaseConnection.Save(fileInfo).Error
@@ -331,21 +435,6 @@ func (rep *FileInfoRepository) GetSharedWithFileInfosByUser(userID int64) (share
 
 // GetSharedFileInfosByUser returns all file infos a user shared with someone else
 func (rep *FileInfoRepository) GetSharedFileInfosByUser(userID int64) (sharedFilesForUser []*models.FileInfo, err error) {
-	return
-}
-
-// Search returns a list of file infos for a path and name search term
-func (rep *FileInfoRepository) Search(userID int64, path, name string) (results []*models.FileInfo, err error) {
-	pathSearch := path + "%"
-	fileNameSearch := "%" + name + "%"
-	err = sqlDatabaseConnection.Raw(getSearch, pathSearch, fileNameSearch, userID, userID).Order(fileListOrder).Find(&results).Error
-	if err != nil && IsRecordNotFoundError(err) {
-		err = nil
-	} else if err != nil {
-		log.Error(0, "Could not get search result for fileName %v in path %v for user %v: %v", name, path, userID, err)
-		return
-	}
-
 	return
 }
 

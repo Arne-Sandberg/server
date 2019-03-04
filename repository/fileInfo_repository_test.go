@@ -12,14 +12,12 @@ var testFileInfoSetupFailed = false
 var testFileInfoUser0 = &models.User{Email: "user0", Username: "user0"}
 var testFileInfoUser0Dir0 = &models.FileInfo{OwnerUsername: testFileInfoUser0.Username, Name: "dir0", Path: "/", IsDir: true}
 var testFileInfoUser0Dir0File0 = &models.FileInfo{OwnerUsername: testFileInfoUser0.Username, Name: "file0.txt", Path: "/dir0", IsDir: false}
-var testFileInfoUser1 = &models.User{Email: "user1", Username: "user1"}
 
 func testFileInfoSetup() *FileInfoRepository {
 	testConnectClearGraph()
 
 	userRep, _ := CreateUserRepository()
 	userRep.Create(testFileInfoUser0)
-	userRep.Create(testFileInfoUser1)
 
 	rep, _ := CreateFileInfoRepository()
 	return rep
@@ -27,7 +25,6 @@ func testFileInfoSetup() *FileInfoRepository {
 
 func testFileInfoInsert(rep *FileInfoRepository) {
 	rep.CreateRootFolder(testFileInfoUser0.Username)
-	rep.CreateRootFolder(testFileInfoUser1.Username)
 	rep.Create(testFileInfoUser0Dir0)
 	rep.Create(testFileInfoUser0Dir0File0)
 }
@@ -70,7 +67,6 @@ func TestCreateFile(t *testing.T) {
 	defer testCloseClearGraph()
 	rep := testFileInfoSetup()
 	rep.CreateRootFolder(testFileInfoUser0.Username)
-	rep.CreateRootFolder(testFileInfoUser1.Username)
 
 	err := rep.Create(testFileInfoUser0Dir0)
 	if err != nil {
@@ -126,7 +122,50 @@ func TestGetDirectoryContentByPath(t *testing.T) {
 	}
 }
 
-func TestCountFiles(t *testing.T) {
+func TestDeleteFiles(t *testing.T) {
+	if testFileInfoSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testCloseClearGraph()
+	rep := testFileInfoSetup()
+
+	testFileInfoInsert(rep)
+
+	err := rep.Delete(testFileInfoUser0.Username, testFileInfoUser0Dir0File0.Path)
+	if err != nil {
+		t.Fatalf("Failed to delete user0dir0: %v", err)
+	}
+	count, _ := rep.Count()
+	if count != 1 {
+		t.Errorf("Count of files after deletion of user0dir0 unequal to one: %d", count)
+	}
+}
+
+func TestSearchFiles(t *testing.T) {
+	if testFileInfoSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testCloseClearGraph()
+	rep := testFileInfoSetup()
+
+	testFileInfoInsert(rep)
+
+	results, err := rep.Search(testFileInfoUser0.Username, testFileInfoUser0Dir0.Path, "0")
+	if err != nil {
+		t.Fatalf("Failed to search for '%s' in path '%s' for user '%s': %v", "0", testFileInfoUser0Dir0.Path, testFileInfoUser0.Username, err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("Length of result of search unequal to two: %d", len(results))
+	}
+	if !reflect.DeepEqual(results[0], testFileInfoUser0Dir0) {
+		t.Errorf("First search result and user0dir0 are not deeply equal: %v != %v", results[0], testFileInfoUser0Dir0)
+	}
+	if !reflect.DeepEqual(results[1], testFileInfoUser0Dir0File0) {
+		t.Errorf("Second search result and user0dir0file0 are not deeply equal: %v != %v", results[0], testFileInfoUser0Dir0File0)
+	}
+}
+
+func TestCountFileInfo(t *testing.T) {
 	if testFileInfoSetupFailed {
 		t.Skip("Skip due to failed setup")
 	}
@@ -139,7 +178,7 @@ func TestCountFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get count of file infos: %v", err)
 	}
-	if count != 4 {
-		t.Errorf("Count of file infos unequal to four: %d", count)
+	if count != 3 {
+		t.Errorf("Count of file infos unequal to three: %d", count)
 	}
 }
