@@ -165,6 +165,25 @@ func TestSearchFiles(t *testing.T) {
 	}
 }
 
+func TestDeleteUserFiles(t *testing.T) {
+	if testFileInfoSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testCloseClearGraph()
+	rep := testFileInfoSetup()
+
+	testFileInfoInsert(rep)
+
+	err := rep.DeleteUserFileInfos(testFileInfoUser0.Username)
+	if err != nil {
+		t.Fatalf("Failed to delete file infos for user0: %v", err)
+	}
+	count, _ := rep.Count()
+	if count != 0 {
+		t.Errorf("Count after user file deletion unequal to zero: %d", count)
+	}
+}
+
 func TestCountFileInfo(t *testing.T) {
 	if testFileInfoSetupFailed {
 		t.Skip("Skip due to failed setup")

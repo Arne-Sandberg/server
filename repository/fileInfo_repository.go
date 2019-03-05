@@ -375,6 +375,22 @@ func (rep *FileInfoRepository) searchTxFunc(username, path, term string) neo4j.T
 	}
 }
 
+// DeleteUserFileInfos deletes all file infos for an user
+func (rep *FileInfoRepository) DeleteUserFileInfos(username string) (err error) {
+	session, err := getGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	_, err = session.WriteTransaction(rep.deleteTxFunc(username, "/"))
+	if err != nil {
+		log.Error(0, "Could not delete files for user '%s': %v", username, err)
+		return
+	}
+	return
+}
+
 // Count returns the count of file infos
 func (rep *FileInfoRepository) Count() (count int64, err error) {
 	session, err := getGraphSession()
@@ -435,26 +451,6 @@ func (rep *FileInfoRepository) GetSharedWithFileInfosByUser(userID int64) (share
 
 // GetSharedFileInfosByUser returns all file infos a user shared with someone else
 func (rep *FileInfoRepository) GetSharedFileInfosByUser(userID int64) (sharedFilesForUser []*models.FileInfo, err error) {
-	return
-}
-
-// DeleteUserFileInfos deletes all file infos for an user
-func (rep *FileInfoRepository) DeleteUserFileInfos(userID int64) (err error) {
-	var files []models.FileInfo
-	err = sqlDatabaseConnection.Find(&files, &models.FileInfo{OwnerID: userID}).Error
-	if err != nil {
-		log.Error(0, "Could not get all files for %v: %v", userID, err)
-		return
-	}
-
-	for _, file := range files {
-		err = sqlDatabaseConnection.Delete(&file).Error
-		if err != nil {
-			log.Warn("Could not delete file: %v", err)
-			continue
-		}
-	}
-
 	return
 }
 */
