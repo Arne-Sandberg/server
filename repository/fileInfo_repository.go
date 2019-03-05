@@ -285,7 +285,7 @@ func (rep *FileInfoRepository) deleteTxFunc(username, path string) neo4j.Transac
 		queryTemplate := `
 			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(f:FSInfo)
 			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
-			MATCH (f)-[:CONTAINS]->(c:FSInfo)
+			MATCH (f)-[:CONTAINS*]->(c:FSInfo)
 			DETACH DELETE f, c
 		`
 		query := fmt.Sprintf(queryTemplate, numPathElements)
