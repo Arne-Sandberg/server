@@ -1119,6 +1119,9 @@ func init() {
         "goVersion": {
           "type": "string"
         },
+        "numFileInfos": {
+          "type": "integer"
+        },
         "numGC": {
           "type": "integer"
         },
@@ -2374,6 +2377,9 @@ func init() {
         },
         "goVersion": {
           "type": "string"
+        },
+        "numFileInfos": {
+          "type": "integer"
         },
         "numGC": {
           "type": "integer"

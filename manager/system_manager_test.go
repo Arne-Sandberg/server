@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -14,24 +13,25 @@ var testSystemDBName = "systemTest.db"
 
 func testSystemCleanup() {
 	systemManager = nil
-	authManager = nil
-	os.Remove(testSystemDBName)
+	testCloseClearGraph()
 }
 
-func testSystemReq() {
-	repository.InitSQLDatabaseConnection("", "", "", "", 0, testSystemDBName)
-	sessionRep, _ := repository.CreateSessionRepository()
-	userRep, _ := repository.CreateUserRepository()
-
-	CreateAuthManager(sessionRep, userRep, 24, 1)
+func testSystemReq() (sessionRep *repository.SessionRepository, fileInfoRep *repository.FileInfoRepository) {
+	testConnectClearGraph()
+	sessionRep, _ = repository.CreateSessionRepository()
+	fileInfoRep, _ = repository.CreateFileInfoRepository()
+	return
 }
 
 func TestCreateSystemManager(t *testing.T) {
 	defer testSystemCleanup()
+	sessionRep, fileInfoRep := testSystemReq()
 
-	mgr := CreateSystemManager(testSystemVersion)
+	mgr := CreateSystemManager(testSystemVersion, sessionRep, fileInfoRep)
 	expMgr := &SystemManager{
-		version: testSystemVersion,
+		version:     testSystemVersion,
+		sessionRep:  sessionRep,
+		fileInfoRep: fileInfoRep,
 	}
 	mgr.startTime = time.Time{}
 
@@ -42,8 +42,9 @@ func TestCreateSystemManager(t *testing.T) {
 
 func TestGetSystemManager(t *testing.T) {
 	defer testSystemCleanup()
+	sessionRep, fileInfoRep := testSystemReq()
 
-	mgr := CreateSystemManager(testSystemVersion)
+	mgr := CreateSystemManager(testSystemVersion, sessionRep, fileInfoRep)
 	mgrGet := GetSystemManager()
 
 	if !reflect.DeepEqual(mgr, mgrGet) {
@@ -53,9 +54,9 @@ func TestGetSystemManager(t *testing.T) {
 
 func TestGetSystemStats(t *testing.T) {
 	defer testSystemCleanup()
-	testSystemReq()
+	sessionRep, fileInfoRep := testSystemReq()
 
-	mgr := CreateSystemManager(testSystemVersion)
+	mgr := CreateSystemManager(testSystemVersion, sessionRep, fileInfoRep)
 	_, err := mgr.GetSystemStats()
 	if err != nil {
 		t.Fatalf("Failed to get system stats: %#v", err)

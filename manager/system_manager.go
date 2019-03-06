@@ -5,25 +5,30 @@ import (
 	"time"
 
 	"github.com/freecloudio/server/models"
+	"github.com/freecloudio/server/repository"
 )
 
 // SystemManager provides
 type SystemManager struct {
-	version   string
-	startTime time.Time
+	version     string
+	startTime   time.Time
+	sessionRep  *repository.SessionRepository
+	fileInfoRep *repository.FileInfoRepository
 }
 
 var systemManager *SystemManager
 
 // CreateSystemManager creates a new singleton StatsManager which can be used immediately
-func CreateSystemManager(version string) *SystemManager {
+func CreateSystemManager(version string, sessionRep *repository.SessionRepository, fileInfoRep *repository.FileInfoRepository) *SystemManager {
 	if systemManager != nil {
 		return systemManager
 	}
 
 	systemManager = &SystemManager{
-		version:   version,
-		startTime: time.Now(),
+		version:     version,
+		startTime:   time.Now(),
+		sessionRep:  sessionRep,
+		fileInfoRep: fileInfoRep,
 	}
 	return systemManager
 }
@@ -38,10 +43,13 @@ func (mgr *SystemManager) GetSystemStats() (stats *models.SystemStats, err error
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	uptime := time.Since(mgr.startTime)
-	var sessionCount int64
-	sessionCount, err = GetAuthManager().GetSessionCount()
+	sessionCount, err := mgr.sessionRep.Count()
 	if err != nil {
 		sessionCount = -1
+	}
+	fileInfoCount, err := mgr.fileInfoRep.Count()
+	if err != nil {
+		fileInfoCount = -1
 	}
 
 	stats = &models.SystemStats{
@@ -52,7 +60,8 @@ func (mgr *SystemManager) GetSystemStats() (stats *models.SystemStats, err error
 		NumGC:         int64(m.NumGC),
 		GoVersion:     runtime.Version(),
 		NumGoroutines: int64(runtime.NumGoroutine()),
-		NumSessions:   int64(sessionCount),
+		NumSessions:   sessionCount,
+		NumFileInfos:  fileInfoCount,
 		Uptime:        int64(uptime.Seconds()),
 	}
 	return

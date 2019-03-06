@@ -21,6 +21,9 @@ type SystemStats struct {
 	// go version
 	GoVersion string `json:"goVersion,omitempty"`
 
+	// num file infos
+	NumFileInfos int64 `json:"numFileInfos,omitempty"`
+
 	// num g c
 	NumGC int64 `json:"numGC,omitempty"`
 
