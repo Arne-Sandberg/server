@@ -11,7 +11,7 @@ import (
 func TestInitGraphDatabaseConnection(t *testing.T) {
 	defer testCloseClearGraph()
 
-	err := InitGraphDatabaseConnection(config.GetString("graph.url"), config.GetString("graph.user"), config.GetString("graph.password"))
+	err := InitGraphDatabaseConnection(config.GetString("graph_url"), config.GetString("graph_user"), config.GetString("graph_password"))
 	if err != nil {
 		t.Fatalf("Failed to init graph database connection: %v", err)
 	}
@@ -117,7 +117,7 @@ func testClearGraph() {
 }
 
 func testConnectClearGraph() {
-	InitGraphDatabaseConnection(config.GetString("graph.url"), config.GetString("graph.user"), config.GetString("graph.password"))
+	InitGraphDatabaseConnection(config.GetString("graph_url"), config.GetString("graph_user"), config.GetString("graph_password"))
 	testClearGraph()
 }
 

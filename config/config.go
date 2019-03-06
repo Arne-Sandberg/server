@@ -3,6 +3,7 @@ package config
 import "github.com/spf13/viper"
 
 func init() {
+	viper.SetEnvPrefix("FC")
 	viper.AutomaticEnv()
 	setDefaults()
 }
@@ -32,9 +33,9 @@ func setDefaults() {
 	viper.SetDefault("db.password", "")
 	viper.SetDefault("db.name", "freecloud.db")
 
-	viper.SetDefault("graph.url", "bolt://localhost:7687")
-	viper.SetDefault("graph.user", "neo4j")
-	viper.SetDefault("graph.password", "freecloud")
+	viper.SetDefault("graph_url", "bolt://localhost:7687")
+	viper.SetDefault("graph_user", "neo4j")
+	viper.SetDefault("graph_password", "freecloud")
 }
 
 func GetString(key string) string {

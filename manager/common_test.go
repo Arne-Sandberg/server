@@ -15,7 +15,7 @@ func testClearGraph() {
 }
 
 func testConnectClearGraph() {
-	repository.InitGraphDatabaseConnection(config.GetString("graph.url"), config.GetString("graph.user"), config.GetString("graph.password"))
+	repository.InitGraphDatabaseConnection(config.GetString("graph_url"), config.GetString("graph_user"), config.GetString("graph_password"))
 	testClearGraph()
 }
 

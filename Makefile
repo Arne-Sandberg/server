@@ -10,7 +10,7 @@ depensure:
 	dep ensure
 
 test:
-	go test ./...
+	go test -p=1 ./...
 
 validateswagger:
 	swagger validate ./api/freecloud.yml

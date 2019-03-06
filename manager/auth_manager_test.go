@@ -131,7 +131,7 @@ func TestUserLogin(t *testing.T) {
 
 	token, err := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
 	if err != nil {
-		t.Errorf("Failed to verify and get new session for admin user: %v", err)
+		t.Fatalf("Failed to verify and get new session for admin user: %v", err)
 	}
 	if token.Token == "" {
 		t.Error("Token empty for logged in admin user")
@@ -154,7 +154,7 @@ func TestGetUserByID(t *testing.T) {
 
 	readBackUser, err := mgr.GetUserByUsername(testAuthUserAdmin.Username)
 	if err != nil {
-		t.Errorf("Failed to get admin user by username: %v", err)
+		t.Fatalf("Failed to get admin user by username: %v", err)
 	}
 	readBackUser.LastSessionAt = 0
 	readBackUser.UpdatedAt = 0

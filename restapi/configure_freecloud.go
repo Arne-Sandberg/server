@@ -178,7 +178,7 @@ func initializeServer() {
 		log.Fatal(0, "Database setup failed, bailing out!: %v", err)
 	}
 
-	err = repository.InitGraphDatabaseConnection(config.GetString("graph.url"), config.GetString("graph.user"), config.GetString("graph.password"))
+	err = repository.InitGraphDatabaseConnection(config.GetString("graph_url"), config.GetString("graph_user"), config.GetString("graph_password"))
 	if err != nil {
 		log.Fatal(0, "Database setup failed, bailing out: %v", err)
 	}
@@ -206,12 +206,13 @@ func initializeServer() {
 
 	manager.CreateAuthManager(sessionRep, userRep, config.GetInt("auth.session_expiry"), config.GetInt("auth.session_cleanup_interval"))
 	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep, tmpName)
-	manager.CreateSystemManager("0.0.1") // TODO: Better place to save version
+	manager.CreateSystemManager("0.0.1", sessionRep, fileInfoRep) // TODO: Better place to save version
 }
 
 func shutdownServer() {
 	manager.GetAuthManager().Close()
+	manager.GetFileManager().Close()
 	repository.CloseSQLDatabaseConnection()
-	repository.CloseSQLDatabaseConnection()
+	repository.CloseGraphDatabaseConnection()
 	utils.CloseLogger()
 }

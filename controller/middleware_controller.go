@@ -26,9 +26,7 @@ func ValidateToken(token string, scopes []string) (principal *models.Principal, 
 	principal = &models.Principal{Token: &models.Token{Token: token}}
 
 	if len(scopes) > 0 {
-		session := &models.Session{Token: token}
-
-		principal.User, err = manager.GetAuthManager().ValidateSession(session)
+		principal.User, err = manager.GetAuthManager().ValidateToken(principal.Token)
 		if err != nil {
 			return nil, errors.New(http.StatusInternalServerError, err.Error())
 		}

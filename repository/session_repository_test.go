@@ -12,9 +12,9 @@ var testSessionSetupFailed = false
 var testSessionDBName = "sessionTest.db"
 var testSessionNotExpiring = time.Now().UTC().Unix() + 99999999
 var testSessionExpiring = time.Now().UTC().Unix() - 99999999
-var testSession0User = &models.User{Username: "0"}
+var testSession0User = &models.User{Username: "0", Email: "0@example.com"}
 var testSession0 = &models.Session{Token: "aabbccddeeff", ExpiresAt: testSessionNotExpiring}
-var testSession1User = &models.User{Username: "1"}
+var testSession1User = &models.User{Username: "1", Email: "1@example.com"}
 var testSession1 = &models.Session{Token: "ffeeddccbbaa", ExpiresAt: testSessionNotExpiring}
 var testSession2 = &models.Session{Token: "112233445566", ExpiresAt: testSessionNotExpiring}
 var testSession3 = &models.Session{Token: "665544332211", ExpiresAt: testSessionExpiring}
@@ -90,7 +90,7 @@ func TestCountSessions(t *testing.T) {
 		t.Fatalf("Failed to get count: %v", err)
 	}
 	if count != 4 {
-		t.Errorf("Count unequal to four for filled session repository: %d", err)
+		t.Errorf("Count unequal to four for filled session repository: %d", count)
 	}
 }
 
