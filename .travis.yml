@@ -15,7 +15,7 @@ go:
 before_script:
   - git fetch origin master:refs/remotes/origin/master
   - wget https://github.com/neo4j-drivers/seabolt/releases/download/v1.7.0/seabolt-1.7.0-Linux-Ubuntu-Xenial.deb
-  - dpkg -i seabolt-1.7.0-Linux-Ubuntu-Xenial.deb
+  - sudo dpkg -i seabolt-1.7.0-Linux-Ubuntu-Xenial.deb
 script:
   - go vet ./... 2> vet_report.out
   - go build ./cmd/freecloud-server
