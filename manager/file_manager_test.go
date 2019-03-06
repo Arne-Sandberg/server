@@ -1,12 +1,6 @@
 package manager
 
-import (
-	"testing"
-
-	"github.com/freecloudio/server/models"
-)
-
-func TestGetUserPath(t *testing.T) {
+/*func TestGetUserPath(t *testing.T) {
 	var l = map[int64]string{
 		0: "/0",
 		1: "/1",
@@ -18,6 +12,4 @@ func TestGetUserPath(t *testing.T) {
 			t.Errorf("Expected result %s for input %v but got: %s", expOutput, input, output)
 		}
 	}
-}
-
-
+}*/

@@ -19,7 +19,7 @@ func testSystemCleanup() {
 }
 
 func testSystemReq() {
-	repository.InitDatabaseConnection("", "", "", "", 0, testSystemDBName)
+	repository.InitSQLDatabaseConnection("", "", "", "", 0, testSystemDBName)
 	sessionRep, _ := repository.CreateSessionRepository()
 	userRep, _ := repository.CreateUserRepository()
 

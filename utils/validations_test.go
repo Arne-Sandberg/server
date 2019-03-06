@@ -26,6 +26,7 @@ func TestValidateUsername(t *testing.T) {
 		{"double quote", args{"\"myname\""}, false},
 		{"greater sign", args{">greatname"}, false},
 		{"smaller sign", args{"<smallname"}, false},
+		{"smaller sign", args{""}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

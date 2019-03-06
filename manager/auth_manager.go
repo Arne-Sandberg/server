@@ -85,7 +85,7 @@ func (mgr *AuthManager) CreateUser(user *models.User) (token *models.Token, err 
 	existingUser, err := mgr.userRep.GetByUsernameOrEmail(user.Username, user.Email)
 	if err != nil && !repository.IsRecordNotFoundError(err) {
 		// Don't bail out here, since this will be checked again when creating the user in repository
-		log.Warn("Could not validate whether user with email %s already exists", user.Email)
+		log.Warn("Could not validate whether user with email '%s' or username '%s' already exists", user.Email, user.Username)
 	} else if err == nil && existingUser != nil {
 		return nil, fcerrors.New(fcerrors.UserExists)
 	}
@@ -269,22 +269,22 @@ func (mgr *AuthManager) createUserSession(username string) (*models.Session, err
 	return session, nil
 }
 
-// ValidateSession checks if the session is valid.
-func (mgr *AuthManager) ValidateSession(sess *models.Session) (*models.User, error) {
-	storedSession, user, err := mgr.sessionRep.GetWithUserByToken(sess.Token)
+// ValidateToken checks if the session is valid.
+func (mgr *AuthManager) ValidateToken(token *models.Token) (*models.User, error) {
+	storedSession, user, err := mgr.sessionRep.GetWithUserByToken(token.Token)
 	if err != nil {
-		log.Warn("Could not read session via token, assuming invalid session")
-		return nil, fcerrors.Wrap(err, fcerrors.Database)
+		log.Warn("Could not read session via token, assuming invalid token")
+		return nil, fcerrors.Wrap(err, fcerrors.BadCredentials)
 	}
 	if storedSession.ExpiresAt < utils.GetTimestampNow() {
-		return nil, nil
+		return nil, fcerrors.New(fcerrors.ExpiredSession)
 	}
 	return user, nil
 }
 
-// DeleteSession removes the session from the session provider
-func (mgr *AuthManager) DeleteSession(session *models.Session) (err error) {
-	return fcerrors.Wrap(mgr.sessionRep.Delete(session), fcerrors.Database)
+// DeleteToken removes the session from the session provider
+func (mgr *AuthManager) DeleteToken(token *models.Token) (err error) {
+	return fcerrors.Wrap(mgr.sessionRep.Delete(&models.Session{Token: token.Token}), fcerrors.Database)
 }
 
 // GetSessionCount return the count of active sessions

@@ -25,7 +25,7 @@ func TestGetGraphSession(t *testing.T) {
 	testConnectClearGraph()
 	defer testCloseClearGraph()
 
-	sess, err := getGraphSession()
+	sess, err := GetGraphSession()
 	if err != nil {
 		t.Fatalf("Failed to get graph session: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestRecordToModel(t *testing.T) {
 }
 
 func testClearGraph() {
-	sess, _ := getGraphSession()
+	sess, _ := GetGraphSession()
 	defer sess.Close()
 	sess.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		return tx.Run("MATCH (n) DETACH DELETE n", nil)

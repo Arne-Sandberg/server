@@ -32,7 +32,7 @@ func CreateFileInfoRepository() (*FileInfoRepository, error) {
 
 // CreateRootFolder creates the root folder for an username, does not fail if it already exists
 func (rep *FileInfoRepository) CreateRootFolder(username string) (err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -68,7 +68,7 @@ func (rep *FileInfoRepository) createRootFolderTxFunc(rootFolderInfo *models.Fil
 
 // Create stores a new file info
 func (rep *FileInfoRepository) Create(fileInfo *models.FileInfo) (err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -130,7 +130,7 @@ func (rep *FileInfoRepository) createTxFunc(fileInfo *models.FileInfo) neo4j.Tra
 
 // GetByPath returns a file info by username and path
 func (rep *FileInfoRepository) GetByPath(username, path string) (fileInfo *models.FileInfo, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -194,7 +194,7 @@ func (rep *FileInfoRepository) pathToElements(path string) []string {
 
 // GetDirectoryContentByPath returns all child files of a directory
 func (rep *FileInfoRepository) GetDirectoryContentByPath(username, path string) (content []*models.FileInfo, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -264,7 +264,7 @@ func (rep *FileInfoRepository) getDirectoryContentByPathTxFunc(username, path st
 
 // Delete deletes a file info by its path
 func (rep *FileInfoRepository) Delete(username, path string) (err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -299,7 +299,7 @@ func (rep *FileInfoRepository) deleteTxFunc(username, path string) neo4j.Transac
 
 // Search returns a list of file infos for a path and name search term
 func (rep *FileInfoRepository) Search(username, path, term string) (results []*models.FileInfo, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -377,7 +377,7 @@ func (rep *FileInfoRepository) searchTxFunc(username, path, term string) neo4j.T
 
 // DeleteUserFileInfos deletes all file infos for an user
 func (rep *FileInfoRepository) DeleteUserFileInfos(username string) (err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -393,7 +393,7 @@ func (rep *FileInfoRepository) DeleteUserFileInfos(username string) (err error) 
 
 // Count returns the count of file infos
 func (rep *FileInfoRepository) Count() (count int64, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}

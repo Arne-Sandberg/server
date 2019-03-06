@@ -5,27 +5,25 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/freecloudio/server/restapi/fcerrors"
-
 	"github.com/freecloudio/server/models"
-
 	"github.com/freecloudio/server/repository"
+	"github.com/freecloudio/server/restapi/fcerrors"
 )
 
 var testAuthSetupFailed = false
 var testAuthDataFolder = "testData"
-var testAuthDBName = "authTest.db"
 var testAuthUserAdminPW = "12345678"
-var testAuthUserAdmin = &models.User{FirstName: "Admin", LastName: "User", Email: "admin.user@email.com", IsAdmin: true, Password: testAuthUserAdminPW}
+var testAuthUserAdmin = &models.User{Username: "Admin", FirstName: "Admin", LastName: "User", Email: "admin.user@email.com", IsAdmin: true, Password: testAuthUserAdminPW}
 var testAuthUserPW = "87654321"
-var testAuthUser = &models.User{FirstName: "User", LastName: "User", Email: "user.user@email.com", IsAdmin: false, Password: testAuthUserPW}
+var testAuthUser = &models.User{Username: "User", FirstName: "User", LastName: "User", Email: "user.user@email.com", IsAdmin: false, Password: testAuthUserPW}
 
 func testAuthCleanup(mgr *AuthManager) {
+	// If nil then it runs before req
 	if mgr != nil {
 		mgr.Close()
+		testCloseClearGraph()
 	}
 	authManager = nil
-	os.Remove(testAuthDBName)
 	os.RemoveAll(testAuthDataFolder)
 	testAuthUserAdmin.Password = testAuthUserAdminPW
 	testAuthUser.Password = testAuthUserPW
@@ -33,7 +31,7 @@ func testAuthCleanup(mgr *AuthManager) {
 
 func testAuthReq() (sessionRep *repository.SessionRepository, userRep *repository.UserRepository) {
 	testAuthCleanup(nil)
-	repository.InitSQLDatabaseConnection("", "", "", "", 0, testAuthDBName)
+	testConnectClearGraph()
 	sessionRep, _ = repository.CreateSessionRepository()
 	userRep, _ = repository.CreateUserRepository()
 	return
@@ -42,10 +40,6 @@ func testAuthReq() (sessionRep *repository.SessionRepository, userRep *repositor
 func testAuthSetup() *AuthManager {
 	sessionRep, userRep := testAuthReq()
 	mgr := CreateAuthManager(sessionRep, userRep, 24, 1)
-	shareRep, _ := repository.CreateShareEntryRepository()
-	fileInfoRep, _ := repository.CreateFileInfoRepository()
-	fileSystemRep, _ := repository.CreateFileSystemRepository(testAuthDataFolder, ".tmp", 1, 1)
-	CreateFileManager(fileSystemRep, fileInfoRep, shareRep, ".tmp")
 	return mgr
 }
 
@@ -101,19 +95,19 @@ func TestCreateUser(t *testing.T) {
 	mgr := testAuthSetup()
 	defer testAuthCleanup(mgr)
 
-	sess, err := mgr.CreateUser(testAuthUserAdmin)
+	token, err := mgr.CreateUser(testAuthUserAdmin)
 	if err != nil {
 		t.Errorf("Failed to create admin user: %v", err)
 	}
-	if sess.UserID != testAuthUserAdmin.ID {
-		t.Errorf("Returned session for created admin user not for created user: %v != %v", sess.UserID, testAuthUserAdmin.ID)
+	if token.Token == "" {
+		t.Error("Token empty for new admin user")
 	}
-	sess, err = mgr.CreateUser(testAuthUser)
+	token, err = mgr.CreateUser(testAuthUser)
 	if err != nil {
 		t.Errorf("Failed to create user: %v", err)
 	}
-	if sess.UserID != testAuthUser.ID {
-		t.Errorf("Returned session for created user not for created user: %v != %v", sess.UserID, testAuthUser.ID)
+	if token.Token == "" {
+		t.Error("Token empty for new user")
 	}
 
 	_, err = mgr.CreateUser(testAuthUser)
@@ -135,12 +129,12 @@ func TestUserLogin(t *testing.T) {
 
 	testAuthInsert(mgr)
 
-	sess, err := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
+	token, err := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
 	if err != nil {
 		t.Errorf("Failed to verify and get new session for admin user: %v", err)
 	}
-	if sess.UserID != testAuthUserAdmin.ID {
-		t.Errorf("New verified session is not for correct user: %v != %v", sess.UserID, testAuthUserAdmin.ID)
+	if token.Token == "" {
+		t.Error("Token empty for logged in admin user")
 	}
 
 	_, err = mgr.LoginUser(testAuthUser.Email, "wrongPassword")
@@ -158,18 +152,18 @@ func TestGetUserByID(t *testing.T) {
 
 	testAuthInsert(mgr)
 
-	readBackUser, err := mgr.GetUserByID(testAuthUserAdmin.ID)
+	readBackUser, err := mgr.GetUserByUsername(testAuthUserAdmin.Username)
 	if err != nil {
-		t.Errorf("Failed to get admin user by ID: %v", err)
+		t.Errorf("Failed to get admin user by username: %v", err)
 	}
-	readBackUser.LastSession = 0
-	readBackUser.Updated = 0
-	testAuthUserAdmin.Updated = 0
+	readBackUser.LastSessionAt = 0
+	readBackUser.UpdatedAt = 0
+	testAuthUserAdmin.UpdatedAt = 0
 	if !reflect.DeepEqual(readBackUser, testAuthUserAdmin) {
 		t.Errorf("Read back admin user by ID and admin user not deeply equal: %v != %v", readBackUser, testAuthUserAdmin)
 	}
 
-	_, err = mgr.GetUserByID(9999)
+	_, err = mgr.GetUserByUsername("NonExisting")
 	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.UserNotFound {
 		t.Errorf("Getting user with non existing id succeeded or error is not 'user not found': %v", err)
 	}
@@ -188,9 +182,9 @@ func TestGetUserByMail(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to get user by email: %v", err)
 	}
-	readBackUser.LastSession = 0
-	readBackUser.Updated = 0
-	testAuthUser.Updated = 0
+	readBackUser.LastSessionAt = 0
+	readBackUser.UpdatedAt = 0
+	testAuthUser.UpdatedAt = 0
 	if !reflect.DeepEqual(readBackUser, testAuthUser) {
 		t.Errorf("Read back user by email and user not deeply equal: %v != %v", readBackUser, testAuthUser)
 	}
@@ -218,15 +212,15 @@ func TestGetAllUsers(t *testing.T) {
 		t.Errorf("Lenght of all users unequal to two: %d", len(users))
 	}
 	for _, user := range users {
-		user.LastSession = 0
-		user.Updated = 0
-		if user.ID == testAuthUserAdmin.ID {
-			testAuthUserAdmin.Updated = 0
+		user.LastSessionAt = 0
+		user.UpdatedAt = 0
+		if user.Username == testAuthUserAdmin.Username {
+			testAuthUserAdmin.UpdatedAt = 0
 			if !reflect.DeepEqual(user, testAuthUserAdmin) {
 				t.Errorf("Read admin user from all users not deeply equal to admin user: %v != %v", user, testAuthUserAdmin)
 			}
-		} else if user.ID == testAuthUser.ID {
-			testAuthUser.Updated = 0
+		} else if user.Username == testAuthUser.Username {
+			testAuthUser.UpdatedAt = 0
 			if !reflect.DeepEqual(user, testAuthUser) {
 				t.Errorf("Read user from all user not deeply equal to user: %v != %v", user, testAuthUser)
 			}
@@ -242,13 +236,13 @@ func TestDeleteUser(t *testing.T) {
 	defer testAuthCleanup(mgr)
 
 	testAuthInsert(mgr)
-	sess, _ := mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
+	token, _ := mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
 
-	err := mgr.DeleteUser(testAuthUser.ID)
+	err := mgr.DeleteUser(testAuthUser.Username)
 	if err != nil {
 		t.Errorf("Failed to delete user: %v", err)
 	}
-	_, err = mgr.GetUserByID(testAuthUser.ID)
+	_, err = mgr.GetUserByUsername(testAuthUser.Username)
 	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.UserNotFound {
 		t.Errorf("Getting deleted user was successfull or error is unequal to 'user not found': %v", err)
 	}
@@ -256,8 +250,8 @@ func TestDeleteUser(t *testing.T) {
 	if err == nil || err.(*fcerrors.FCError).Code != fcerrors.BadCredentials {
 		t.Errorf("Creating new session for deleted user succeeded or error is unequal to 'bad credentials': %v", err)
 	}
-	valid := mgr.ValidateSession(sess)
-	if valid {
+	_, err = mgr.ValidateToken(token)
+	if err == nil {
 		t.Error("Session valid for deleted user")
 	}
 }
@@ -270,23 +264,23 @@ func TestValidateSession(t *testing.T) {
 	defer testAuthCleanup(mgr)
 
 	testAuthInsert(mgr)
-	sess, _ := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
+	token, _ := mgr.LoginUser(testAuthUserAdmin.Email, testAuthUserAdminPW)
 
-	res := mgr.ValidateSession(sess)
-	if !res {
-		t.Error("Failed to validate valid session")
+	user, err := mgr.ValidateToken(token)
+	if err != nil {
+		t.Errorf("Failed to validate valid token: %v", err)
+	}
+	user.LastSessionAt = 0
+	user.UpdatedAt = 0
+	testAuthUserAdmin.UpdatedAt = 0
+	if !reflect.DeepEqual(user, testAuthUserAdmin) {
+		t.Errorf("Read back admin user through token validation and admin user not deeply equal: %v != %v", user, testAuthUserAdmin)
 	}
 
-	sess.UserID = testAuthUser.ID
-	res = mgr.ValidateSession(sess)
-	if res {
-		t.Error("Succeeded to validate session for wrong user")
-	}
-
-	sess.Token = "invalidToken"
-	res = mgr.ValidateSession(sess)
-	if res {
-		t.Error("Succeeded to validate session with wrong token")
+	token.Token = "invalidToken"
+	_, err = mgr.ValidateToken(token)
+	if err == nil {
+		t.Error("Succeeded to validate wrong token")
 	}
 }
 
@@ -329,12 +323,12 @@ func TestDeleteSession(t *testing.T) {
 	if count != 2 {
 		t.Errorf("Session count unequal to two: %d", count)
 	}
-	sess, _ := mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
+	token, _ := mgr.LoginUser(testAuthUser.Email, testAuthUserPW)
 	count, _ = mgr.GetSessionCount()
 	if count != 3 {
 		t.Errorf("Session count unequal to three after new session: %d", count)
 	}
-	err := mgr.DeleteSession(sess)
+	err := mgr.DeleteToken(token)
 	if err != nil {
 		t.Errorf("Failed to delete session: %v", err)
 	}
@@ -360,7 +354,7 @@ func TestGetAdminCount(t *testing.T) {
 	if count != 1 {
 		t.Errorf("Admin count unequal to one: %d", count)
 	}
-	mgr.DeleteUser(testAuthUserAdmin.ID)
+	mgr.DeleteUser(testAuthUserAdmin.Username)
 	count, err = mgr.GetAdminCount()
 	if err != nil {
 		t.Errorf("Failed to get admin count after deleting admin: %v", err)

@@ -18,7 +18,7 @@ var (
 	// InvalidUserData is thrown when user data validation fails on signup
 	InvalidUserData = Code{"Invalid user data", http.StatusBadRequest}
 	// UserExists is thrown when a user already exists on signup
-	UserExists = Code{"A user with the same email already exists", http.StatusBadRequest}
+	UserExists = Code{"A user with the same email or username already exists", http.StatusBadRequest}
 	// UserNotFound is pretty clear
 	UserNotFound = Code{"User cannot be found", http.StatusNotFound}
 	// HashingFailed is thrown when a password hash operation failed
@@ -33,6 +33,8 @@ var (
 	MissingCredentials = Code{"Email or Password are missing", http.StatusBadRequest}
 	// DeleteSession failed
 	DeleteSession = Code{"Could not delete session", http.StatusInternalServerError}
+	// ExpiredSession provided
+	ExpiredSession = Code{"Session is expired", http.StatusUnauthorized}
 )
 
 // FCError is a struct implementing the Error interface, which should be used on all internal errors.

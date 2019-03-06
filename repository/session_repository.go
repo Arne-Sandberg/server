@@ -28,7 +28,7 @@ func CreateSessionRepository() (*SessionRepository, error) {
 
 // Create stores a new session for an user
 func (rep *SessionRepository) Create(session *models.Session, username string) (err error) {
-	dbSession, err := getGraphSession()
+	dbSession, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -54,7 +54,7 @@ func (rep *SessionRepository) createTxFunc(session *models.Session, username str
 
 // Count returns the amount of stored sessions
 func (rep *SessionRepository) Count() (count int64, err error) {
-	dbSession, err := getGraphSession()
+	dbSession, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -81,7 +81,7 @@ func (rep *SessionRepository) countTxFunc() neo4j.TransactionWork {
 
 // Delete deletes a given session
 func (rep *SessionRepository) Delete(session *models.Session) (err error) {
-	dbSession, err := getGraphSession()
+	dbSession, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -106,7 +106,7 @@ func (rep *SessionRepository) deleteTxFunc(sessionToken string) neo4j.Transactio
 
 // DeleteAllForUser deletes all session for one user
 func (rep *SessionRepository) DeleteAllForUser(username string) (err error) {
-	dbSession, err := getGraphSession()
+	dbSession, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -132,7 +132,7 @@ func (rep *SessionRepository) deleteAllForUserTxFunc(username string) neo4j.Tran
 // DeleteExpired deletes all expired sessions
 func (rep *SessionRepository) DeleteExpired() (err error) {
 	log.Trace("Cleaning old sessions")
-	dbSession, err := getGraphSession()
+	dbSession, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -158,7 +158,7 @@ func (rep *SessionRepository) deleteExpiredTxFunc(currTime int64) neo4j.Transact
 
 // GetWithUserByToken reads and returns a session and its user by token
 func (rep *SessionRepository) GetWithUserByToken(token string) (session *models.Session, user *models.User, err error) {
-	dbSession, err := getGraphSession()
+	dbSession, err := GetGraphSession()
 	if err != nil {
 		return
 	}

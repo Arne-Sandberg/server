@@ -30,7 +30,7 @@ func (rep *UserRepository) Create(user *models.User) (err error) {
 	user.CreatedAt = utils.GetTimestampNow()
 	user.UpdatedAt = utils.GetTimestampNow()
 
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -56,7 +56,7 @@ func (rep *UserRepository) createTxFunc(user *models.User) neo4j.TransactionWork
 
 // Delete deletes a user by its username
 func (rep *UserRepository) Delete(username string) (err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -84,7 +84,7 @@ func (rep *UserRepository) deleteTxFunc(username string) neo4j.TransactionWork {
 func (rep *UserRepository) Update(user *models.User) (err error) {
 	user.UpdatedAt = utils.GetTimestampNow()
 
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -110,7 +110,7 @@ func (rep *UserRepository) updateTxFunc(user *models.User) neo4j.TransactionWork
 
 // UpdateLastSession updates the 'updatedAt' and 'lastSessionAt' attributes of an user
 func (rep *UserRepository) UpdateLastSession(username string) (err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -138,7 +138,7 @@ func (rep *UserRepository) updateLastSessionTxFunc(username string, currTime int
 
 // GetByUsername reads and returns an user by username
 func (rep *UserRepository) GetByUsername(username string) (user *models.User, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -170,7 +170,7 @@ func (rep *UserRepository) getByUsernameTxFunc(username string) neo4j.Transactio
 
 // GetByEmail reads and return an user by email
 func (rep *UserRepository) GetByEmail(email string) (user *models.User, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -202,7 +202,7 @@ func (rep *UserRepository) getByEmailTxFunc(email string) neo4j.TransactionWork 
 
 // GetByUsernameOrEmail reads and return an user by email
 func (rep *UserRepository) GetByUsernameOrEmail(username, email string) (user *models.User, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -235,7 +235,7 @@ func (rep *UserRepository) getByUsernameOrEmailTxFunc(username, email string) ne
 
 // GetAll reads and returns all stored users
 func (rep *UserRepository) GetAll() (users []*models.User, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -274,7 +274,7 @@ func (rep *UserRepository) getAllTxFunc() neo4j.TransactionWork {
 
 // AdminCount returns the amount of stored admins
 func (rep *UserRepository) AdminCount() (count int64, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -303,7 +303,7 @@ func (rep *UserRepository) adminCountTxFunc() neo4j.TransactionWork {
 
 // TotalCount returns the amount of stored users
 func (rep *UserRepository) TotalCount() (count int64, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}

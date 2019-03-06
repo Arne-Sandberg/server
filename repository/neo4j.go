@@ -59,7 +59,7 @@ func createConstraintForLabel(labelConstraint *neoLabelConstraint) error {
 		}
 	}
 
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func CloseGraphDatabaseConnection() (err error) {
 
 // GetGraphDatabaseVersion returns the neo4j version we are connected to
 func GetGraphDatabaseVersion() (version string, err error) {
-	session, err := getGraphSession()
+	session, err := GetGraphSession()
 	if err != nil {
 		return
 	}
@@ -121,8 +121,8 @@ func GetGraphDatabaseVersion() (version string, err error) {
 	return
 }
 
-// getGraphSession return a new neo4j session
-func getGraphSession() (neo4j.Session, error) {
+// GetGraphSession return a new neo4j session
+func GetGraphSession() (neo4j.Session, error) {
 	sess, err := graphConnection.Session(neo4j.AccessModeWrite)
 	if err != nil {
 		log.Error(0, "Failed to create neo4j session: %v", err)
