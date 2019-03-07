@@ -24,7 +24,7 @@ before_script:
 script:
   - go vet ./... 2> vet_report.out
   - go build ./cmd/freecloud-server
-  - go test -coverprofile=test_coverage.out -json -race ./... > test_report.json
+  - go test -coverprofile=test_coverage.out -json -race -p=1 ./... > test_report.json
   - sonar-scanner
 notifications:
   email: false
