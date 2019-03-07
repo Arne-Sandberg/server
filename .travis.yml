@@ -3,7 +3,7 @@ language: go
 git:
   depth: false
 services:
-  - neo4j
+  - docker
 addons:
   sonarcloud:
     organization: "freecloudio"
@@ -13,16 +13,19 @@ go:
   - "1.x"
   - "1.10.x"
   - "1.10"
+env:
+  - FC_GRAPH_URL=bolt://localhost:7687
 before_script:
   - git fetch origin master:refs/remotes/origin/master
   - sudo apt-get install -y libssl1.0.0
   - wget https://github.com/neo4j-drivers/seabolt/releases/download/v1.7.0/seabolt-1.7.0-Linux-Ubuntu-Xenial.deb
   - sudo dpkg -i seabolt-1.7.0-Linux-Ubuntu-Xenial.deb
+  - docker run -d -p 7687:7687 --env=NEO4J_AUTH=none neo4j:3.5.3
 script:
   - go vet ./... 2> vet_report.out
   - go build ./cmd/freecloud-server
-#  - go test -coverprofile=test_coverage.out -json -race ./... > test_report.json
-#  - sonar-scanner
+  - go test -coverprofile=test_coverage.out -json -race ./... > test_report.json
+  - sonar-scanner
 notifications:
   email: false
   slack:

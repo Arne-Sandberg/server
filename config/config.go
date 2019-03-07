@@ -36,6 +36,7 @@ func setDefaults() {
 	viper.SetDefault("graph_url", "bolt://localhost:7687")
 	viper.SetDefault("graph_user", "neo4j")
 	viper.SetDefault("graph_password", "freecloud")
+	viper.SetDefault("graph_enterprise", false)
 }
 
 func GetString(key string) string {

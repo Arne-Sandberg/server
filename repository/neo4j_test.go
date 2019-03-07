@@ -21,6 +21,19 @@ func TestInitGraphDatabaseConnection(t *testing.T) {
 	}
 }
 
+func TestGetGraphInfo(t *testing.T) {
+	testConnectClearGraph()
+	defer testCloseClearGraph()
+
+	info, err := GetGraphInfo()
+	if err != nil {
+		t.Fatalf("Failed to get graph session: %v", err)
+	}
+	if info.Version == "" || info.Edition == "" {
+		t.Errorf("Version or edition of graph info empty: %v", info)
+	}
+}
+
 func TestGetGraphSession(t *testing.T) {
 	testConnectClearGraph()
 	defer testCloseClearGraph()

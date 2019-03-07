@@ -6,12 +6,15 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/freecloudio/server/models"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	log "gopkg.in/clog.v1"
 )
 
 // ErrNeoNotInitialized is returned if a repository is initialized before the database connection
 var ErrNeoNotInitialized = errors.New("db repository: neo4j repository must be initialized first")
+
+var graphInfo *models.GraphInfo
 
 type neoLabelConstraint struct {
 	label       string
@@ -38,6 +41,80 @@ func InitGraphDatabaseConnection(url, username, password string) error {
 	}
 
 	return nil
+}
+
+// CloseGraphDatabaseConnection closes the current connection to neo4j
+func CloseGraphDatabaseConnection() (err error) {
+	if err = graphConnection.Close(); err != nil {
+		log.Error(0, "Failed to close neo4j connection: %v", err)
+		return
+	}
+
+	return
+}
+
+// GetGraphInfo returns info about the currenlty connected neo4j database
+func GetGraphInfo() (graphInfoRet *models.GraphInfo, err error) {
+	if graphInfo != nil {
+		return graphInfo, err
+	}
+
+	session, err := GetGraphSession()
+	if err != nil {
+		return
+	}
+	graphInfoRet = &models.GraphInfo{}
+
+	res, err := session.Run("CALL dbms.queryJmx(\"org.neo4j:instance=kernel#0,name=Configuration\")", nil)
+	if err != nil {
+		log.Error(0, "Failed to run version/edition query: %v", err)
+		return
+	}
+	summary, err := res.Summary()
+	if err != nil {
+		log.Error(0, "Failed to get summary or result of version/edition query: %v", err)
+		return
+	}
+	graphInfoRet.Version = summary.Server().Version()
+
+	rec, err := neo4j.Single(res, nil)
+	if err != nil {
+		log.Error(0, "Failed to get record from edition query: %v", err)
+		return
+	}
+	configMapInt, ok := rec.Get("attributes")
+	if !ok {
+		err = errors.New("failed to get attributes from edition query")
+		log.Error(0, err.Error())
+		return
+	}
+	configMap := configMapInt.(map[string]interface{})
+	editionMapInt, ok := configMap["unsupported.dbms.edition"]
+	if !ok {
+		err = errors.New("failed to get edition map from config map")
+		log.Error(0, err.Error())
+		return
+	}
+	editionMap := editionMapInt.(map[string]interface{})
+	graphInfoRet.Edition, ok = editionMap["value"].(string)
+	if !ok {
+		err = errors.New("failed to get value map from edition map")
+		log.Error(0, err.Error())
+		return
+	}
+
+	graphInfo = graphInfoRet
+
+	return
+}
+
+// GetGraphSession return a new neo4j session
+func GetGraphSession() (neo4j.Session, error) {
+	sess, err := graphConnection.Session(neo4j.AccessModeWrite)
+	if err != nil {
+		log.Error(0, "Failed to create neo4j session: %v", err)
+	}
+	return sess, err
 }
 
 func createConstraintForLabel(labelConstraint *neoLabelConstraint) error {
@@ -75,6 +152,11 @@ func createConstraintForLabel(labelConstraint *neoLabelConstraint) error {
 		}
 	}
 
+	info, err := GetGraphInfo()
+	if err != nil || info.Edition == "community" {
+		return err
+	}
+
 	exisQuery := "CREATE CONSTRAINT ON (c:%s) ASSERT exists(c.%s)"
 	for _, exisProp := range labelConstraint.exisProps {
 		_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
@@ -82,52 +164,11 @@ func createConstraintForLabel(labelConstraint *neoLabelConstraint) error {
 		})
 		if err != nil {
 			log.Error(0, "Failed to create exist constraint on label %s with property %s: %v", labelConstraint.label, exisProp, err)
-			log.Info("Don't create other exist constraints as we probably are on the community edition")
-			break
+			continue
 		}
 	}
 
 	return nil
-}
-
-// CloseGraphDatabaseConnection closes the current connection to neo4j
-func CloseGraphDatabaseConnection() (err error) {
-	if err = graphConnection.Close(); err != nil {
-		log.Error(0, "Failed to close neo4j connection: %v", err)
-		return
-	}
-
-	return
-}
-
-// GetGraphDatabaseVersion returns the neo4j version we are connected to
-func GetGraphDatabaseVersion() (version string, err error) {
-	session, err := GetGraphSession()
-	if err != nil {
-		return
-	}
-
-	res, err := session.Run("RETURN 0", nil)
-	if err != nil {
-		log.Error(0, "Failed to run probe query for database version: %v", err)
-		return
-	}
-	summary, err := res.Summary()
-	if err != nil {
-		log.Error(0, "Failed to get summary or result of probe query for database version: %v", err)
-		return
-	}
-	version = summary.Server().Version()
-	return
-}
-
-// GetGraphSession return a new neo4j session
-func GetGraphSession() (neo4j.Session, error) {
-	sess, err := graphConnection.Session(neo4j.AccessModeWrite)
-	if err != nil {
-		log.Error(0, "Failed to create neo4j session: %v", err)
-	}
-	return sess, err
 }
 
 // Convert given struct to a map with the 'fc_neo' / 'json' / field name as key and the field value as value
