@@ -122,10 +122,16 @@ func (mgr *AuthManager) CreateUser(user *models.User) (token *models.Token, err 
 		}
 	}
 
+	err = GetFileManager().CreateUserFolders(user.Username)
+	if err != nil {
+		log.Error(0, "Failed to create user folders for new user: %v", err)
+		return nil, err
+	}
+
 	err = GetFileManager().ScanUserFolderForChanges(user)
 	if err != nil {
 		log.Error(0, "Failed to scan folder for new user: %v", err)
-		return nil, fcerrors.Wrap(err, fcerrors.Filesystem)
+		return nil, err
 	}
 
 	// Now, create a session for the user
@@ -183,7 +189,7 @@ func (mgr *AuthManager) DeleteUser(username string) (err error) {
 	}
 
 	if !user.RetainFilesAfterDeletion {
-		err = GetFileManager().DeleteUserFiles(user)
+		err = GetFileManager().DeleteUserFiles(username)
 		if err != nil {
 			log.Error(0, "Failed to delete files for to be deleted user: %v", err)
 			return

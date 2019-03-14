@@ -10,13 +10,11 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 	"strings"
-
-	"github.com/go-openapi/swag"
 )
 
 // RescanUserByIDURL generates an URL for the rescan user by ID operation
 type RescanUserByIDURL struct {
-	ID int64
+	Username string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -42,13 +40,13 @@ func (o *RescanUserByIDURL) SetBasePath(bp string) {
 func (o *RescanUserByIDURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/file/rescan/{id}"
+	var _path = "/file/rescan/{username}"
 
-	id := swag.FormatInt64(o.ID)
-	if id != "" {
-		_path = strings.Replace(_path, "{id}", id, -1)
+	username := o.Username
+	if username != "" {
+		_path = strings.Replace(_path, "{username}", username, -1)
 	} else {
-		return nil, errors.New("id is required on RescanUserByIDURL")
+		return nil, errors.New("username is required on RescanUserByIDURL")
 	}
 
 	_basePath := o._basePath

@@ -56,8 +56,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	}
 
 	api.FileCreateFileHandler = file.CreateFileHandlerFunc(func(params file.CreateFileParams, principal *models.Principal) middleware.Responder {
-		//return controller.FileCreateHandler(params, principal)
-		return middleware.NotImplemented("operation file.CreateFile has not yet been implemented")
+		return controller.FileCreateHandler(params, principal)
 	})
 	api.UserDeleteCurrentUserHandler = user.DeleteCurrentUserHandlerFunc(func(params user.DeleteCurrentUserParams, principal *models.Principal) middleware.Responder {
 		return controller.AuthDeleteCurrentUserHandler(params, principal)
@@ -76,8 +75,7 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 		return controller.AuthGetCurrentUserHandler(params, principal)
 	})
 	api.FileGetPathInfoHandler = file.GetPathInfoHandlerFunc(func(params file.GetPathInfoParams, principal *models.Principal) middleware.Responder {
-		//return controller.FileGetPathInfoHandler(params, principal)
-		return middleware.NotImplemented("operation file.GetPathInfo has not yet been implemented")
+		return controller.FileGetPathInfoHandler(params, principal)
 	})
 	api.SystemGetSystemStatsHandler = system.GetSystemStatsHandlerFunc(func(params system.GetSystemStatsParams, principal *models.Principal) middleware.Responder {
 		return controller.SystemStatsHandler()
@@ -128,14 +126,6 @@ func configureAPI(api *operations.FreecloudAPI) http.Handler {
 	api.FileZipFilesHandler = file.ZipFilesHandlerFunc(func(params file.ZipFilesParams, principal *models.Principal) middleware.Responder {
 		//return controller.FileZipFilesHandler(params, principal)
 		return middleware.NotImplemented("operation file.ZipFiles has not yet been implemented")
-	})
-	api.FileGetShareEntryByIDHandler = file.GetShareEntryByIDHandlerFunc(func(params file.GetShareEntryByIDParams, principal *models.Principal) middleware.Responder {
-		//return controller.FileGetShareEntryByIDHandler(params, principal)
-		return middleware.NotImplemented("operation file.GetShareEntryByID has not yet been implemented")
-	})
-	api.FileDeleteShareEntryByIDHandler = file.DeleteShareEntryByIDHandlerFunc(func(params file.DeleteShareEntryByIDParams, principal *models.Principal) middleware.Responder {
-		//return controller.FileDeleteShareEntryByIDHandler(params, principal)
-		return middleware.NotImplemented("operation file.GetShareEntryByID has not yet been implemented")
 	})
 
 	initializeServer()
@@ -199,13 +189,13 @@ func initializeServer() {
 	if err != nil {
 		log.Fatal(0, "ShareEntryRepository setup failed, bailing out!: %v", err)
 	}
-	fileSystemRep, err := repository.CreateFileSystemRepository(config.GetString("fs.base_directory"), tmpName, config.GetInt("fs.tmp_clear_interval"), config.GetInt("fs.tmp_data_expiry"))
+	fileSystemRep, err := repository.CreateFileSystemRepository(config.GetString("fs.base_directory"), tmpName)
 	if err != nil {
 		log.Fatal(0, "FileSystemRepository setup failed, bailing out!: %v", err)
 	}
 
 	manager.CreateAuthManager(sessionRep, userRep, config.GetInt("auth.session_expiry"), config.GetInt("auth.session_cleanup_interval"))
-	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep, tmpName)
+	manager.CreateFileManager(fileSystemRep, fileInfoRep, shareEntryRep, tmpName, config.GetInt("fs.tmp_data_expiry"), config.GetInt("fs.tmp_clear_interval"))
 	manager.CreateSystemManager("0.0.1", sessionRep, fileInfoRep) // TODO: Better place to save version
 }
 

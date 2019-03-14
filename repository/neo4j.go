@@ -193,11 +193,11 @@ func modelToMap(model interface{}) map[string]interface{} {
 
 func recordToModel(record neo4j.Record, key string, model interface{}) (interface{}, error) {
 	valInt, ok := record.Get(key)
-	if ok == false {
+	if !ok {
 		return nil, errors.New("value not found with key '" + key + "'")
 	}
 	valNode, ok := valInt.(neo4j.Node)
-	if ok == false {
+	if !ok {
 		return nil, errors.New("value with key '" + key + "' could not be converted to 'neo4j.Node'")
 	}
 	valProps := valNode.Props()

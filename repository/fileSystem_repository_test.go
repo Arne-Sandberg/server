@@ -16,14 +16,11 @@ var testFileSystemTmpName = ".tmp"
 
 func testFileSystemCleanup(rep *FileSystemRepository) {
 	os.RemoveAll(testFileSystemDirName)
-	if rep != nil {
-		rep.Close()
-	}
 }
 
 func testFileSystemSetup() *FileSystemRepository {
 	testFileSystemCleanup(nil)
-	rep, _ := CreateFileSystemRepository(testFileSystemDirName, testFileSystemTmpName, 1, 0)
+	rep, _ := CreateFileSystemRepository(testFileSystemDirName, testFileSystemTmpName)
 	return rep
 }
 
@@ -49,7 +46,7 @@ func testFileSystemInsertComplete(rep *FileSystemRepository) {
 func TestCreateFileSystemRepository(t *testing.T) {
 	testFileSystemCleanup(nil)
 
-	rep, err := CreateFileSystemRepository(testFileSystemDirName, testFileSystemTmpName, 1, 0)
+	rep, err := CreateFileSystemRepository(testFileSystemDirName, testFileSystemTmpName)
 	if err != nil {
 		t.Errorf("Failed to create fileSystemRepository> %v", err)
 	}
@@ -61,22 +58,6 @@ func TestCreateFileSystemRepository(t *testing.T) {
 	testFileSystemCleanup(rep)
 }
 
-func TestFileSystemClose(t *testing.T) {
-	if testFileSystemSetupFailed {
-		t.Skip("Skipped due to failed setup")
-	}
-	rep := testFileSystemSetup()
-	defer testFileSystemCleanup(nil)
-
-	err := rep.Close()
-	if err != nil {
-		t.Errorf("Failed to close repository: %v", err)
-	}
-
-	if t.Failed() {
-		testFileSystemSetupFailed = true
-	}
-}
 func TestFileSystemCreateDir(t *testing.T) {
 	if testFileSystemSetupFailed {
 		t.Skip("Skipped due to failed setup")
@@ -294,29 +275,6 @@ func TestFileSystemDeleteFile(t *testing.T) {
 	_, err = rep.GetInfo("2", "/anotherFile.txt")
 	if err == nil || err != ErrFileNotExist {
 		t.Errorf("Getting fileInfo for deleted file succeeded or error is unequal to 'file does not exist': %v", err)
-	}
-}
-
-func TestFileSystemCleanTemp(t *testing.T) {
-	if testFileSystemSetupFailed {
-		t.Skip("Skipped due to failed setup")
-	}
-	rep := testFileSystemSetup()
-	defer testFileSystemCleanup(rep)
-
-	testFileSystemInsertComplete(rep)
-
-	err := rep.cleanupTempFolder()
-	if err != nil {
-		t.Fatalf("Failed to cleanup tmp folder: %v", err)
-	}
-	_, err = rep.GetInfo("1", ".tmp/testfile.txt")
-	if err == nil || err != ErrFileNotExist {
-		t.Errorf("Reading tmp file after tmp cleanup successfull or error unequal to 'file does not exist': %v", err)
-	}
-	_, err = rep.GetInfo("2", "/anotherFile.txt")
-	if err != nil {
-		t.Errorf("Failed to read normal file after tmp cleanup: %v", err)
 	}
 }
 

@@ -15,8 +15,11 @@ import (
 // swagger:model SearchRequest
 type SearchRequest struct {
 
-	// keyword
-	Keyword string `json:"keyword,omitempty"`
+	// path
+	Path string `json:"path,omitempty"`
+
+	// term
+	Term string `json:"term,omitempty"`
 }
 
 // Validate validates this search request

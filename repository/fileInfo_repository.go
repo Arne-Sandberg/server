@@ -30,8 +30,8 @@ func CreateFileInfoRepository() (*FileInfoRepository, error) {
 	return &FileInfoRepository{}, nil
 }
 
-// CreateRootFolder creates the root folder for an username, does not fail if it already exists
-func (rep *FileInfoRepository) CreateRootFolder(username string) (err error) {
+// CreateUserFolder creates the root folder for an username, does not fail if it already exists
+func (rep *FileInfoRepository) CreateUserFolder(username string) (err error) {
 	session, err := GetGraphSession()
 	if err != nil {
 		return
@@ -416,6 +416,61 @@ func (rep *FileInfoRepository) countTxFunc() neo4j.TransactionWork {
 		}
 
 		return record.GetByIndex(0), nil
+	}
+}
+
+// GetOwnerPath returns the owner and path of a fileInfo on the filesystem -> Not following shares
+func (rep *FileInfoRepository) GetOwnerPath(username, path string) (owner, retPath string, err error) {
+	session, err := GetGraphSession()
+	if err != nil {
+		return
+	}
+	defer session.Close()
+
+	ownerPathInt, err := session.ReadTransaction(rep.getOwnerPathTxFunc(username, path))
+	if err != nil {
+		log.Error(0, "Could not get owner and ownerpath: %v", err)
+		return
+	}
+	ownerPath := ownerPathInt.(*ownerPath)
+	owner = ownerPath.owner
+	retPath = ownerPath.path
+	return
+}
+
+type ownerPath struct {
+	owner string
+	path  string
+}
+
+func (rep *FileInfoRepository) getOwnerPathTxFunc(username, path string) neo4j.TransactionWork {
+	return func(tx neo4j.Transaction) (interface{}, error) {
+		pathElements := rep.pathToElements(path)
+		numPathElements := len(pathElements)
+		queryTemplate := `
+			MATCH p = (u:User {username: $username})-[:HAS_ROOT_FOLDER|CONTAINS|CONTAINS_SHARED*%d]->(f:FSInfo)
+			WHERE [n in tail(nodes(p)) | n.name] = $pathElements
+			MATCH op = (o:User)-[:CONTAINS|HAS_ROOT_FOLDER*]->(f)
+			RETURN o.username as owner, reduce(s = "", n in tail(tail(nodes(op))) | s + '/' + n.name) as fsPath
+		`
+		query := fmt.Sprintf(queryTemplate, numPathElements)
+		params := map[string]interface{}{
+			"username":     username,
+			"pathElements": pathElements,
+		}
+		rec, err := neo4j.Single(tx.Run(query, params))
+		if err != nil {
+			return nil, err
+		}
+
+		if len(rec.Values()) < 2 {
+			return nil, errors.New("not enough values in owner path request")
+		}
+
+		return &ownerPath{
+			owner: rec.GetByIndex(0).(string),
+			path:  rec.GetByIndex(1).(string),
+		}, nil
 	}
 }
 

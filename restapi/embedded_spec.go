@@ -198,10 +198,7 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/FileInfo"
-            }
+            "description": "Success"
           },
           "default": {
             "description": "Unexpected error",
@@ -357,7 +354,7 @@ func init() {
         }
       }
     },
-    "/file/rescan/{id}": {
+    "/file/rescan/{username}": {
       "post": {
         "security": [
           {
@@ -369,14 +366,13 @@ func init() {
         "tags": [
           "file"
         ],
-        "summary": "Rescan data folder by user id",
+        "summary": "Rescan data folder by username",
         "operationId": "rescanUserByID",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username to scan",
+            "name": "username",
             "in": "path",
             "required": true
           }
@@ -456,81 +452,6 @@ func init() {
             "schema": {
               "$ref": "#/definitions/ShareRequest"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/file/share/{shareID}": {
-      "get": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Get share entry by shareID",
-        "operationId": "getShareEntryByID",
-        "parameters": [
-          {
-            "minimum": 1,
-            "type": "integer",
-            "description": "Requested shareID",
-            "name": "shareID",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Share entry",
-            "schema": {
-              "$ref": "#/definitions/ShareEntry"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Delete share entry by shareID",
-        "operationId": "deleteShareEntryByID",
-        "parameters": [
-          {
-            "minimum": 1,
-            "type": "integer",
-            "description": "ShareID to be deleted",
-            "name": "shareID",
-            "in": "path",
-            "required": true
           }
         ],
         "responses": {
@@ -961,11 +882,6 @@ func init() {
           "type": "boolean",
           "x-nullable": true
         },
-        "lastChanged": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
         "mimeType": {
           "type": "string",
           "x-nullable": true
@@ -1062,32 +978,11 @@ func init() {
     "SearchRequest": {
       "type": "object",
       "properties": {
-        "keyword": {
+        "path": {
           "type": "string"
-        }
-      }
-    },
-    "ShareEntry": {
-      "type": "object",
-      "properties": {
-        "FileID": {
-          "type": "integer",
-          "format": "int64"
         },
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
-        },
-        "OwnerID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"-\""
-        },
-        "SharedWithID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"-\""
+        "term": {
+          "type": "string"
         }
       }
     },
@@ -1103,8 +998,7 @@ func init() {
         "users": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           }
         }
       }
@@ -1250,7 +1144,7 @@ func init() {
       "type": "oauth2",
       "flow": "accessCode",
       "authorizationUrl": "https://dummy.oauth.net/auth",
-      "tokenUrl": "https://dumy.oauth.net/token",
+      "tokenUrl": "https://dummy.oauth.net/token",
       "scopes": {
         "admin": "admin with all privileges",
         "user": "normal user"
@@ -1457,10 +1351,7 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/FileInfo"
-            }
+            "description": "Success"
           },
           "default": {
             "description": "Unexpected error",
@@ -1616,7 +1507,7 @@ func init() {
         }
       }
     },
-    "/file/rescan/{id}": {
+    "/file/rescan/{username}": {
       "post": {
         "security": [
           {
@@ -1628,14 +1519,13 @@ func init() {
         "tags": [
           "file"
         ],
-        "summary": "Rescan data folder by user id",
+        "summary": "Rescan data folder by username",
         "operationId": "rescanUserByID",
         "parameters": [
           {
-            "minimum": 1,
-            "type": "integer",
-            "description": "The user id",
-            "name": "id",
+            "type": "string",
+            "description": "Username to scan",
+            "name": "username",
             "in": "path",
             "required": true
           }
@@ -1715,81 +1605,6 @@ func init() {
             "schema": {
               "$ref": "#/definitions/ShareRequest"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      }
-    },
-    "/file/share/{shareID}": {
-      "get": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Get share entry by shareID",
-        "operationId": "getShareEntryByID",
-        "parameters": [
-          {
-            "minimum": 1,
-            "type": "integer",
-            "description": "Requested shareID",
-            "name": "shareID",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Share entry",
-            "schema": {
-              "$ref": "#/definitions/ShareEntry"
-            }
-          },
-          "default": {
-            "description": "Unexpected error",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "security": [
-          {
-            "TokenAuth": [
-              "user"
-            ]
-          }
-        ],
-        "tags": [
-          "file"
-        ],
-        "summary": "Delete share entry by shareID",
-        "operationId": "deleteShareEntryByID",
-        "parameters": [
-          {
-            "minimum": 1,
-            "type": "integer",
-            "description": "ShareID to be deleted",
-            "name": "shareID",
-            "in": "path",
-            "required": true
           }
         ],
         "responses": {
@@ -2220,11 +2035,6 @@ func init() {
           "type": "boolean",
           "x-nullable": true
         },
-        "lastChanged": {
-          "type": "integer",
-          "format": "int64",
-          "x-nullable": true
-        },
         "mimeType": {
           "type": "string",
           "x-nullable": true
@@ -2321,32 +2131,11 @@ func init() {
     "SearchRequest": {
       "type": "object",
       "properties": {
-        "keyword": {
+        "path": {
           "type": "string"
-        }
-      }
-    },
-    "ShareEntry": {
-      "type": "object",
-      "properties": {
-        "FileID": {
-          "type": "integer",
-          "format": "int64"
         },
-        "ID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"primary_key;auto_increment\""
-        },
-        "OwnerID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"-\""
-        },
-        "SharedWithID": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-custom-tag": "gorm:\"-\""
+        "term": {
+          "type": "string"
         }
       }
     },
@@ -2362,8 +2151,7 @@ func init() {
         "users": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           }
         }
       }
@@ -2509,7 +2297,7 @@ func init() {
       "type": "oauth2",
       "flow": "accessCode",
       "authorizationUrl": "https://dummy.oauth.net/auth",
-      "tokenUrl": "https://dumy.oauth.net/token",
+      "tokenUrl": "https://dummy.oauth.net/token",
       "scopes": {
         "admin": "admin with all privileges",
         "user": "normal user"

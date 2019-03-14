@@ -24,7 +24,7 @@ func testFileInfoSetup() *FileInfoRepository {
 }
 
 func testFileInfoInsert(rep *FileInfoRepository) {
-	rep.CreateRootFolder(testFileInfoUser0.Username)
+	rep.CreateUserFolder(testFileInfoUser0.Username)
 	rep.Create(testFileInfoUser0Dir0)
 	rep.Create(testFileInfoUser0Dir0File0)
 }
@@ -50,7 +50,7 @@ func TestCreateRootFolder(t *testing.T) {
 	defer testCloseClearGraph()
 	rep := testFileInfoSetup()
 
-	err := rep.CreateRootFolder(testFileInfoUser0.Username)
+	err := rep.CreateUserFolder(testFileInfoUser0.Username)
 	if err != nil {
 		t.Errorf("Failed to create root folder for user0: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestCreateFile(t *testing.T) {
 	}
 	defer testCloseClearGraph()
 	rep := testFileInfoSetup()
-	rep.CreateRootFolder(testFileInfoUser0.Username)
+	rep.CreateUserFolder(testFileInfoUser0.Username)
 
 	err := rep.Create(testFileInfoUser0Dir0)
 	if err != nil {
@@ -199,5 +199,27 @@ func TestCountFileInfo(t *testing.T) {
 	}
 	if count != 3 {
 		t.Errorf("Count of file infos unequal to three: %d", count)
+	}
+}
+
+func TestGetFSPath(t *testing.T) {
+	if testFileInfoSetupFailed {
+		t.Skip("Skip due to failed setup")
+	}
+	defer testCloseClearGraph()
+	rep := testFileInfoSetup()
+
+	testFileInfoInsert(rep)
+
+	// TODO: Change to a proper test with different users after implementing sharing
+	owner, path, err := rep.GetOwnerPath(testFileInfoUser0.Username, testFileInfoUser0Dir0File0.Path)
+	if err != nil {
+		t.Fatalf("Failed to get owner path: %v", err)
+	}
+	if owner != testFileInfoUser0.Username {
+		t.Errorf("Read owner of file is unequal to real owner: %v != %v", owner, testFileInfoUser0.Username)
+	}
+	if path != testFileInfoUser0Dir0File0.Path {
+		t.Errorf("Read path of owner of file is unequal to real path of owner: %v != %v", path, testFileInfoUser0Dir0File0.Path)
 	}
 }

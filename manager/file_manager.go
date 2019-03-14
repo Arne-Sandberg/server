@@ -1,51 +1,81 @@
 package manager
 
 import (
-	"errors"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/freecloudio/server/restapi/fcerrors"
+	"github.com/freecloudio/server/utils"
 
 	"github.com/freecloudio/server/models"
 	"github.com/freecloudio/server/repository"
+	log "gopkg.in/clog.v1"
 )
 
-var (
-	ErrFileNotFound     = errors.New("vfs: File not found")
-	ErrSharedIntoShared = errors.New("vfs: Moving or copying shared file into shared folder")
-	// ErrForbiddenPathName indicates a path having weird characters that nobody should use, also these characters are forbidden on Windows
-	ErrForbiddenPathName = errors.New("paths cannot contain the following characters: <>:\"\\|?*")
-	ErrFileNotExist      = errors.New("file does not exist")
-)
-
+// FileManager has methods for creating/updating/deleting/sharing files
 type FileManager struct {
-	fileSystemRep *repository.FileSystemRepository
-	fileInfoRep   *repository.FileInfoRepository
-	shareEntryRep *repository.ShareEntryRepository
-	tmpName       string
+	fileSystemRep      *repository.FileSystemRepository
+	fileInfoRep        *repository.FileInfoRepository
+	shareEntryRep      *repository.ShareEntryRepository
+	tmpName            string
+	tmpExpiry          int
+	tmpCleanupInterval int
+	done               chan struct{}
 }
 
 var fileManager *FileManager
 
-func CreateFileManager(fileSystemRep *repository.FileSystemRepository, fileInfoRep *repository.FileInfoRepository, shareEntryRep *repository.ShareEntryRepository, tmpName string) (*FileManager, error) {
+// CreateFileManager creates a new singleton FileManager which can be used immediately, tmpExpiry and tmpCleanupInterval are in hours
+func CreateFileManager(fileSystemRep *repository.FileSystemRepository, fileInfoRep *repository.FileInfoRepository, shareEntryRep *repository.ShareEntryRepository, tmpName string, tmpExpiry, tmpCleanupInterval int) (*FileManager, error) {
 	if fileManager != nil {
 		return fileManager, nil
 	}
 
 	fileManager = &FileManager{
-		fileSystemRep: fileSystemRep,
-		fileInfoRep:   fileInfoRep,
-		shareEntryRep: shareEntryRep,
-		tmpName:       tmpName,
+		fileSystemRep:      fileSystemRep,
+		fileInfoRep:        fileInfoRep,
+		shareEntryRep:      shareEntryRep,
+		tmpName:            tmpName,
+		tmpExpiry:          tmpExpiry,
+		tmpCleanupInterval: tmpCleanupInterval,
+		done:               make(chan struct{}),
 	}
 	err := fileManager.ScanFSForChanges()
-
+	go fileManager.cleanupExpiredTmpRoutine()
 	return fileManager, err
 }
 
+// GetFileManager returns the singleton instance of the FileManager
 func GetFileManager() *FileManager {
 	return fileManager
 }
 
-func (mgr *FileManager) Close() {}
+// Close is used to end running tasks
+func (mgr *FileManager) Close() {
+	mgr.done <- struct{}{}
+}
 
+func (mgr *FileManager) cleanupExpiredTmpRoutine() {
+	log.Trace("Tmp cleaner will run every %v hours", mgr.tmpCleanupInterval)
+	mgr.cleanupTmp()
+	ticker := time.NewTicker(time.Hour * time.Duration(mgr.tmpCleanupInterval))
+	for {
+		select {
+		case <-mgr.done:
+			return
+		case <-ticker.C:
+			log.Trace("Cleaning expired tmp")
+			mgr.cleanupTmp()
+		}
+	}
+}
+
+func (mgr *FileManager) cleanupTmp() {
+	// TODO: Implement this
+}
+
+// ScanFSForChanges runs ScanUserFolderForChanges for all users
 func (mgr *FileManager) ScanFSForChanges() (err error) {
 	/*existingUsers, err := GetAuthManager().GetAllUsers()
 	if err != nil {
@@ -62,6 +92,7 @@ func (mgr *FileManager) ScanFSForChanges() (err error) {
 	return
 }
 
+// ScanUserFolderForChanges compares the db with the fs and fixes differences in the db for a specific user
 func (mgr *FileManager) ScanUserFolderForChanges(user *models.User) (err error) {
 	/*err = mgr.CreateUserFolders(user.ID)
 	if err != nil {
@@ -176,210 +207,183 @@ func (mgr *FileManager) scanDirForChanges(user *models.User, path, name string) 
 
 	return
 }
+*/
 
-func (mgr *FileManager) getDirectoryContentByPath(userID int64, path, name string) (dirInfo *models.FileInfo, dirContent []*models.FileInfo, err error) {
-	dirInfo, err = mgr.fileInfoRep.GetByPath(userID, path, name)
-	if err != nil {
-		return nil, nil, err
+func (mgr *FileManager) getUserPath(username string) string {
+	return "/" + filepath.Join(username)
+}
+
+// GetPathInfo returns the pathInfo - fileInfo and content - of a path
+func (mgr *FileManager) GetPathInfo(username, path string) (pathInfo *models.PathInfo, err error) {
+	pathInfo = &models.PathInfo{}
+
+	pathInfo.FileInfo, err = mgr.fileInfoRep.GetByPath(username, path)
+	if err != nil && repository.IsRecordNotFoundError(err) {
+		return nil, fcerrors.Wrap(err, fcerrors.FileNotExists)
+	} else if err != nil {
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
-	if dirInfo.IsDir {
-		dirContent, _ = mgr.fileInfoRep.GetDirectoryContentByID(userID, dirInfo.ID)
+	if pathInfo.FileInfo.IsDir {
+		pathInfo.Content, err = mgr.fileInfoRep.GetDirectoryContentByPath(username, path)
+		if err != nil {
+			return nil, fcerrors.Wrap(err, fcerrors.Database)
+		}
 	}
 
 	return
 }
 
-func (mgr *FileManager) getUserPath(user *models.User) string {
-	return mgr.getUserPathWithID(user.ID)
+// GetFileInfo returns the fileInfo for an user and path
+func (mgr *FileManager) GetFileInfo(username, path string) (fileInfo *models.FileInfo, err error) {
+	fileInfo, err = mgr.fileInfoRep.GetByPath(username, path)
+	if err != nil && repository.IsRecordNotFoundError(err) {
+		return nil, fcerrors.Wrap(err, fcerrors.FileNotExists)
+	} else if err != nil {
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
+	}
+
+	return
 }
 
-func (mgr *FileManager) getUserPathWithID(userID int64) string {
-	return "/" + filepath.Join(strconv.Itoa(int(userID)))
-}
-
-func (mgr *FileManager) CreateUserFolders(userID int64) error {
-	userPath := mgr.getUserPathWithID(userID)
+// CreateUserFolders creates the root and tmp folder for an user
+func (mgr *FileManager) CreateUserFolders(username string) error {
+	userPath := mgr.getUserPath(username)
 
 	//Create user dir if not existing and add it to the db
 	created, err := mgr.fileSystemRep.CreateDirectory(userPath)
 	if err != nil {
-		return fmt.Errorf("failed to create folder for user id %v: %v", userID, err)
+		return fcerrors.Wrap(err, fcerrors.Filesystem)
 	}
-	_, err = mgr.fileInfoRep.GetByPath(userID, "/", "")
-	if created || repository.IsRecordNotFoundError(err) {
-		err = mgr.fileInfoRep.Create(&models.FileInfo{
-			Path:        "/",
-			Name:        "",
-			IsDir:       true,
-			OwnerID:     userID,
-			LastChanged: utils.GetTimestampNow(),
-		})
+	if created {
+		err = mgr.fileInfoRep.CreateUserFolder(username)
 		if err != nil {
-			return fmt.Errorf("failed inserting created root folder for user id %v: %v", userID, err)
+			return fcerrors.Wrap(err, fcerrors.Database)
 		}
 	}
 
-	//Create tmp dir for if not existing and add it to the db
-	created, err = mgr.fileSystemRep.CreateDirectory(filepath.Join(userPath, mgr.tmpName))
+	// Create tmp dir
+	err = mgr.CreateDirectory(username, mgr.tmpName)
 	if err != nil {
-		return fmt.Errorf("failed creating tmp folder for user id %v: %v", userID, err)
+		return err
 	}
-	_, err = mgr.fileInfoRep.GetByPath(userID, "/", mgr.tmpName)
-	if created || repository.IsRecordNotFoundError(err) {
-		err = mgr.fileInfoRep.Create(&models.FileInfo{
-			Path:        "/",
-			Name:        mgr.tmpName,
-			IsDir:       true,
-			OwnerID:     userID,
-			LastChanged: utils.GetTimestampNow(),
-		})
+
+	return nil
+}
+
+// CreateFile combines CreateDirectory or NewFileHandle + FinishNewFile to create an empty directory or file
+func (mgr *FileManager) CreateFile(username string, path string, isDir bool) error {
+	if isDir {
+		err := mgr.CreateDirectory(username, path)
 		if err != nil {
-			return fmt.Errorf("failed inserting created tmp folder for user id %v: %v", userID, err)
+			return err
+		}
+	} else {
+		file, err := mgr.NewFileHandle(username, path)
+		defer file.Close()
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (mgr *FileManager) NewFileHandleForUser(user *models.User, path string) (*os.File, error) {
+// NewFileHandle returns a fileHandle from the fs
+func (mgr *FileManager) NewFileHandle(username, path string) (*os.File, error) {
 	if !utils.ValidatePath(path) {
-		return nil, ErrForbiddenPathName
+		return nil, fcerrors.New(fcerrors.PathNotValid)
 	}
 
 	filePath, fileName := utils.SplitPath(path)
-	folderInfo, err := mgr.GetFileInfo(user, filePath, false)
+
+	owner, ownerParentPath, err := mgr.fileInfoRep.GetOwnerPath(username, filePath)
+	if err != nil && repository.IsRecordNotFoundError(err) {
+		return nil, fcerrors.New(fcerrors.FileNotExists)
+	} else if err != nil {
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
+	}
+
+	ownerPath := mgr.getUserPath(owner)
+	handlePath := filepath.Join(ownerPath, ownerParentPath, fileName)
+	fileHandle, err := mgr.fileSystemRep.CreateHandle(handlePath)
 	if err != nil {
-		return nil, err
+		return nil, fcerrors.Wrap(err, fcerrors.Filesystem)
 	}
 
-	handlePath := filepath.Join(mgr.getUserPathWithID(folderInfo.OwnerID), folderInfo.Path, folderInfo.Name, fileName)
-
-	return mgr.fileSystemRep.CreateHandle(handlePath)
-}
-
-func (mgr *FileManager) FinishNewFile(user *models.User, path string) (err error) {
-	if !utils.ValidatePath(path) {
-		err = ErrForbiddenPathName
-		return
-	}
-
-	filePath, fileName := utils.SplitPath(path)
-	folderInfo, err := mgr.GetFileInfo(user, filePath, false)
+	fileInfo, err := mgr.fileSystemRep.GetInfo(ownerPath, filepath.Join(ownerParentPath, fileName))
 	if err != nil {
-		return
+		fileHandle.Close()
+		return nil, fcerrors.Wrap(err, fcerrors.Filesystem)
 	}
 
-	userPath := mgr.getUserPathWithID(folderInfo.OwnerID)
-	fileInfo, err := mgr.fileSystemRep.GetInfo(userPath, filepath.Join(folderInfo.Path, folderInfo.Name, fileName))
-	if err != nil {
-		return
-	}
-
-	fileInfo.OwnerID = folderInfo.OwnerID
-	fileInfo.ParentID = folderInfo.ID
+	fileInfo.OwnerUsername = owner
 	err = mgr.fileInfoRep.Create(fileInfo)
 	if err != nil {
-		return
+		fileHandle.Close()
+		return nil, fcerrors.Wrap(err, fcerrors.Database)
 	}
 
-	//TODO: Make asynchronus scan call for dir sizes?!?
-
-	return
+	return fileHandle, nil
 }
 
-func (mgr *FileManager) CreateFile(user *models.User, path string, isDir bool) (fileInfo *models.FileInfo, err error) {
-	if exisFileInfo, _ := mgr.GetFileInfo(user, path, true); exisFileInfo != nil && exisFileInfo.ID > 0 {
-		return nil, fmt.Errorf("file %v already exists", path)
-	}
-
-	if isDir {
-		err := mgr.CreateDirectoryForUser(user, path)
-		if err != nil {
-			return nil, fmt.Errorf("directory creation failed for path '%s': %v", path, err)
-		}
-	} else {
-		file, err := mgr.NewFileHandleForUser(user, path)
-		defer file.Close()
-		if err != nil {
-			return nil, fmt.Errorf("creating new file handle failed for path '%s': %v", path, err)
-		}
-		err = mgr.FinishNewFile(user, path)
-		if err != nil {
-			return nil, fmt.Errorf("finishing created file failed for path '%s': %v", path, err)
-		}
-	}
-
-	fileInfo, err = mgr.GetFileInfo(user, path, true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get fileInfo of created file '%s': %v", path, err)
-	}
-
-	return fileInfo, nil
-}
-
-func (mgr *FileManager) CreateDirectoryForUser(user *models.User, path string) (err error) {
+// CreateDirectory creates a new dir for the user; Returns no error if the dir already exists in the fs
+func (mgr *FileManager) CreateDirectory(username, path string) error {
 	if !utils.ValidatePath(path) {
-		err = ErrForbiddenPathName
-		return
+		return fcerrors.New(fcerrors.PathNotValid)
 	}
 
-	folderPath, folderName := utils.SplitPath(path)
-	userPath := mgr.getUserPath(user)
+	filePath, fileName := utils.SplitPath(path)
 
-	parFolderInfo, err := mgr.GetFileInfo(user, folderPath, false)
+	owner, ownerParentPath, err := mgr.fileInfoRep.GetOwnerPath(username, filePath)
+	if err != nil && repository.IsRecordNotFoundError(err) {
+		return fcerrors.New(fcerrors.FileNotExists)
+	} else if err != nil {
+		return fcerrors.Wrap(err, fcerrors.Database)
+	}
+
+	ownerPath := mgr.getUserPath(owner)
+	fsPath := filepath.Join(ownerPath, ownerParentPath, fileName)
+	created, err := mgr.fileSystemRep.CreateDirectory(fsPath)
+	if !created {
+		return nil
+	} else if err != nil {
+		return fcerrors.Wrap(err, fcerrors.Filesystem)
+	}
+
+	dirInfo, err := mgr.fileSystemRep.GetInfo(ownerPath, path)
 	if err != nil {
-		err = fmt.Errorf("could not find parent folder of creating folder in db: %v", err)
-		log.Error(0, "%v", err)
-		return
+		return fcerrors.Wrap(err, fcerrors.Filesystem)
 	}
-
-	_, err = mgr.fileSystemRep.CreateDirectory(filepath.Join(userPath, path))
-	if err != nil {
-		err = fmt.Errorf("error creating directory for user %v: %v", user.ID, err)
-		log.Error(0, "%v", err)
-		return
-	}
-
-	dirInfo := &models.FileInfo{
-		Path:        utils.ConvertToSlash(filepath.Join(parFolderInfo.Path, parFolderInfo.Name), true),
-		Name:        folderName,
-		IsDir:       true,
-		OwnerID:     parFolderInfo.OwnerID,
-		LastChanged: utils.GetTimestampNow(),
-		ParentID:    parFolderInfo.ID,
-	}
+	dirInfo.OwnerUsername = owner
 	err = mgr.fileInfoRep.Create(dirInfo)
 	if err != nil {
+		return fcerrors.Wrap(err, fcerrors.Database)
+	}
+
+	return nil
+}
+
+// SearchForFiles searches in the given path for a given term and returns all results that contain the term
+func (mgr *FileManager) SearchForFiles(username, path, term string) (results []*models.FileInfo, err error) {
+	return mgr.fileInfoRep.Search(username, path, term)
+}
+
+// DeleteUserFiles deletes all user files in the db and in the fs
+func (mgr *FileManager) DeleteUserFiles(username string) (err error) {
+	err = mgr.fileInfoRep.DeleteUserFileInfos(username)
+	if err != nil {
 		return
 	}
 
+	err = mgr.fileSystemRep.Delete(mgr.getUserPath(username))
+	if err != nil {
+		return
+	}
 	return
 }
 
-func (mgr *FileManager) GetPathInfo(user *models.User, path string) (*models.PathInfo, error) {
-	dirInfo, err := mgr.GetFileInfo(user, path, true)
-	if err != nil {
-		return nil, err
-	}
-
-	var content []*models.FileInfo
-	if dirInfo.IsDir {
-		content, err = mgr.fileInfoRep.GetDirectoryContentByID(user.ID, dirInfo.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		if dirInfo.ShareID > 0 || dirInfo.OwnerID != user.ID {
-			for _, file := range content {
-				file.Path = path
-			}
-		}
-	}
-
-	return &models.PathInfo{FileInfo: dirInfo, Content: content}, nil
-}
-
+/*
 func (mgr *FileManager) GetStarredFileInfosForUser(user *models.User) (starredFilesInfo []*models.FileInfo, err error) {
 	starredFilesInfo, err = mgr.fileInfoRep.GetStarredFileInfosByUser(user.ID)
 	if err != nil {
@@ -394,80 +398,6 @@ func (mgr *FileManager) ListSharedFilesForUser(user *models.User) (sharedFilesIn
 		return
 	}
 	return
-}
-
-// GetFileInfo returns the stored fileInfo for a given path and user resolving shared folders
-// Set adaptSharePath to true if the returned path of the fileInfo should be from the root of the requesting user
-// Set adaptSharePath to false if it should stay the orig path of the sharing user
-func (mgr *FileManager) GetFileInfo(user *models.User, requestedPath string, adaptSharedPath bool) (*models.FileInfo, error) {
-	filePath, fileName := utils.SplitPath(requestedPath)
-	fileInfo, err := mgr.fileInfoRep.GetByPath(user.ID, filePath, fileName)
-
-	if err == nil && fileInfo.ShareID <= 0 { // File exists in db for user and is owned by him: Directly return info
-		return fileInfo, nil
-	} else if err == nil && fileInfo.ShareID > 0 { // File exists in db for user and is shared with him: Get orig file and return it
-		shareEntry, err := mgr.getCheckedShareEntry(user.ID, fileInfo.ShareID)
-		if err != nil {
-			return nil, err
-		}
-
-		finalFileInfo := &models.FileInfo{}
-		finalFileInfo, err = mgr.fileInfoRep.GetByID(shareEntry.FileID)
-		if err != nil {
-			return nil, err
-		}
-
-		if adaptSharedPath {
-			finalFileInfo.Path = filePath
-		}
-
-		return finalFileInfo, err
-	} else { // File does not exist in db: Check recusively if it is in a shared folder otherwise return not found
-		var sharedParentInfo *models.FileInfo
-		var removedPath string
-		parentPath := filePath
-		parentName := ""
-		for {
-			removedPath = filepath.Join(removedPath, parentName)
-			parentPath, parentName = utils.SplitPath(parentPath)
-
-			fileInfo, err = mgr.fileInfoRep.GetByPath(user.ID, parentPath, parentName)
-
-			if err == nil && fileInfo.ShareID <= 0 { // Found existing parent but it is not shared --> Requested file does not exist
-				break
-			} else if err == nil && fileInfo.ShareID > 0 { // Found existing parent that is shared --> Check share and remember parent
-				shareEntry, err := mgr.getCheckedShareEntry(user.ID, fileInfo.ShareID)
-				if err != nil {
-					return nil, err
-				}
-
-				sharedParentInfo = &models.FileInfo{}
-				sharedParentInfo, err = mgr.fileInfoRep.GetByID(shareEntry.FileID)
-				if err != nil {
-					return nil, err
-				}
-
-				break
-			}
-		}
-
-		if sharedParentInfo == nil {
-			return nil, ErrFileNotFound
-		}
-
-		finalFileInfo := &models.FileInfo{}
-		finalPath := utils.ConvertToSlash(filepath.Join(sharedParentInfo.Path, sharedParentInfo.Name, removedPath), true)
-		finalFileInfo, err = mgr.fileInfoRep.GetByPath(sharedParentInfo.OwnerID, finalPath, fileName)
-		if err != nil {
-			return nil, err
-		}
-
-		if adaptSharedPath {
-			finalFileInfo.Path = filePath
-		}
-
-		return finalFileInfo, nil
-	}
 }
 
 func (mgr *FileManager) GetDownloadPath(user *models.User, path string) (downloadURL, filename string, err error) {
@@ -734,25 +664,6 @@ func (mgr *FileManager) deleteFileInDB(fileInfo *models.FileInfo) (err error) {
 	return
 }
 
-func (mgr *FileManager) SearchForFiles(user *models.User, path string) (results []*models.FileInfo, err error) {
-	filePath, fileName := utils.SplitPath(path)
-	return mgr.fileInfoRep.Search(user.ID, filePath, fileName)
-}
-*/
-func (mgr *FileManager) DeleteUserFiles(user *models.User) (err error) {
-	/*err = mgr.fileInfoRep.DeleteUserFileInfos(user.ID)
-	if err != nil {
-		return
-	}
-
-	err = mgr.fileSystemRep.Delete(mgr.getUserPath(user))
-	if err != nil {
-		return
-	}*/
-	return
-}
-
-/*
 func (mgr *FileManager) ShareFiles(fromUser *models.User, toUserIDs []int64, paths []string) error {
 	type failedShareStruct struct {
 		toUserMail string
@@ -787,123 +698,4 @@ func (mgr *FileManager) ShareFiles(fromUser *models.User, toUserIDs []int64, pat
 	return nil
 }
 
-func (mgr *FileManager) ShareFile(fromUser, toUser *models.User, path string) (err error) {
-	filePath, fileName := utils.SplitPath(path)
-	// Get fileInfo without resolving shared files
-	fileInfo, err := mgr.fileInfoRep.GetByPath(fromUser.ID, filePath, fileName)
-	if err != nil {
-		return
-	}
-
-	if fileInfo.ShareID > 0 {
-		return fmt.Errorf("sharing shared files is forbidden")
-	}
-
-	if res, _ := mgr.isInSharedByMe(fromUser.ID, toUser.ID, fileInfo); res {
-		return fmt.Errorf("file is already shared with this user")
-	}
-
-	if exisFileInfo, _ := mgr.fileInfoRep.GetByPath(toUser.ID, "/", fileInfo.Name); exisFileInfo != nil && exisFileInfo.ID > 0 {
-		return fmt.Errorf("file already exists at target user")
-	}
-
-	shareEntry := &models.ShareEntry{
-		FileID: fileInfo.ID,
-	}
-	err = mgr.shareEntryRep.Create(shareEntry)
-	if err != nil {
-		return
-	}
-
-	sharedParentInfo, err := mgr.fileInfoRep.GetByPath(toUser.ID, "/", "")
-	if err != nil {
-		return
-	}
-
-	sharedFileInfo := &models.FileInfo{
-		Path:        "/",
-		Name:        fileInfo.Name,
-		IsDir:       fileInfo.IsDir,
-		Size:        fileInfo.Size,
-		OwnerID:     toUser.ID,
-		LastChanged: utils.GetTimestampNow(),
-		MimeType:    fileInfo.MimeType,
-		ParentID:    sharedParentInfo.ID,
-		ShareID:     shareEntry.ID,
-		Starred:     false,
-	}
-
-	err = mgr.fileInfoRep.Create(sharedFileInfo)
-	return
-}
-
-func (mgr *FileManager) isInSharedByMe(userID, withUserID int64, fileInfo *models.FileInfo) (bool, error) {
-	parentID := fileInfo.ID
-
-	for parentID != 0 {
-		fileInfo, err := mgr.fileInfoRep.GetByID(parentID)
-		if err != nil {
-			return false, err
-		}
-
-		if shareEntries, _ := mgr.shareEntryRep.GetByFileID(fileInfo.ID); len(shareEntries) < 0 {
-			if withUserID <= 0 {
-				return true, nil
-			}
-
-			for _, entry := range shareEntries {
-				if entry.SharedWithID == withUserID {
-					return true, nil
-				}
-			}
-		}
-
-		parentID = fileInfo.ParentID
-	}
-
-	return false, nil
-}
-
-func (mgr *FileManager) getCheckedShareEntry(userID, shareID int64) (shareEntry *models.ShareEntry, err error) {
-	shareEntry, err = mgr.shareEntryRep.GetByID(shareID)
-	if err != nil {
-		return
-	}
-
-	if shareEntry.SharedWithID != userID {
-		err = fmt.Errorf("user of shareEntry not matching with requested user")
-		return
-	}
-
-	return
-}
-
-func (mgr *FileManager) GetAvatarForUser(userID int64) (string, error) {
-	p := filepath.Join(config.GetString("fs.base_directory"), config.GetString("fs.avatar_directory"), string(userID))
-	_, err := os.Stat(p)
-	if err != nil {
-		log.Error(0, "DB says user %d has avatar, but the file was not found: %v", userID, err)
-		return "", err
-	}
-	return p, nil
-}
-
-func (mgr *FileManager) GetShareEntryByID(shareID int64, user *models.User) (*models.ShareEntry, error) {
-	return mgr.shareEntryRep.GetByIDForUser(shareID, user.ID)
-}
-
-func (mgr *FileManager) DeleteShareEntryByID(shareID int64, user *models.User) error {
-	shareEntry, err := mgr.shareEntryRep.GetByIDForUser(shareID, user.ID)
-	if err != nil {
-		return err
-	}
-
-	err = mgr.shareEntryRep.Delete(shareEntry.ID)
-	if err != nil {
-		return err
-	}
-
-	// TODO: Delete file of shared_with user
-	return nil
-}
 */

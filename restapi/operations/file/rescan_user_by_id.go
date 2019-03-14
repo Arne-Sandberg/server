@@ -31,9 +31,9 @@ func NewRescanUserByID(ctx *middleware.Context, handler RescanUserByIDHandler) *
 	return &RescanUserByID{Context: ctx, Handler: handler}
 }
 
-/*RescanUserByID swagger:route POST /file/rescan/{id} file rescanUserById
+/*RescanUserByID swagger:route POST /file/rescan/{username} file rescanUserById
 
-Rescan data folder by user id
+Rescan data folder by username
 
 */
 type RescanUserByID struct {

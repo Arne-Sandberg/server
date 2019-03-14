@@ -8,7 +8,6 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/freecloudio/server/models"
 	"github.com/freecloudio/server/utils"
@@ -25,15 +24,12 @@ var (
 
 // FileSystemRepository represents the local filesystem for storing files
 type FileSystemRepository struct {
-	base               string
-	tmpName            string
-	tmpCleanupInterval int
-	tmpDataExpiry      int
-	done               chan struct{}
+	base    string
+	tmpName string
 }
 
 // CreateFileSystemRepository creates a new fileSystemRepository at a given relative or abolute path with a interval for temp cleanup in hours and a tmp data expiry in hours
-func CreateFileSystemRepository(baseDir, tmpName string, tmpCleanupInterval, tmpDataExpiry int) (*FileSystemRepository, error) {
+func CreateFileSystemRepository(baseDir, tmpName string) (*FileSystemRepository, error) {
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		log.Error(0, "Could not initialize filesystem: %v", err)
@@ -59,75 +55,10 @@ func CreateFileSystemRepository(baseDir, tmpName string, tmpCleanupInterval, tmp
 
 	log.Info("Initialized filesystem at base directory %s", base)
 	fileSystemRepository := &FileSystemRepository{
-		base:               base,
-		tmpName:            tmpName,
-		tmpCleanupInterval: tmpCleanupInterval,
-		tmpDataExpiry:      tmpDataExpiry,
-		done:               make(chan struct{}),
+		base:    base,
+		tmpName: tmpName,
 	}
-
-	go fileSystemRepository.cleanupTempFolderRoutine()
-
 	return fileSystemRepository, nil
-}
-
-// Close closes the repository and with that ends the go routine for tmp cleanup
-func (rep *FileSystemRepository) Close() error {
-	rep.done <- struct{}{}
-	return nil
-}
-
-// cleanupTempFolderRoutine is the actual routine that periodically calls cleanupTempFolder
-func (rep *FileSystemRepository) cleanupTempFolderRoutine() {
-	log.Trace("Starting temp folder cleaner, running now and every %v hours", rep.tmpCleanupInterval)
-	rep.cleanupTempFolder()
-
-	ticker := time.NewTicker(time.Hour * time.Duration(rep.tmpCleanupInterval))
-	for {
-		select {
-		case <-rep.done:
-			return
-		case <-ticker.C:
-			rep.cleanupTempFolder()
-		}
-	}
-}
-
-// cleanupTempFolder deletes the content of all tmp folders
-func (rep *FileSystemRepository) cleanupTempFolder() (err error) {
-	log.Trace("Cleaning temp folder")
-
-	now := time.Now()
-
-	baseList, err := ioutil.ReadDir(rep.base)
-	if err != nil {
-		log.Warn("Cleaning temp folder failed: %v", err)
-		return
-	}
-
-	for _, info := range baseList {
-		if !info.IsDir() {
-			continue
-		}
-
-		tmpFolderPath := filepath.Join(rep.base, info.Name(), rep.tmpName)
-		tmpInfoList, err := ioutil.ReadDir(tmpFolderPath)
-		if err != nil {
-			log.Warn("Error reading temp folder in %v during temp cleanup: %v", tmpFolderPath, err)
-		}
-
-		for _, tmpInfo := range tmpInfoList {
-			expires := tmpInfo.ModTime().Add(time.Hour * time.Duration(rep.tmpDataExpiry))
-			if now.After(expires) {
-				err = os.RemoveAll(filepath.Join(tmpFolderPath, tmpInfo.Name()))
-				if err != nil {
-					log.Warn("Error deleting file %v in temp folder %v during temp cleanup: %v", tmpInfo.Name(), tmpFolderPath, err)
-					continue
-				}
-			}
-		}
-	}
-	return
 }
 
 // CreateHandle opens an *os.File handle for writing to.

@@ -19,7 +19,7 @@ type ShareRequest struct {
 	Paths []string `json:"paths"`
 
 	// users
-	Users []int64 `json:"users"`
+	Users []string `json:"users"`
 }
 
 // Validate validates this share request

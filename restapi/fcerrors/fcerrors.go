@@ -35,6 +35,10 @@ var (
 	DeleteSession = Code{"Could not delete session", http.StatusInternalServerError}
 	// ExpiredSession provided
 	ExpiredSession = Code{"Session is expired", http.StatusUnauthorized}
+	// FileNotExists if the path could not be found in the db
+	FileNotExists = Code{"File could not be found", http.StatusNotFound}
+	// PathNotValid represents an path with bad characters
+	PathNotValid = Code{"Path is not valid", http.StatusBadRequest}
 )
 
 // FCError is a struct implementing the Error interface, which should be used on all internal errors.

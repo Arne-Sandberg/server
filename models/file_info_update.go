@@ -18,9 +18,6 @@ type FileInfoUpdate struct {
 	// is dir
 	IsDir *bool `json:"isDir,omitempty"`
 
-	// last changed
-	LastChanged *int64 `json:"lastChanged,omitempty"`
-
 	// mime type
 	MimeType *string `json:"mimeType,omitempty"`
 

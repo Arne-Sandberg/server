@@ -16,8 +16,8 @@ const (
 	saltLength = 16
 
 	recommendedN = 16384
-	recommendedr = 8
-	recommendedp = 1
+	recommendedR = 8
+	recommendedP = 1
 
 	scryptHashLength = 32
 
@@ -30,7 +30,7 @@ func HashScrypt(plaintext string) (hash string, err error) {
 	passwordb := []byte(plaintext)
 	saltb := []byte(utils.RandomString(saltLength))
 
-	hashb, err := scrypt.Key(passwordb, saltb, recommendedN, recommendedr, recommendedp, scryptHashLength)
+	hashb, err := scrypt.Key(passwordb, saltb, recommendedN, recommendedR, recommendedP, scryptHashLength)
 	if err != nil {
 		return "", errors.Wrap(err, "could not hash password")
 	}
@@ -38,7 +38,7 @@ func HashScrypt(plaintext string) (hash string, err error) {
 	hashs := base64.StdEncoding.EncodeToString(hashb)
 	salts := base64.StdEncoding.EncodeToString(saltb)
 
-	return fmt.Sprintf("$%s$%d$%d$%d$%s$%s", ScryptHashID, recommendedN, recommendedr, recommendedp, salts, hashs), nil
+	return fmt.Sprintf("$%s$%d$%d$%d$%s$%s", ScryptHashID, recommendedN, recommendedR, recommendedP, salts, hashs), nil
 }
 
 func ValidateScryptPassword(plaintext, hashed string) (valid bool, err error) {
